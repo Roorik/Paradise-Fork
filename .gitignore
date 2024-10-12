@@ -26,8 +26,8 @@ tools/MapDaemon/logs/*.txt
 #Visual studio stuff
 *.vscode/*
 !/.vscode/extensions.json
-!/.vscode/launch.json
-!/.vscode/tasks.json
+/.vscode/launch.json
+/.vscode/tasks.json
 
 #ignore any files in config/, except those in subdirectories.
 /config/*
