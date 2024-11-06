@@ -1037,6 +1037,7 @@ GLOBAL_LIST_EMPTY(turret_icons)
 	use_power = NO_POWER_USE
 	has_cover = FALSE
 	raised = TRUE
+	density = TRUE
 	scan_range = 9
 
 	faction = "syndicate"

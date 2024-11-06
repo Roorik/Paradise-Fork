@@ -43,7 +43,7 @@
 	if(S.bodyflags & HAS_SKIN_COLOR && !(S.bodyflags & HAS_ICON_SKIN_TONE))
 		randomize_skin_color()
 	backbag = 2
-	age = rand(AGE_MIN, AGE_MAX)
+	age = get_rand_age(S)
 
 
 /datum/preferences/proc/randomize_hair_color(var/target = "hair")

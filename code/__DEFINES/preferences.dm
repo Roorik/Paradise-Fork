@@ -125,6 +125,16 @@
 
 #define EXP_DEPT_TYPE_LIST		list(EXP_TYPE_SERVICE, EXP_TYPE_MEDICAL, EXP_TYPE_ENGINEERING, EXP_TYPE_SCIENCE, EXP_TYPE_SECURITY, EXP_TYPE_COMMAND, EXP_TYPE_SILICON, EXP_TYPE_SPECIAL)
 
+
+/// Tags for 'age needed for this job' list.
+#define SPECIES_AGE_MIN		"Min"
+#define SPECIES_AGE_MAX		"Max"
+#define JOB_MIN_AGE_HIGH_ED	"Higher Education"
+#define JOB_MIN_AGE_COMMAND	"Command"
+
+#define AGE_SHEET	list(SPECIES_AGE_MIN = 18, SPECIES_AGE_MAX = 85, JOB_MIN_AGE_HIGH_ED = 30, JOB_MIN_AGE_COMMAND = 30)
+
+
 // Defines just for parallax because its levels make storing it in the regular prefs a pain in the ass
 // These dont need to be bitflags because there isnt going to be more than one at a time of these active
 // But its gonna piss off my OCD if it isnt bitflags, so deal with it, -affected
