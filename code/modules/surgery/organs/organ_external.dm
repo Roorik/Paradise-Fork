@@ -182,8 +182,10 @@
 		return
 
 	var/obj/item/organ/external/replaced = owner.bodyparts_by_name[limb_zone]
+
 	if(!isnull(replaced))
 		replaced.remove(target, ORGAN_MANIPULATION_NOEFFECT)
+
 	owner.bodyparts_by_name[limb_zone] = src
 	owner.bodyparts |= src
 
@@ -438,6 +440,9 @@
 
 	return update_state()
 
+
+/obj/item/organ/external/blob_act()
+	external_receive_damage(max_damage, forced = TRUE)
 
 /obj/item/organ/external/emp_act(severity)
 	if(!is_robotic() || emp_proof)
@@ -951,7 +956,7 @@ Note that amputating the affected organ does in fact remove the infection from t
 			INVOKE_ASYNC(owner, TYPE_PROC_REF(/mob, emote), "scream")
 
 	status |= ORGAN_BROKEN
-	broken_description = pick("broken", "fracture", "hairline fracture")
+	broken_description = pick("Смещение кости", "Перелом", "Микротрещина")
 	perma_injury = brute_dam
 
 	// Fractures have a chance of getting you out of restraints

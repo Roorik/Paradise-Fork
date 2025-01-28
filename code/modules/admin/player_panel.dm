@@ -10,8 +10,7 @@
 
 	//javascript, the part that does most of the work~
 	dat += {"
-
-		<head>
+			<head>
 			<script type='text/javascript'>
 
 				var locked_tabs = new Array();
@@ -189,7 +188,6 @@
 			</script>
 		</head>
 
-
 	"}
 
 	//body tag start + onload and onkeypress (onkeyup) javascript event calls
@@ -228,6 +226,7 @@
 			var/color = "#e6e6e6"
 			if(i%2 == 0)
 				color = "#f2f2f2"
+
 			var/antagonist_string = get_antag_type_truncated_plaintext_string(M)
 
 			var/M_job = ""
@@ -351,7 +350,7 @@
 	if(!check_rights(R_ADMIN))
 		return
 	if(SSticker && SSticker.current_state >= GAME_STATE_PLAYING)
-		var/dat = {"<html><meta charset="UTF-8"><head><title>Round Status</title></head><body><h1><B>Round Status</B></h1>"}
+		var/dat = {"<body><h1><B>Round Status</B></h1>"}
 		dat += "Current Game Mode: <B>[SSticker.mode.name]</B><BR>"
 		dat += "Round Duration: <B>[ROUND_TIME_TEXT()]</B><BR>"
 		dat += "<B>Emergency shuttle</B><BR>"
@@ -374,6 +373,39 @@
 				dat += span_danger("<B>Emergency shuttle lockdowned</B>")
 				dat += "<BR><a href='byond://?src=[UID()];stop_lockdown=1'>Stop lockdown</a><br>"
 		dat += "<a href='byond://?src=[UID()];delay_round_end=1'>[SSticker.delay_end ? "End Round Normally" : "Delay Round End"]</a><br>"
+		var/connected_players = GLOB.clients.len
+		var/lobby_players = 0
+		var/observers = 0
+		var/observers_connected = 0
+		var/living_players = 0
+		var/living_players_connected = 0
+		var/living_players_antagonist = 0
+		var/other_players = 0
+		for(var/mob/M in GLOB.mob_list)
+			if(M.ckey)
+				if(isnewplayer(M))
+					lobby_players++
+					continue
+				else if(M.stat != DEAD && M.mind && !isbrain(M))
+					living_players++
+					if(M.mind.special_role)
+						living_players_antagonist++
+					if(M.client)
+						living_players_connected++
+				else if((M.stat == DEAD )||(isobserver(M)))
+					observers++
+					if(M.client)
+						observers_connected++
+				else
+					other_players++
+		dat += "<BR><b><font color='#9A67EA'>Players:|[connected_players - lobby_players] ingame|[connected_players] connected|[lobby_players] lobby|</font></b>"
+		dat += "<BR><b><font color='green'>Living Players:|[living_players_connected] active|[living_players - living_players_connected] disconnected|[living_players_antagonist] antagonists|</font></b>"
+		dat += "<BR><b><font color='red'>Dead/Observing players:|[observers_connected] active|[observers - observers_connected] disconnected|</font></b>"
+		if(other_players)
+			dat += "<BR><span class='userdanger'>[other_players] players in invalid state or the statistics code is bugged!</span>"
+		dat += "<BR>"
+		dat +="<br><b>Code Phrases:</b> <span class='codephrases'>[GLOB.syndicate_code_phrase]</span>"
+		dat +="<br><b>Code Responses:</b> <span class='coderesponses'>[GLOB.syndicate_code_response]</span>"
 		dat += "<br><b>Antagonist Teams</b><br>"
 		dat += "<a href='byond://?src=[UID()];check_teams=1'>View Teams</a><br>"
 		if(SSticker.mode.syndicates.len)
@@ -425,7 +457,7 @@
 		if(blob_infected && blob_infected.len)
 			var/datum/game_mode/mode = SSticker.mode
 			dat += "<br><table cellspacing=5><tr><td><B>Blob</B></td><td></td><td></td></tr>"
-			dat += "<tr><td><i>Progress: [GLOB.blobs.len]/[mode.blob_win_count]</i></td></tr>"
+			dat += "<tr><td><i>Progress: [mode.legit_blobs.len]/[mode.blob_win_count]</i></td></tr>"
 			dat += "<tr><td><a href='byond://?src=[UID()];edit_blob_win_count=1'>Edit Win Count</a><br></tr>"
 			dat += "<tr><td><a href='byond://?src=[UID()];send_warning=1'>Send warning to all living blobs</a><br></td></tr>"
 			dat += "<tr><td><a href='byond://?src=[UID()];burst_all_blobs=1'>Burst all blobs</a><br></td></tr>"
@@ -433,6 +465,7 @@
 				dat += "<tr><td><a href='byond://?src=[UID()];delay_blob_end=1'>Delay blob end</a> Now: [mode.delay_blob_end? "ON" : "OFF"]<br></td></tr>"
 				dat += "<tr><td><a href='byond://?src=[UID()];toggle_auto_gamma=1'>Toggle auto GAMMA</a> Now: [mode.off_auto_gamma? "OFF" : "ON"]<br></td></tr>"
 			dat += "<tr><td><a href='byond://?src=[UID()];toggle_auto_nuke_codes=1'>Toggle auto nuke codes</a> Now: [mode.off_auto_nuke_codes? "OFF" : "ON"]<br></td></tr>"
+			dat += "<tr><td><a href='byond://?src=[UID()];toggle_blob_infinity_points=1'>Toggle blob infinity points</a> Now: [mode.is_blob_infinity_points? "ON" : "OFF"]<br></td></tr>"
 			dat += "</table>"
 			dat += "<br><table cellspacing=5><tr><td><B>Blobs</B></td><td></td></tr>"
 			for(var/datum/mind/blob in mode.blobs["infected"])
@@ -454,14 +487,14 @@
 
 			dat += "</table>"
 
-			dat += "<br><table cellspacing=5><tr><td><B>Blobernauts</B></td><td></td></tr>"
-			for(var/datum/mind/blob in mode.blobs["blobernauts"])
+			dat += "<br><table cellspacing=5><tr><td><B>Minions</B></td><td></td></tr>"
+			for(var/datum/mind/blob in mode.blobs["minions"])
 				var/mob/M = blob.current
 				if(M)
 					dat += "<tr><td>[ADMIN_PP(M,"[M.real_name]")][M.client ? "" : " <i>(ghost)</i>"][M.stat == 2 ? " <b><font color=red>(DEAD)</font></b>" : ""]</td>"
 					dat += "<td><a href='byond://?priv_msg=[M.client?.ckey]'>PM</A></td>"
 				else
-					dat += "<tr><td><i>Blobernauts not found!</i></td></tr>"
+					dat += "<tr><td><i>Minions not found!</i></td></tr>"
 
 			dat += "</table>"
 
@@ -623,8 +656,12 @@
 		dat += "<tr><td>Antag: </td><td>[sec_list[4]]</td>"
 		dat += "</table>"
 
-		dat += "</body></html>"
-		usr << browse(dat, "window=roundstatus;size=400x500")
+		dat += "</body>"
+		var/datum/browser/popup = new(usr, "roundstatus", "<div align='center'>Round Status</div>", 400, 500)
+		popup.set_content(dat)
+		popup.set_window_options("can_close=1;can_minimize=0;can_maximize=0;can_resize=0;titlebar=1;")
+		popup.open()
+		onclose(usr, "roundstatus")
 	else
 		alert("The game hasn't started yet!")
 
@@ -648,5 +685,60 @@
 			</td>
 		"}
 
+	txt += "</tr>"
+	return txt
+
+/datum/admins/proc/check_security_line(mob/living/human, close = 1)
+	var/logout_status = human.client ? "" : " <i>(logged out)</i>"
+	var/list/coords = ATOM_COORDS(human)
+	var/job = issilicon(human) ? "Cyborg" : human.job // || need because maybe ert robots with null in job
+	return {"<tr><td><a href='byond://?src=[UID()];adminplayeropts=[human.UID()]'>[human.real_name]</a>[logout_status]</td><td>[job][human.stat == DEAD ? " <b><font color=red>(Dead)</font></b>" : "<font color=green> [human.health]%</font>"] <b>[get_area_name(human)]</b> [coords[1]],[coords[2]],[coords[3]]</td><td><a href='byond://?src=[usr.UID()];priv_msg=[human.client?.ckey]'>PM</A> [ADMIN_FLW(human, "FLW")]</td>[close ? "</tr>" : ""]"}
+
+/datum/admins/proc/check_security()
+	if(!check_rights(R_ADMIN))
+		return
+	if(!SSticker || SSticker.current_state < GAME_STATE_PLAYING)
+		return
+
+	var/dat = {"<body><h1><B>Round Status</B></h1>"}
+	var/list/sec_list = check_active_security_force()
+	dat += "<br><table cellspacing=5><tr><td><b>Security</b></td><td></td></tr>"
+	dat += "<tr><td>Total: </td><td>[sec_list[1]]</td>"
+	dat += "<tr><td>Active: </td><td>[sec_list[2]]</td>"
+	dat += "<tr><td>Dead: </td><td>[sec_list[3]]</td>"
+	dat += "<tr><td>Antag: </td><td>[sec_list[4]]</td>"
+	dat += "</table>"
+	dat += "</body>"
+
+	dat += "<br><table cellspacing=5><tr><td><B>Security</B></td><td></td></tr>"
+	for(var/datum/mind/mind in SSticker.mode.get_all_sec())
+		if(mind.current)
+			dat += check_security_line(mind.current)
+	dat += "</table>"
+
+	if(SSticker.mode.ert.len)
+		dat += check_role_table_sec("ERT", SSticker.mode.ert)
+
+	var/datum/browser/popup = new(usr, "secstatus", "<div align='center'>Security Status</div>", 600, 800)
+	popup.set_content(dat)
+	popup.set_window_options("can_close=1;can_minimize=0;can_maximize=0;can_resize=0;titlebar=1;")
+	popup.open()
+	onclose(usr, "secstatus")
+
+/datum/admins/proc/check_role_table_sec(name, list/members, show_objectives=0)
+	var/txt = "<br><table cellspacing=5><tr><td><b>[name]</b></td><td></td></tr>"
+	for(var/datum/mind/mind in members)
+		txt += check_role_table_row_sec(mind.current, show_objectives)
+	txt += "</table>"
+	return txt
+
+/datum/admins/proc/check_role_table_row_sec(mob/mob, show_objectives)
+	var/txt = check_security_line(mob, close = 0)
+	if(show_objectives)
+		txt += {"
+			<td>
+				<a href='byond://?src=[UID()];traitor=[mob.UID()]'>Show Objective</a>
+			</td>
+		"}
 	txt += "</tr>"
 	return txt
