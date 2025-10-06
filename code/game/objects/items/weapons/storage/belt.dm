@@ -1,20 +1,88 @@
 /obj/item/storage/belt
 	name = "belt"
 	desc = "Can hold various things."
+	gender = MALE
 	icon = 'icons/obj/clothing/belts.dmi'
 	icon_state = "utilitybelt"
 	item_state = "utility"
 	lefthand_file = 'icons/mob/inhands/equipment/belt_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/belt_righthand.dmi'
 	slot_flags = ITEM_SLOT_BELT
-	flags = BLOCKS_LIGHT
 	attack_verb = list("хлестнул", "стегнул", "проучил")
 	max_integrity = 300
-	pickup_sound = 'sound/items/handling/backpack_pickup.ogg'
-	equip_sound = 'sound/items/handling/backpack_equip.ogg'
-	drop_sound = 'sound/items/handling/backpack_drop.ogg'
+	pickup_sound = 'sound/items/handling/pickup/toolbelt_pickup.ogg'
+	equip_sound = 'sound/items/handling/equip/toolbelt_equip.ogg'
+	drop_sound = 'sound/items/handling/drop/toolbelt_drop.ogg'
 	var/use_item_overlays = FALSE // Do we have overlays for items held inside the belt?
 
+/obj/item/storage/belt/proc/check_menu(mob/living/user)
+	if(!istype(user))
+		return FALSE
+	if(user.incapacitated() || !user.Adjacent(src))
+		return FALSE
+	return TRUE
+
+/obj/item/storage/belt/proc/collect_radial_menu_choices()
+	var/list/choices = list()
+	for(var/i = contents.len; i >= 1; i--) // Reverse order
+		var/obj/item = contents[i]
+		choices["[item.declent_ru(NOMINATIVE)]"] = image(icon = item.icon, icon_state = item.icon_state)
+	return choices
+
+/obj/item/storage/belt/proc/try_fast_equip_item_from_belt(obj/item/item)
+	if(item == null)
+		return
+	if(!usr.put_in_any_hand_if_possible(item))
+		return
+	to_chat(usr, span_notice("Вы достаете [item.declent_ru(ACCUSATIVE)] с пояса."))
+	balloon_alert(usr, "снято с пояса")
+
+/obj/item/storage/belt/proc/try_fast_unequip_item_to_belt(obj/item/item)
+	if(item == null)
+		return
+	if(!can_be_inserted(item)) // Detail stop message in check proc
+		balloon_alert(usr, "не помещается в пояс")
+		return
+	if(handle_item_insertion(item))
+		balloon_alert(usr, "повесил на пояс")
+
+/obj/item/storage/belt/proc/find_content_by_name(choice)
+	for(var/obj/item in contents)
+		if(item.declent_ru(NOMINATIVE) == choice)
+			return item
+	return null
+
+/obj/item/storage/belt/proc/select_item_by_radial_menu(mob/user, list/choices)
+	var/choice = show_radial_menu(user, src, choices, custom_check = CALLBACK(src, PROC_REF(check_menu), user), anim_speed = 0)
+	if(!check_menu(user))
+		return null
+	return find_content_by_name(choice)
+
+/obj/item/storage/belt/proc/radial_menu(mob/user)
+	if(!check_menu(user))
+		return
+	var/list/choices = collect_radial_menu_choices()
+	if(length(choices) == 0)
+		to_chat(user, span_notice("Ваш пояс пуст."))
+		balloon_alert(user, "пояс пуст!")
+		return
+	if(length(choices) == 1) // Auto extract for single item without radial menu
+		var/obj/item/selected = contents[1]
+		try_fast_equip_item_from_belt(selected)
+		return
+	var/obj/item/selected = select_item_by_radial_menu(user, choices)
+	try_fast_equip_item_from_belt(selected)
+
+/obj/item/storage/belt/attack_self(mob/user = usr)
+	var/obj/item/hand_item = user.get_active_hand()
+	if(hand_item)
+		try_fast_unequip_item_to_belt(hand_item)
+		return
+	radial_menu(user)
+
+/obj/item/storage/belt/item_action_slot_check(slot, mob/user, datum/action/action)
+	if(slot & ITEM_SLOT_BELT)
+		return TRUE
 
 /obj/item/storage/belt/update_overlays()
 	. = ..()
@@ -37,12 +105,8 @@
 /obj/item/storage/belt/utility
 	name = "tool-belt" //Carn: utility belt is nicer, but it bamboozles the text parsing.
 	desc = "Can hold various tools."
-	icon_state = "utilitybelt"
-	item_state = "utility"
-	drop_sound = 'sound/items/handling/toolbelt_drop.ogg'
-	pickup_sound = 'sound/items/handling/toolbelt_pickup.ogg'
 	use_item_overlays = TRUE
-	max_combined_w_class = 15	// 6 `WEIGHT_CLASS_SMALL` items + RCD.
+	max_combined_w_class = 18
 	max_w_class = WEIGHT_CLASS_NORMAL
 	can_hold = list(
 		/obj/item/crowbar,
@@ -107,9 +171,9 @@
 	//much roomier now that we've managed to remove two tools
 
 /obj/item/storage/belt/medical
-	use_to_pickup = 1 //Allow medical belt to pick up medicine
 	name = "medical belt"
-	desc = "Can hold various medical equipment."
+	desc = "Универсальный медицинский пояс, предназначенный для размещения и переноски медицинских приспособлений и лекарственных средств. \
+			Оборудован рядом карманов и креплений для мелких предметов. Используется медицинским персоналом."
 	icon_state = "medicalbelt"
 	item_state = "medical"
 	use_item_overlays = TRUE
@@ -138,17 +202,26 @@
 		/obj/item/handheld_defibrillator,
 		/obj/item/reagent_containers/applicator,
 		/obj/item/radio)
+	use_to_pickup = 1 //Allow medical belt to pick up medicine
+
+/obj/item/storage/belt/medical/get_ru_names()
+	return list(
+		NOMINATIVE = "медицинский пояс",
+		GENITIVE = "медицинского пояса",
+		DATIVE = "медицинскому поясу",
+		ACCUSATIVE = "медицинский пояс",
+		INSTRUMENTAL = "медицинским поясом",
+		PREPOSITIONAL = "медицинском поясе"
+	)
 
 /obj/item/storage/belt/medical/surgery
-	max_w_class = WEIGHT_CLASS_NORMAL
-	max_combined_w_class = 17
-	use_to_pickup = 1
 	name = "surgical belt"
+	desc = "Универсальный хирургический пояс, предназначенный для размещения и переноски хирургических инструментов. \
+			Оборудован нескользящими вставками для удержания инструментов. Используется хирургическим персоналом."
 	icon_state = "surgicalbelt"
 	item_state = "surgical"
-	desc = "Can hold various surgical tools."
+	max_combined_w_class = 17
 	storage_slots = 11
-	use_item_overlays = TRUE
 	can_hold = list(
 		/obj/item/scalpel,
 		/obj/item/hemostat,
@@ -162,6 +235,16 @@
 		/obj/item/radio,
 		/obj/item/clothing/gloves/color/latex,
 		/obj/item/reagent_containers/spray/cleaner)
+
+/obj/item/storage/belt/medical/surgery/get_ru_names()
+	return list(
+		NOMINATIVE = "хирургический пояс",
+		GENITIVE = "хирургического пояса",
+		DATIVE = "хирургическому поясу",
+		ACCUSATIVE = "хирургический пояс",
+		INSTRUMENTAL = "хирургическим поясом",
+		PREPOSITIONAL = "хирургическом поясе"
+	)
 
 /obj/item/storage/belt/medical/surgery/loaded/populate_contents()
 	new /obj/item/scalpel(src)
@@ -237,6 +320,7 @@
 		/obj/item/forensics/sample_kit/powder,
 		/obj/item/forensics/sample_kit,
 		/obj/item/eftpos/sec,
+		/obj/item/stock_parts/cell/specter,
 		/obj/item/radio)
 
 /obj/item/storage/belt/security/sec/populate_contents()
@@ -327,7 +411,7 @@
 	desc = "A syndicate belt designed to be used by boarding parties.  Its style is modelled after the hardsuits they wear."
 	icon_state = "militarybelt"
 	item_state = "military"
-	max_w_class = WEIGHT_CLASS_SMALL
+	max_combined_w_class = 18
 	resistance_flags = FIRE_PROOF
 
 /obj/item/storage/belt/military/sst
@@ -340,12 +424,20 @@
 	icon_state = "utilitybelt"
 	item_state = "utility"
 	use_item_overlays = TRUE // So it will still show tools in it in case sec get lazy and just glance at it.
+	w_class_override = list(
+		/obj/item/crowbar,
+		/obj/item/screwdriver,
+		/obj/item/weldingtool,
+		/obj/item/wirecutters,
+		/obj/item/wrench,
+		/obj/item/multitool
+	)
 
 /obj/item/storage/belt/military/traitor/hacker/populate_contents()
 	new /obj/item/screwdriver(src, "red")
 	new /obj/item/wrench(src)
 	new /obj/item/weldingtool/largetank(src)
-	new /obj/item/crowbar/red(src)
+	new /obj/item/crowbar/small(src)
 	new /obj/item/wirecutters(src, "red")
 	new /obj/item/multitool/ai_detect(src)
 	new /obj/item/stack/cable_coil(src, 30, COLOR_RED)
@@ -412,7 +504,14 @@
 /obj/item/storage/belt/rocketman
 	name = "rocket belt"
 	desc = "A belt for holding rockets."
-	ru_names = list(
+	icon_state = "assaultbelt"
+	item_state = "assault"
+	max_combined_w_class = 30 //just to be sure..
+	max_w_class = WEIGHT_CLASS_NORMAL //Rockets are normal
+	can_hold = /obj/item/ammo_casing/caseless/rocket
+
+/obj/item/storage/belt/rocketman/get_ru_names()
+	return list(
 		NOMINATIVE = "пояс с ракетами",
 		GENITIVE = "пояса с ракетами",
 		DATIVE = "поясу с ракетами",
@@ -420,13 +519,6 @@
 		INSTRUMENTAL = "поясом с ракетами",
 		PREPOSITIONAL = "поясе с ракетами"
 	)
-	gender = MALE
-	icon_state = "assaultbelt"
-	item_state = "assault"
-	storage_slots = 7
-	max_combined_w_class = 30 //just to be sure..
-	max_w_class = WEIGHT_CLASS_NORMAL //Rockets are normal
-	can_hold = /obj/item/ammo_casing/caseless/rocket
 
 /obj/item/storage/belt/rocketman/populate_contents()
 	for(var/I in 1 to 3)
@@ -535,8 +627,8 @@
 
 /obj/item/storage/belt/lazarus
 	name = "trainer's belt"
-	desc = "For the mining master, holds your lazarus capsules."
-	icon_state = "lazarusbelt"
+	desc = "Для шахтёров-мастеров – хранит капсулы Лазаря."
+	icon_state = "lazarusbelt_0"
 	item_state = "lazbelt"
 	w_class = WEIGHT_CLASS_BULKY
 	max_w_class = WEIGHT_CLASS_TINY
@@ -546,12 +638,22 @@
 		/obj/item/mobcapsule,
 		/obj/item/radio)
 
+/obj/item/storage/belt/lazarus/get_ru_names()
+	return list(
+		NOMINATIVE = "пояс тренера",
+		GENITIVE = "пояса тренера",
+		DATIVE = "поясу тренера",
+		ACCUSATIVE = "пояс тренера",
+		INSTRUMENTAL = "поясом тренера",
+		PREPOSITIONAL = "поясе тренера"
+	)
+
 /obj/item/storage/belt/lazarus/Initialize(mapload)
 	. = ..()
 	update_icon(UPDATE_ICON_STATE)
 
 /obj/item/storage/belt/lazarus/update_icon_state()
-	icon_state = "[initial(icon_state)]_[length(contents)]"
+	icon_state = "lazarusbelt_[length(contents)]"
 
 
 /obj/item/storage/belt/lazarus/attackby(obj/item/I, mob/user, params)
@@ -564,7 +666,15 @@
 /obj/item/storage/belt/bandolier
 	name = "bandolier"
 	desc = "Патронташ для хранения патронов к дробовику."
-	ru_names = list(
+	icon_state = "bandolier"
+	item_state = "bandolier"
+	storage_slots = 16
+	max_combined_w_class = 16
+	display_contents_with_number = TRUE
+	can_hold = list(/obj/item/ammo_casing/shotgun)
+
+/obj/item/storage/belt/bandolier/get_ru_names()
+	return list(
 		NOMINATIVE = "патронташ",
 		GENITIVE = "патронташа",
 		DATIVE = "патронташу",
@@ -572,13 +682,6 @@
 		INSTRUMENTAL = "патронташем",
 		PREPOSITIONAL = "патронташе"
 	)
-	gender = MALE
-	icon_state = "bandolier"
-	item_state = "bandolier"
-	storage_slots = 16
-	max_combined_w_class = 16
-	display_contents_with_number = TRUE
-	can_hold = list(/obj/item/ammo_casing/shotgun)
 
 /obj/item/storage/belt/bandolier/Initialize(mapload)
 	. = ..()
@@ -653,7 +756,6 @@
 	icon_state = "fannypack_leather"
 	item_state = "fannypack_leather"
 	storage_slots = 3
-	max_w_class = WEIGHT_CLASS_SMALL
 
 /obj/item/storage/belt/fannypack/black
 	name = "black fannypack"
@@ -731,11 +833,11 @@
 
 	if(length(contents))
 		var/obj/item/I = contents[1]
-		H.visible_message("<span class='notice'>[H] takes [I] out of [src].</span>", "<span class='notice'>You take [I] out of [src].</span>")
+		H.visible_message(span_notice("[H] takes [I] out of [src]."), span_notice("You take [I] out of [src]."))
 		H.put_in_hands(I, ignore_anim = FALSE)
 		update_icon()
 	else
-		to_chat(user, "<span class='warning'>[src] is empty!</span>")
+		to_chat(user, span_warning("[src] is empty!"))
 
 /obj/item/storage/belt/rapier/handle_item_insertion(obj/item/W, prevent_warning)
 	if(!..())
@@ -788,10 +890,17 @@
 	item_state = "holdingbelt"
 	storage_slots = 14
 	w_class = WEIGHT_CLASS_BULKY
-	max_w_class = WEIGHT_CLASS_SMALL
 	max_combined_w_class = 21 // = 14 * 1.5, not 14 * 2.  This is deliberate
 	origin_tech = "bluespace=5;materials=4;engineering=4;plasmatech=5"
 	can_hold = list()
+	w_class_override = list(
+		/obj/item/crowbar,
+		/obj/item/screwdriver,
+		/obj/item/weldingtool,
+		/obj/item/wirecutters,
+		/obj/item/wrench,
+		/obj/item/multitool
+	)
 
 /obj/item/storage/belt/bluespace/owlman
 	name = "Owlman's utility belt"
@@ -801,7 +910,6 @@
 	storage_slots = 6
 	max_w_class = WEIGHT_CLASS_NORMAL
 	max_combined_w_class = 18
-	origin_tech = "bluespace=5;materials=4;engineering=4;plasmatech=5"
 	allow_quick_empty = 1
 	can_hold = list(
 		/obj/item/grenade/smokebomb,
@@ -912,7 +1020,7 @@
 
 /obj/item/storage/belt/mining
 	name = "explorer's webbing"
-	desc = "A versatile chest rig, cherished by miners and hunters alike."
+	desc = "Универсальная нагрудная система, высоко ценимая шахтёрами и охотниками."
 	icon_state = "explorer1"
 	item_state = "explorer1"
 	storage_slots = 6
@@ -959,6 +1067,16 @@
 		/obj/item/stack/marker_beacon,
 		/obj/item/gem)
 
+/obj/item/storage/belt/mining/get_ru_names()
+	return list(
+		NOMINATIVE = "разгрузка исследователя",
+		GENITIVE = "разгрузки исследователя",
+		DATIVE = "разгрузке исследователя",
+		ACCUSATIVE = "разгрузку исследователя",
+		INSTRUMENTAL = "разгрузкой исследователя",
+		PREPOSITIONAL = "разгрузке исследователя"
+	)
+
 /obj/item/storage/belt/mining/vendor/Initialize(mapload)
 	. = ..()
 	new /obj/item/survivalcapsule(src)
@@ -972,7 +1090,7 @@
 
 /obj/item/storage/belt/mining/primitive
 	name = "hunter's belt"
-	desc = "A versatile belt, woven from sinew."
+	desc = "Универсальный пояс, сплетённый из сухожилий."
 	icon_state = "hunter_belt"
 	item_state = "ebelt"
 	use_item_overlays = TRUE
@@ -1006,6 +1124,16 @@
 		/obj/item/hatchet/wooden,
 		/obj/item/cultivator/wooden,
 		)
+
+/obj/item/storage/belt/mining/primitive/get_ru_names()
+	return list(
+		NOMINATIVE = "охотничий пояс",
+		GENITIVE = "охотничьего пояса",
+		DATIVE = "охотничьему поясу",
+		ACCUSATIVE = "охотничий пояс",
+		INSTRUMENTAL = "охотничьим поясом",
+		PREPOSITIONAL = "охотничьем поясе"
+	)
 
 /obj/item/storage/belt/chef
 	name = "culinary tool apron"

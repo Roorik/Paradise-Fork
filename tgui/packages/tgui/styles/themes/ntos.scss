@@ -6,7 +6,7 @@
 @use 'sass:color';
 @use 'sass:meta';
 
-$nanotrasen: #384e68;
+$nanotrasen: hsl(212.5, 30%, 31.4%);
 
 @use '../colors.scss' with (
   $fg-map-keys: (),
@@ -27,7 +27,7 @@ $nanotrasen: #384e68;
   );
   @include meta.load-css(
     '../components/ImageButton.scss',
-    $with: ('color-default': darken($nanotrasen, 15%))
+    $with: ('color-default': color.adjust($nanotrasen, $lightness: -15%))
   );
   @include meta.load-css(
     '../components/ProgressBar.scss',

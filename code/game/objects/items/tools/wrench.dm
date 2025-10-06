@@ -12,23 +12,22 @@
 	force = 5
 	throwforce = 7
 	usesound = 'sound/items/ratchet.ogg'
-	drop_sound = 'sound/items/handling/wrench_drop.ogg'
-	pickup_sound =  'sound/items/handling/wrench_pickup.ogg'
-	w_class = WEIGHT_CLASS_SMALL
+	drop_sound = 'sound/items/handling/drop/wrench_drop.ogg'
+	pickup_sound =  'sound/items/handling/pickup/wrench_pickup.ogg'
 	materials = list(MAT_METAL=150)
 	origin_tech = "materials=1;engineering=1"
 	attack_verb = list("ударил", "огрел")
-	toolspeed = 1
-	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 30)
+	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, RAD = 0, FIRE = 50, ACID = 30)
 	tool_behaviour = TOOL_WRENCH
+	toolbox_radial_menu_compatibility = TRUE
 
 /obj/item/wrench/Initialize(mapload)
 	. = ..()
 	AddElement(/datum/element/falling_hazard, damage = force, hardhat_safety = TRUE, crushes = FALSE, impact_sound = hitsound)
 
 /obj/item/wrench/suicide_act(mob/user)
-	user.visible_message("<span class='suicide'>[user] is beating [user.p_them()]self to death with [src]! It looks like [user.p_theyre()] trying to commit suicide!</span>")
-	playsound(loc, 'sound/weapons/genhit.ogg', 50, 1, -1)
+	user.visible_message(span_suicide("[user] is beating [user.p_them()]self to death with [src]! It looks like [user.p_theyre()] trying to commit suicide!"))
+	playsound(loc, 'sound/weapons/genhit.ogg', 50, TRUE, -1)
 	return BRUTELOSS
 
 /obj/item/wrench/cyborg
@@ -47,12 +46,12 @@
 	name = "alien wrench"
 	desc = "A polarized wrench. It causes anything placed between the jaws to turn."
 	icon = 'icons/obj/abductor.dmi'
-	icon_state = "wrench"
 	item_state = "wrench_alien"
 	belt_icon = "alien_wrench"
 	usesound = 'sound/effects/empulse.ogg'
 	toolspeed = 0.1
 	origin_tech = "materials=5;engineering=5;abductor=3"
+	w_class = WEIGHT_CLASS_SMALL
 
 /obj/item/wrench/power
 	name = "hand drill"
@@ -60,7 +59,7 @@
 	icon_state = "drill_bolt"
 	item_state = "drill"
 	belt_icon = "hand_drill"
-	usesound = 'sound/items/drill_use.ogg'
+	usesound = 'sound/items/impactwrench.ogg' // Sourced from freesfx.co.uk
 	materials = list(MAT_METAL=150,MAT_SILVER=50,MAT_TITANIUM=25)
 	origin_tech = "materials=2;engineering=2" //done for balance reasons, making them high value for research, but harder to get
 	force = 8 //might or might not be too high, subject to change
@@ -69,9 +68,9 @@
 	toolspeed = 0.25
 
 /obj/item/wrench/power/attack_self(mob/user)
-	playsound(get_turf(user),'sound/items/change_drill.ogg', 50, 1)
+	playsound(get_turf(user),'sound/items/change_drill.ogg', 50, TRUE)
 	var/obj/item/wirecutters/power/s_drill = new /obj/item/screwdriver/power
-	to_chat(user, "<span class='notice'>You attach the screwdriver bit to [src].</span>")
+	to_chat(user, span_notice("You attach the screwdriver bit to [src]."))
 	qdel(src)
 	user.put_in_active_hand(s_drill)
 
@@ -88,13 +87,11 @@
 	origin_tech = "materials=1;engineering=1;biotech=3"
 
 /obj/item/wrench/medical/suicide_act(mob/living/user)
-	user.visible_message("<span class='suicide'>[user] is praying to the medical wrench to take [user.p_their()] soul. It looks like [user.p_theyre()] trying to commit suicide!</span>")
-	// TODO Make them glow with the power of the M E D I C A L W R E N C H
-	// during their ascension
+	user.visible_message(span_suicide("[user] is praying to the medical wrench to take [user.p_their()] soul. It looks like [user.p_theyre()] trying to commit suicide!"))
 
 	// Stun stops them from wandering off
 	user.Stun(10 SECONDS)
-	playsound(loc, 'sound/effects/pray.ogg', 50, 1, -1)
+	playsound(loc, 'sound/effects/pray.ogg', 50, TRUE, -1)
 
 	// Let the sound effect finish playing
 	sleep(20)

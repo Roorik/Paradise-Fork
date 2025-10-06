@@ -8,7 +8,11 @@
 
 /datum/event/space_dragon/announce(false_alarm)
 	if(successSpawn || false_alarm)
-		GLOB.command_announcement.Announce("Зафиксирован большой поток органической энергии вблизи станции [station_name()]. Пожалуйста, ожидайте.", "ВНИМАНИЕ: НЕОПОЗНАННЫЕ ФОРМЫ ЖИЗНИ.")
+		GLOB.major_announcement.announce(
+			message = "Зафиксирован большой поток органической энергии вблизи станции [station_name()]. Пожалуйста, ожидайте.",
+			new_title = ANNOUNCE_CCPARANORMAL_RU,
+			new_sound = 'sound/AI/commandreport.ogg'
+		)
 	else
 		log_and_message_admins("Warning: Could not spawn any mobs for event Space Dragon")
 

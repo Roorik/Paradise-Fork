@@ -12,56 +12,56 @@
 
 	light_color = LIGHT_COLOR_CYAN
 
-/obj/machinery/computer/HolodeckControl/attack_ai(var/mob/user as mob)
+/obj/machinery/computer/HolodeckControl/attack_ai(mob/user as mob)
 	return attack_hand(user)
 
 
-/obj/machinery/computer/HolodeckControl/attack_hand(var/mob/user as mob)
+/obj/machinery/computer/HolodeckControl/attack_hand(mob/user as mob)
 	if(..())
 		return 1
 
 	user.set_machine(src)
-	var/dat = {"<!DOCTYPE html><meta charset="UTF-8">"}
+	var/dat = ""
 
-	dat += "<B>Holodeck Control System</B><BR>"
-	dat += "<HR>Current Loaded Programs:<BR>"
+	dat += "<b>Holodeck Control System</b><br>"
+	dat += "<hr>Current Loaded Programs:<br>"
 
-	dat += "<a href='byond://?src=[UID()];emptycourt=1'>((Empty Court)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];boxingcourt=1'>((Boxing Court)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];basketball=1'>((Basketball Court)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];thunderdomecourt=1'>((Thunderdome Court)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];beach=1'>((Beach)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];desert=1'>((Desert)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];space=1'>((Space)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];picnicarea=1'>((Picnic Area)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];snowfield=1'>((Snow Field)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];theatre=1'>((Theatre)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];meetinghall=1'>((Meeting Hall)</font>)</A><BR>"
-	dat += "<a href='byond://?src=[UID()];knightarena=1'>((Knight Arena)</font>)</A><BR>"
-//		dat += "<a href='byond://?src=[UID()];turnoff=1'>((Shutdown System)</font>)</A><BR>"
+	dat += "<a href='byond://?src=[UID()];emptycourt=1'>((Empty Court))</a><br>"
+	dat += "<a href='byond://?src=[UID()];boxingcourt=1'>((Boxing Court))</a><br>"
+	dat += "<a href='byond://?src=[UID()];basketball=1'>((Basketball Court))</br><br>"
+	dat += "<a href='byond://?src=[UID()];thunderdomecourt=1'>((Thunderdome Court))</a><br>"
+	dat += "<a href='byond://?src=[UID()];beach=1'>((Beach))</a><br>"
+	dat += "<a href='byond://?src=[UID()];desert=1'>((Desert))</a><br>"
+	dat += "<a href='byond://?src=[UID()];space=1'>((Space))</a><br>"
+	dat += "<a href='byond://?src=[UID()];picnicarea=1'>((Picnic Area))</a><br>"
+	dat += "<a href='byond://?src=[UID()];snowfield=1'>((Snow Field))</a><br>"
+	dat += "<a href='byond://?src=[UID()];theatre=1'>((Theatre))</a><br>"
+	dat += "<a href='byond://?src=[UID()];meetinghall=1'>((Meeting Hall))</a><br>"
+	dat += "<a href='byond://?src=[UID()];knightarena=1'>((Knight Arena))</a><br>"
+//		dat += "<a href='byond://?src=[UID()];turnoff=1'>((Shutdown System))</a><br>"
 
-	dat += "Please ensure that only holographic weapons are used in the holodeck if a combat simulation has been loaded.<BR>"
+	dat += "Please ensure that only holographic weapons are used in the holodeck if a combat simulation has been loaded.<br>"
 
 	if(emagged)
-/*			dat += "<a href='byond://?src=[UID()];burntest=1'>(<font color=red>Begin Atmospheric Burn Simulation</font>)</A><BR>"
-		dat += "Ensure the holodeck is empty before testing.<BR>"
-		dat += "<BR>"*/
-		dat += "<a href='byond://?src=[UID()];wildlifecarp=1'>(<font color=red>Begin Wildlife Simulation</font>)</A><BR>"
-		dat += "Ensure the holodeck is empty before testing.<BR>"
-		dat += "<BR>"
+/*			dat += "<a href='byond://?src=[UID()];burntest=1'>(<span style='color: red;' color=red>Begin Atmospheric Burn Simulation</span>)</a><br>"
+		dat += "Ensure the holodeck is empty before testing.<br>"
+		dat += "<br>"*/
+		dat += "<a href='byond://?src=[UID()];wildlifecarp=1'>(<font color=red>Begin Wildlife Simulation</font>)</a><br>"
+		dat += "Ensure the holodeck is empty before testing.<br>"
+		dat += "<br>"
 		if(issilicon(user))
-			dat += "<a href='byond://?src=[UID()];AIoverride=1'>(<font color=green>Re-Enable Safety Protocols?</font>)</A><BR>"
-		dat += "Safety Protocols are <font color=red> DISABLED </font><BR>"
+			dat += "<a href='byond://?src=[UID()];AIoverride=1'>(<font color=green>Re-Enable Safety Protocols?</font>)</a><br>"
+		dat += "Safety Protocols are <font color=red> DISABLED </font><br>"
 	else
 		if(issilicon(user))
-			dat += "<a href='byond://?src=[UID()];AIoverride=1'>(<font color=red>Override Safety Protocols?</font>)</A><BR>"
-		dat += "<BR>"
-		dat += "Safety Protocols are <font color=green> ENABLED </font><BR>"
+			dat += "<a href='byond://?src=[UID()];AIoverride=1'>(<font color=red>Override Safety Protocols?</font>)</a><br>"
+		dat += "<br>"
+		dat += "Safety Protocols are <font color=green> ENABLED </font><br>"
 
 	var/datum/browser/popup = new(user, "holodeck_computer", name, 400, 500)
 	popup.set_content(dat)
-	popup.open(0)
-	onclose(user, "computer")
+	popup.open(TRUE)
+	onclose(user, "holodeck_computer")
 	return
 
 /obj/machinery/computer/HolodeckControl/Topic(href, href_list)
@@ -167,15 +167,15 @@
 /obj/machinery/computer/HolodeckControl/emag_act(mob/user)
 	if(!emagged)
 		add_attack_logs(user, src, "emagged")
-		playsound(src.loc, 'sound/effects/sparks4.ogg', 75, 1)
+		playsound(src.loc, 'sound/effects/sparks4.ogg', 75, TRUE)
 		emagged = 1
 		if(user)
 			to_chat(user, span_notice("You vastly increase projector power and override the safety and security protocols."))
 			to_chat(user, "Warning.  Automatic shutoff and derezing protocols have been corrupted.  Please call Nanotrasen maintenance and do not use the simulator.")
 		src.updateUsrDialog()
 
-/obj/machinery/computer/HolodeckControl/New()
-	..()
+/obj/machinery/computer/HolodeckControl/Initialize(mapload)
+	. = ..()
 	linkedholodeck = locate(/area/holodeck/alphadeck)
 	//if(linkedholodeck)
 	//	target = locate(/area/holodeck/source_emptycourt)
@@ -189,11 +189,11 @@
 
 /obj/machinery/computer/HolodeckControl/emp_act(severity)
 	emergencyShutdown()
-	..()
+	return ..()
 
-/obj/machinery/computer/HolodeckControl/ex_act(severity)
+/obj/machinery/computer/HolodeckControl/ex_act(severity, target)
 	emergencyShutdown()
-	..()
+	return ..()
 
 /obj/machinery/computer/HolodeckControl/blob_act(obj/structure/blob/B)
 	emergencyShutdown()
@@ -220,11 +220,11 @@
 
 			for(var/turf/T in linkedholodeck)
 				if(prob(30))
-					do_sparks(2, 1, T)
-				T.ex_act(3)
+					do_sparks(2, TRUE, T)
+				T.ex_act(EXPLODE_LIGHT)
 				T.hotspot_expose(1000,500,1)
 
-/obj/machinery/computer/HolodeckControl/proc/derez(var/obj/obj , var/silent = 1)
+/obj/machinery/computer/HolodeckControl/proc/derez(obj/obj , silent = 1)
 	holographic_items.Remove(obj)
 
 	if(obj == null)
@@ -251,17 +251,6 @@
 	if(toggleOn)
 		var/area/targetsource = locate(/area/holodeck/source_emptycourt)
 		holographic_items = targetsource.copy_contents_to(linkedholodeck)
-
-/*		spawn(30)
-			for(var/obj/effect/landmark/L in linkedholodeck)
-				if(L.name=="Atmospheric Test Start")
-					spawn(20)
-						var/turf/T = get_turf(L)
-						do_sparks(2, 1, T)
-						if(T)
-							T.temperature = 5000
-							T.hotspot_expose(50000,50000,1)*/
-
 		active = 1
 	else
 		for(var/item in holographic_items)
@@ -301,13 +290,6 @@
 
 	spawn(30)
 		for(var/obj/effect/landmark/L in linkedholodeck)
-/*			if(L.name=="Atmospheric Test Start")
-				spawn(20)
-					var/turf/T = get_turf(L)
-					do_sparks(2, 1, T)
-					if(T)
-						T.temperature = 5000
-						T.hotspot_expose(50000,50000,1)*/
 			if(L.name=="Holocarp Spawn")
 				new /mob/living/simple_animal/hostile/carp/holocarp(L.loc)
 
@@ -369,7 +351,6 @@
 
 /obj/structure/table/holotable
 	obj_flags = NODECONSTRUCT
-	canSmoothWith = SMOOTH_GROUP_TABLES
 
 /obj/structure/table/holotable/wood
 	name = "wooden table"
@@ -387,17 +368,12 @@
 	item_chair = null
 
 /obj/item/clothing/gloves/boxing/hologlove
-	name = "boxing gloves"
-	desc = "Because you really needed another excuse to punch your crewmates."
-	icon_state = "boxing"
-	item_state = "boxing"
 
 /obj/structure/holowindow/has_prints()
 	return FALSE
 
 /obj/structure/holowindow
 	name = "reinforced window"
-	icon = 'icons/obj/structures.dmi'
 	icon_state = "rwindow"
 	desc = "A window."
 	density = TRUE
@@ -443,18 +419,17 @@
 	force = 3.0
 	throw_speed = 1
 	throw_range = 5
-	throwforce = 0
 	w_class = WEIGHT_CLASS_SMALL
 	armour_penetration = 50
 	block_chance = 50
 	var/active = 0
 
 /obj/item/holo/esword/green/New()
-	..()
+	. = ..()
 	item_color = "green"
 
 /obj/item/holo/esword/red/New()
-	..()
+	. = ..()
 	item_color = "red"
 
 /obj/item/holo/esword/hit_reaction(mob/living/carbon/human/owner, atom/movable/hitby, attack_text = "the attack", final_block_chance = 0, damage = 0, attack_type = ITEM_ATTACK)
@@ -463,7 +438,7 @@
 	return 0
 
 /obj/item/holo/esword/New()
-	..()
+	. = ..()
 	item_color = pick("red","blue","green","purple")
 
 
@@ -478,18 +453,16 @@
 		force = 30
 		hitsound = "sound/weapons/blade1.ogg"
 		w_class = WEIGHT_CLASS_BULKY
-		playsound(user, 'sound/weapons/saberon.ogg', 20, 1)
+		playsound(user, 'sound/weapons/saberon.ogg', 20, TRUE)
 		to_chat(user, span_notice("[src] is now active."))
 	else
 		force = 3
 		hitsound = "swing_hit"
 		w_class = WEIGHT_CLASS_SMALL
-		playsound(user, 'sound/weapons/saberoff.ogg', 20, 1)
+		playsound(user, 'sound/weapons/saberoff.ogg', 20, TRUE)
 		to_chat(user, span_notice("[src] can now be concealed."))
-	if(ishuman(user))
-		var/mob/living/carbon/human/H = user
-		H.update_inv_l_hand()
-		H.update_inv_r_hand()
+
+	user.update_held_items()
 	add_fingerprint(user)
 	return
 
@@ -552,10 +525,10 @@
 
 	if((mover.throwing && mover.throwing.thrower && HAS_TRAIT(mover.throwing.thrower, TRAIT_BADASS)) || prob(50))
 		mover.forceMove(get_turf(src))
-		visible_message(span_notice("Swish! [mover] lands in [src]."))
+		visible_message(span_notice("Вжух! [mover.declent_ru(NOMINATIVE)] приземляется в [declent_ru(ACCUSATIVE)]."))
 
 	else
-		visible_message(span_alert("[mover] bounces off of [src]'s rim!"))
+		visible_message(span_alert("[mover.declent_ru(NOMINATIVE)] отскакивает от края [declent_ru(GENITIVE)]!"))
 
 	return FALSE
 
@@ -563,6 +536,33 @@
 /obj/structure/holohoop/has_prints()
 	return FALSE
 
+
+/obj/structure/holohoop/CanAllowThrough(atom/movable/mover, border_dir)
+	. = ..()
+	if(!isitem(mover) || isprojectile(mover) || !mover.throwing || mover.pass_flags == PASSEVERYTHING)
+		return
+
+	if(prob(50))
+		visible_message(span_alert("[mover.declent_ru(NOMINATIVE)] отскакивает от края [src.declent_ru(GENITIVE)]!"))
+		return FALSE
+
+	mover.forceMove(loc)
+	visible_message(span_notice("Вжух! [mover.declent_ru(NOMINATIVE)] приземляется в [declent_ru(ACCUSATIVE)]."))
+	return FALSE
+
+
+/obj/structure/holohoop/hitby(atom/movable/AM, skipcatch, hitpush, blocked, datum/thrownthing/throwingdatum)
+	if(!isitem(AM) || isprojectile(AM))
+		return ..()
+
+	if(prob(50) && (!throwingdatum || !throwingdatum.thrower || !HAS_TRAIT(throwingdatum.thrower, TRAIT_BADASS)))
+		visible_message(span_danger("[AM.declent_ru(NOMINATIVE)] отскакивает от края [src.declent_ru(GENITIVE)]!"))
+		return ..()
+
+	AM.forceMove(get_turf(src))
+	visible_message(span_warning("Вжух! [AM.declent_ru(NOMINATIVE)] приземляется в [declent_ru(ACCUSATIVE)]."))
+	SEND_SIGNAL(src, COMSIG_ATOM_HITBY, AM, skipcatch, hitpush, blocked, throwingdatum)
+	return
 
 /obj/machinery/readybutton
 	name = "Ready Declaration Device"
@@ -574,7 +574,6 @@
 	var/eventstarted = 0
 
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 2
 	active_power_usage = 6
 	power_channel = ENVIRON

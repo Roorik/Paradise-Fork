@@ -24,7 +24,7 @@ GLOBAL_LIST_EMPTY(world_uplinks)
 	/// Allows or blocks ordering of certain items. Specified on initialization by different uplink types.
 	var/uplink_type = UPLINK_TYPE_TRAITOR
 	/// If set, the uplink will show the option to become a contractor through this variable.
-	var/datum/antagonist/contractor/contractor
+	var/datum/antagonist/traitor/traitor
 	/// Whether the uplink is jammed and cannot be used to order items.
 	var/is_jammed = FALSE
 
@@ -39,6 +39,7 @@ GLOBAL_LIST_EMPTY(world_uplinks)
 
 /obj/item/uplink/Destroy()
 	GLOB.world_uplinks -= src
+	traitor = null
 	return ..()
 
 
@@ -46,13 +47,13 @@ GLOBAL_LIST_EMPTY(world_uplinks)
 	return loc
 
 
- /**
-  * Build the item lists for use with the UI
-  * Generates a list of items for use in the UI, based on job and other parameters.
-  *
-  * Arguments:
-  * * user - User to check.
-  */
+/**
+ * Build the item lists for use with the UI
+ * Generates a list of items for use in the UI, based on job and other parameters.
+ *
+ * Arguments:
+ * * user - User to check.
+ */
 /obj/item/uplink/proc/generate_item_lists(mob/user)
 	if(!job)
 		job = user.mind?.assigned_role
@@ -78,7 +79,8 @@ GLOBAL_LIST_EMPTY(world_uplinks)
 												"cost" = uplink_item.cost,
 												"hijack_only" = uplink_item.hijack_only,
 												"obj_path" = ref(uplink_item),
-												"refundable" = uplink_item.refundable
+												"refundable" = uplink_item.refundable,
+												"uid" = uplink_item.UID()
 												)
 											)
 
@@ -169,18 +171,16 @@ GLOBAL_LIST_EMPTY(world_uplinks)
 	// If we are here, we didnt refund
 	to_chat(user, span_warning("[hold_item] не подлежит возврату."))
 
-
-// HIDDEN UPLINK - Can be stored in anything but the host item has to have a trigger for it.
-/* How to create an uplink in 3 easy steps!
-
- 1. All obj/item 's have a hidden_uplink var. By default it's null. Give the item one with "new(src)", it must be in it's contents. Feel free to add "uses".
-
- 2. Code in the triggers. Use check_trigger for this, I recommend closing the item's menu with "usr << browse(null, "window=windowname") if it returns true.
- The var/value is the value that will be compared with the var/target. If they are equal it will activate the menu.
-
- 3. If you want the menu to stay until the users locks his uplink, add an active_uplink_check(mob/user) in your interact/attack_hand proc.
- Then check if it's true, if true return. This will stop the normal menu appearing and will instead show the uplink menu.
-*/
+/**
+ * HIDDEN UPLINK - Can be stored in anything but the host item has to have a trigger for it.
+ * How to create an uplink in 3 easy steps!
+ * 1. All obj/item 's have a hidden_uplink var. By default it's null. Give the item one with "new(src)", it must be in it's contents. Feel free to add "uses".
+ * 2. Code in the triggers. Use check_trigger for this, I recommend closing the item's menu with "usr << browse(null, "window=windowname") if it returns true.
+ * The var/value is the value that will be compared with the var/target. If they are equal it will activate the menu.
+ *
+ * 3. If you want the menu to stay until the users locks his uplink, add an active_uplink_check(mob/user) in your interact/attack_hand proc.
+ * Then check if it's true, if true return. This will stop the normal menu appearing and will instead show the uplink menu.
+ */
 /obj/item/uplink/hidden
 	name = "hidden uplink"
 	desc = "There is something wrong if you're examining this."
@@ -257,17 +257,20 @@ GLOBAL_LIST_EMPTY(world_uplinks)
 	data["cart_price"] = calculate_cart_tc()
 	data["lucky_numbers"] = lucky_numbers
 
-	if(contractor)
-		var/list/contractor_data = list(
-			available = uses >= contractor.tc_cost && world.time < contractor.offer_deadline && \
-			(SSticker?.mode?.contractor_accepted< CONTRACTOR_MAX_ACCEPTED || contractor.is_admin_forced),
-			affordable = uses >= contractor.tc_cost,
-			accepted = !isnull(contractor.contractor_uplink),
-			time_left = contractor.offer_deadline - world.time,
+	if(!traitor?.contractor_pending)
+		return data
+
+	var/datum/contractor_pending/pending = traitor.contractor_pending
+	var/list/contractor_data = list(
+		available = uses >= CONTRACTOR_COST && world.time < pending.offer_deadline && \
+		(SSticker?.mode?.contractor_accepted< CONTRACTOR_MAX_ACCEPTED || pending.is_admin_forced),
+		affordable = uses >= CONTRACTOR_COST,
+		accepted = traitor.owner.has_antag_datum(/datum/antagonist/contractor),
+		time_left = pending.offer_deadline - world.time,
 			available_offers = CONTRACTOR_MAX_ACCEPTED - SSticker?.mode?.contractor_accepted,
-			is_admin_forced = contractor.is_admin_forced,
-		)
-		data["contractor"] = contractor_data
+		is_admin_forced = pending.is_admin_forced,
+	)
+	data["contractor"] = contractor_data
 
 	return data
 
@@ -444,12 +447,12 @@ GLOBAL_LIST_EMPTY(world_uplinks)
 
 
 /**
-  * Called in tgui_act() to process modal actions
-  *
-  * Arguments:
-  * * action - The action passed by tgui
-  * * params - The params passed by tgui
-  */
+ * Called in tgui_act() to process modal actions
+ *
+ * Arguments:
+ * * action - The action passed by tgui
+ * * params - The params passed by tgui
+ */
 /obj/item/uplink/hidden/proc/tgui_act_modal(action, list/params)
 	. = TRUE
 	var/id = params["id"]
@@ -461,8 +464,8 @@ GLOBAL_LIST_EMPTY(world_uplinks)
 		if(UI_MODAL_ANSWER)
 			if(id == "become_contractor")
 				if(text2num(params["answer"]))
-					var/datum/antagonist/contractor/C = usr?.mind?.has_antag_datum(/datum/antagonist/contractor)
-					C?.become_contractor(usr, src)
+					var/datum/antagonist/traitor/traitor = usr?.mind?.has_antag_datum(/datum/antagonist/traitor)
+					traitor?.contractor_pending?.become_contractor(usr, src)
 				return
 	return FALSE
 
@@ -506,29 +509,25 @@ GLOBAL_LIST_EMPTY(world_uplinks)
 	return 100
 
 
-/obj/item/radio/uplink/nuclear/Initialize(mapload)
-	. = ..()
-	GLOB.nuclear_uplink_list += src
-
-
-/obj/item/radio/uplink/nuclear/Destroy()
-	GLOB.nuclear_uplink_list -= src
-	return ..()
-
-
 /obj/item/radio/uplink/nuclear/choose_uplink()
 	return UPLINK_TYPE_NUCLEAR
 
 
+/obj/item/radio/uplink/nuclear/loneop/get_uses_amount()
+	return ..() + count_nuke_uses()
+
 /obj/item/radio/uplink/sst/choose_uplink()
 	return UPLINK_TYPE_SST
 
-/obj/item/radio/uplink/sst/get_uses_amount()
+/proc/count_nuke_uses()
 	var/danger = GLOB.player_list.len
 	var/temp_danger = (danger + 9)
 	danger = temp_danger - temp_danger % 10
 	danger *= NUKESCALINGMODIFIER
-	return ..() + round(danger/ NUKERS_COUNT) + danger % NUKERS_COUNT
+	return round(danger/ NUKERS_COUNT) + danger % NUKERS_COUNT
+
+/obj/item/radio/uplink/sst/get_uses_amount()
+	return ..() + count_nuke_uses()
 
 
 /obj/item/radio/uplink/admin/choose_uplink()

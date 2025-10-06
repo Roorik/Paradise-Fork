@@ -3,29 +3,21 @@
 #define SCREEN_PAGE_LAST 2
 
 /**
-  * # Newspaper
-  *
-  * A newspaper displaying the stories of all channels contained within.
-  */
+ * # Newspaper
+ *
+ * A newspaper displaying the stories of all channels contained within.
+ */
 /obj/item/newspaper
 	name = "newspaper"
-	desc = "Выпуск газеты \"Грифон\", распространяемой на объектах НаноТрейзен."
-	ru_names = list(
-        NOMINATIVE = "газета",
-        GENITIVE = "газеты",
-        DATIVE = "газете",
-        ACCUSATIVE = "газету",
-        INSTRUMENTAL = "газетой",
-        PREPOSITIONAL = "газете"
-	)
+	desc = "Выпуск газеты \"Грифон\", распространяемой на объектах Нанотрейзен."
 	gender = FEMALE
 	icon = 'icons/obj/bureaucracy.dmi'
 	icon_state = "newspaper"
 	item_state = "newspaper"
 	w_class = WEIGHT_CLASS_SMALL
 	attack_verb = list("стукнул")
-	drop_sound = 'sound/items/handling/paper_drop.ogg'
-	pickup_sound =  'sound/items/handling/paper_pickup.ogg'
+	drop_sound = 'sound/items/handling/drop/paper_drop.ogg'
+	pickup_sound =  'sound/items/handling/pickup/paper_pickup.ogg'
 
 	///The page in the newspaper currently being read. 0 is the title screen while the last is the security screen.
 	var/current_page = 1
@@ -41,7 +33,8 @@
 	var/list/stories = list()
 
 	/// Possible advertising post
-	var/list/adsList = list("Wetskrell.nt — лучший сайт для проведения мужского досуга! Только здесь вы найдёте по настоящему эксклюзивный контент!",
+	var/list/adsList = list(
+		"Wetskrell.nt — лучший сайт для проведения мужского досуга! Только здесь вы найдёте по настоящему эксклюзивный контент!",
 		"На Wetskrell.nt стартовала акция — 3 месяца подписки по цене двух! Только для настоящих ценителей культуры!",
 		"Онлайн Казино МегаСтавка: Мы не чешем колоду, гарантируем честную раздачу! Наши колоды заряжены не в киосках, как у конкурентов!",
 		"Космический бар \"Гравитация\": Лучшие коктейли в системе Тау Кита! Приходите и попробуйте наш фирменный \"Блюспейс Бум\"!",
@@ -56,7 +49,19 @@
 		"Скучаете на смене? Закажите пиццу с плазмой от \"Пицца-Экспресс\"! Доставка в любую точку станции за 15 минут!",
 		"Ресторан \"Звёздный Вкус\": Блюда, которые вы никогда не пробовали! И, возможно, никогда не захотите попробовать снова.",
 		"Клуб \"Нулевая Гравитация\": Танцуйте до тех пор, пока не упадёте! Или пока вас не выбросит за борт.",
-		"Офицеры дуреют от этой кожуры! Самые скользкие кожурки во всей система Тау Кита...")
+		"Офицеры дуреют от этой кожуры! Самые скользкие кожурки во всей система Тау Кита..."
+	)
+
+/obj/item/newspaper/get_ru_names()
+	return list(
+		NOMINATIVE = "газета",
+		GENITIVE = "газеты",
+		DATIVE = "газете",
+		ACCUSATIVE = "газету",
+		INSTRUMENTAL = "газетой",
+		PREPOSITIONAL = "газете"
+	)
+
 
 /obj/item/newspaper/Initialize(mapload)
 	. = ..()
@@ -123,7 +128,7 @@
 		else
 			return TRUE
 	SStgui.update_uis(src)
-	playsound(loc, "pageturn", 50, TRUE)
+	playsound(loc, SFX_PAGE_TURN, 50, TRUE)
 	return TRUE
 
 /obj/item/newspaper/ui_data(mob/user)
@@ -178,12 +183,12 @@
 							span_notice("Вы [rolled ? "с" : "раз"]ворачиваете [declent_ru(ACCUSATIVE)]."))
 	name = "[rolled ? "rolled" : ""] [initial(name)]"
 	ru_names = list(
-        NOMINATIVE = "[rolled ? "свёрнутая " : ""]газета",
-        GENITIVE = "[rolled ? "свёрнутой " : ""]газеты",
-        DATIVE = "[rolled ? "свёрнутой " : ""]газете",
-        ACCUSATIVE = "[rolled ? "свёрнутую" : ""]газету",
-        INSTRUMENTAL = "[rolled ? "свёрнутой " : ""]газетой",
-        PREPOSITIONAL = "[rolled ? "свёрнутой " : ""]газете"
+		NOMINATIVE = "[rolled ? "свёрнутая " : ""]газета",
+		GENITIVE = "[rolled ? "свёрнутой " : ""]газеты",
+		DATIVE = "[rolled ? "свёрнутой " : ""]газете",
+		ACCUSATIVE = "[rolled ? "свёрнутую" : ""]газету",
+		INSTRUMENTAL = "[rolled ? "свёрнутой " : ""]газетой",
+		PREPOSITIONAL = "[rolled ? "свёрнутой " : ""]газете"
 	)
 	return CLICK_ACTION_SUCCESS
 

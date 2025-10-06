@@ -21,11 +21,10 @@ Bonus
 
 /datum/symptom/vomit
 
-	name = "Vomiting"
+	name = "Рвота"
 	id = "vomit"
 	stealth = -2
 	resistance = -1
-	stage_speed = 0
 	transmittable = 1
 	level = 3
 	severity = 4
@@ -36,7 +35,7 @@ Bonus
 		var/mob/living/M = A.affected_mob
 		switch(A.stage)
 			if(1, 2, 3, 4)
-				to_chat(M,  span_warning(pick("You feel nauseous.", "You feel like you're going to throw up!")))
+				to_chat(M, span_warning(pick("Вас тошнит.", "Вам кажется, что вас сейчас вырвет!")))
 			else
 				Vomit(M)
 
@@ -67,12 +66,9 @@ Bonus
 
 /datum/symptom/vomit/blood
 
-	name = "Blood Vomiting"
+	name = "Рвота кровью"
 	id = "vomitblood"
-	stealth = -2
-	resistance = -1
 	stage_speed = -1
-	transmittable = 1
 	level = 4
 	severity = 5
 
@@ -100,9 +96,8 @@ Bonus
 
 /datum/symptom/vomit/projectile
 
-	name = "Projectile Vomiting"
+	name = "Метание рвоты"
 	id = "vomitprojectile"
-	stealth = -2
 	level = 4
 
 /datum/symptom/vomit/projectile/Vomit(mob/living/carbon/M)

@@ -7,7 +7,6 @@ LINEN BINS
 /obj/item/bedsheet
 	name = "bedsheet"
 	desc = "A surprisingly soft linen bedsheet."
-	icon = 'icons/obj/items.dmi'
 	icon_state = "sheet"
 	item_state = "sheet"
 	item_flags = NO_PIXEL_RANDOM_DROP
@@ -19,8 +18,8 @@ LINEN BINS
 	item_color = "white"
 	resistance_flags = FLAMMABLE
 	slot_flags = ITEM_SLOT_NECK
-	drop_sound = 'sound/items/handling/cloth_drop.ogg'
-	pickup_sound =  'sound/items/handling/cloth_pickup.ogg'
+	drop_sound = 'sound/items/handling/drop/cloth_drop.ogg'
+	pickup_sound =  'sound/items/handling/pickup/cloth_pickup.ogg'
 	dying_key = DYE_REGISTRY_BEDSHEET
 	dog_fashion = /datum/dog_fashion/head/ghost
 	var/list/dream_messages = list("white")
@@ -86,12 +85,22 @@ LINEN BINS
 	nightmare_messages = list("Grey blood")
 
 /obj/item/bedsheet/patriot
-	name = "patriotic bedsheet"
-	desc = "You've never felt more free than when sleeping on this."
-	icon_state = "sheetUSA"
-	item_color = "sheetUSA"
-	dream_messages = list("America", "freedom", "fireworks", "bald eagles")
-	nightmare_messages = list("communism")
+	name = "Zaza ambassador"
+	desc = "Вы явно владеете Зазой."
+	icon_state = "sheetzaza"
+	item_color = "sheetzaza"
+	dream_messages = list("Зазе", "качалке", "свободе")
+	nightmare_messages = list("тюрьме", "наручниках")
+
+/obj/item/bedsheet/patriot/get_ru_names()
+	return list(
+		NOMINATIVE = "амбассадор Заза",
+		GENITIVE = "амбассадора Заза",
+		DATIVE = "амбассадору Зазе",
+		ACCUSATIVE = "амбассадора Зазу",
+		INSTRUMENTAL = "амбассадором Зазой",
+		PREPOSITIONAL = "амбассадоре Зазе"
+	)
 
 /obj/item/bedsheet/rainbow
 	name = "rainbow bedsheet"
@@ -249,7 +258,6 @@ LINEN BINS
 /obj/structure/bedsheetbin
 	name = "linen bin"
 	desc = "A linen bin. It looks rather cosy."
-	icon = 'icons/obj/structures.dmi'
 	icon_state = "linenbin-full"
 	anchored = TRUE
 	resistance_flags = FLAMMABLE
@@ -262,11 +270,11 @@ LINEN BINS
 /obj/structure/bedsheetbin/examine(mob/user)
 	. = ..()
 	if(amount < 1)
-		. += "<span class='notice'>There are no bed sheets in the bin.</span>"
+		. += span_notice("There are no bed sheets in the bin.")
 	else if(amount == 1)
-		. += "<span class='notice'>There is one bed sheet in the bin.</span>"
+		. += span_notice("There is one bed sheet in the bin.")
 	else
-		. += "<span class='notice'>There are [amount] bed sheets in the bin.</span>"
+		. += span_notice("There are [amount] bed sheets in the bin.")
 
 /obj/structure/bedsheetbin/update_icon_state()
 	switch(amount)
@@ -326,11 +334,11 @@ LINEN BINS
 
 		B.forceMove_turf()
 		user.put_in_hands(B, ignore_anim = FALSE)
-		to_chat(user, "<span class='notice'>You take [B] out of [src].</span>")
+		to_chat(user, span_notice("You take [B] out of [src]."))
 
 		if(hidden)
 			hidden.forceMove_turf()
-			to_chat(user, "<span class='notice'>[hidden] falls out of [B]!</span>")
+			to_chat(user, span_notice("[hidden] falls out of [B]!"))
 			hidden = null
 
 
@@ -350,7 +358,7 @@ LINEN BINS
 			B = new /obj/item/bedsheet(loc)
 
 		B.loc = loc
-		to_chat(user, "<span class='notice'>You telekinetically remove [B] from [src].</span>")
+		to_chat(user, span_notice("You telekinetically remove [B] from [src]."))
 		update_icon(UPDATE_ICON_STATE)
 
 		if(hidden)

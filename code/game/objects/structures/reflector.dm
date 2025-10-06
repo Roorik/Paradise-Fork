@@ -3,11 +3,8 @@
 	icon = 'icons/obj/stock_parts.dmi'
 	icon_state = "box_0"
 	desc = "A frame to create a reflector.\n<span class='notice'>Use <b>5</b> sheets of <b>glass</b> to create a 1 way reflector.\nUse <b>10</b> sheets of <b>reinforced glass</b> to create a 2 way reflector.\nUse <b>1 diamond</b> to create a reflector cube.</span>"
-	anchored = FALSE
 	density = TRUE
-	layer = 3
 	var/finished = FALSE
-
 
 /obj/structure/reflector/bullet_act(obj/projectile/P)
 	var/turf/reflector_turf = get_turf(src)
@@ -18,7 +15,7 @@
 	if(new_dir)
 		reflect_turf = get_step(reflect_turf, new_dir)
 	else
-		visible_message(span_notice("[src] is hit by [P]!"), projectile_message = TRUE)
+		visible_message(span_notice("[capitalize(declent_ru(NOMINATIVE))] поражён[genderize_ru(gender,"","а","о","ы")] [P.declent_ru(INSTRUMENTAL)]!"), projectile_message = TRUE)
 		new_dir = 0
 		return ..() //Hits as normal, explodes or emps or whatever
 
@@ -96,7 +93,7 @@
 	TOOL_ATTEMPT_DISMANTLE_MESSAGE
 	if(!I.use_tool(src, user, 80, volume = I.tool_volume))
 		return
-	playsound(user, 'sound/items/Ratchet.ogg', 50, 1)
+	playsound(user, 'sound/items/Ratchet.ogg', 50, TRUE)
 	TOOL_DISMANTLE_SUCCESS_MESSAGE
 	new /obj/item/stack/sheet/metal(src.loc, 5)
 	qdel(src)
@@ -123,15 +120,15 @@
 
 
 /obj/structure/reflector/verb/rotate()
-	set name = "Rotate"
-	set category = "Object"
+	set name = "Повернуть"
+	set category = STATPANEL_OBJECT
 	set src in oview(1)
 
 	if(usr.incapacitated() || HAS_TRAIT(usr, TRAIT_HANDS_BLOCKED))
-		to_chat(usr, "<span class='warning'>You can't do that right now!</span>")
+		to_chat(usr, span_warning("You can't do that right now!"))
 		return FALSE
 	if(anchored)
-		to_chat(usr, "<span class='warning'>It is fastened to the floor!</span>")
+		to_chat(usr, span_warning("It is fastened to the floor!"))
 		return FALSE
 	setDir(turn(dir, 270))
 	return TRUE

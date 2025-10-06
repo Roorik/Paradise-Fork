@@ -3,8 +3,6 @@
 	desc = "Watch your step, partner."
 	icon = 'icons/obj/pit.dmi'
 	icon_state = "pit1"
-	blend_mode = BLEND_DEFAULT
-	density = FALSE
 	anchored = TRUE
 	armor = list(melee = 50, bullet = 100, laser = 100, energy = 50, bomb = 50, bio = 50, rad = 50, fire = 50, acid = 50)
 	layer = 2.9
@@ -16,7 +14,7 @@
 	return
 
 /obj/structure/pit/AllowDrop()
-    return TRUE
+	return TRUE
 
 
 /obj/structure/pit/attackby(obj/item/I, mob/user, params)
@@ -118,7 +116,7 @@
 				M.update_tint()
 	update_icon(UPDATE_ICON_STATE)
 
-/obj/structure/pit/proc/close(var/user)
+/obj/structure/pit/proc/close(user)
 	name = "mound"
 	desc = "Some things are better left buried."
 	open = FALSE
@@ -152,24 +150,24 @@
 		return
 
 	escapee.changeNext_click(CLICK_CD_CLICK_ABILITY)
-	to_chat(escapee, "<span class='warning'>You start digging your way out of \the [src] (this will take about [breakout_time] minute\s)</span>")
-	visible_message("<span class='danger'>Something is scratching its way out of \the [src]!</span>")
+	to_chat(escapee, span_warning("You start digging your way out of \the [src] (this will take about [breakout_time] minute\s)"))
+	visible_message(span_danger("Something is scratching its way out of \the [src]!"))
 
 	for(var/i in 1 to (6*breakout_time * 2)) //minutes * 6 * 5seconds * 2
-		playsound(src.loc, 'sound/effects/squelch1.ogg', 100, 1)
+		playsound(src.loc, 'sound/effects/squelch1.ogg', 100, TRUE)
 
 		if(!do_after(escapee, 5 SECONDS))
-			to_chat(escapee, "<span class='warning'>You have stopped digging.</span>")
+			to_chat(escapee, span_warning("You have stopped digging."))
 			return
 		if(open)
 			return
 
 		if(i == 6*breakout_time)
-			to_chat(escapee, "<span class='warning'>Halfway there...</span>")
+			to_chat(escapee, span_warning("Halfway there..."))
 
-	to_chat(escapee, "<span class='warning'>You successfuly dig yourself out!</span>")
-	visible_message("<span class='danger'>\the [escapee] emerges from \the [src]!</span>")
-	playsound(src.loc, 'sound/effects/squelch1.ogg', 100, 1)
+	to_chat(escapee, span_warning("You successfuly dig yourself out!"))
+	visible_message(span_danger("\the [escapee] emerges from \the [src]!"))
+	playsound(src.loc, 'sound/effects/squelch1.ogg', 100, TRUE)
 	open()
 
 /obj/structure/pit/Destroy()
@@ -194,7 +192,6 @@
 //spoooky
 /obj/structure/pit/closed/grave
 	name = "grave"
-	icon_state = "pit0"
 
 /obj/structure/pit/closed/grave/Initialize(mapload)
 	. = ..()

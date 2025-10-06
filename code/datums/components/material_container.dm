@@ -37,6 +37,8 @@
 	precondition = _precondition
 	after_insert = _after_insert
 
+	RegisterSignal(parent, COMSIG_MATERIAL_CONTAINER_ON_INSERT_STACK, PROC_REF(on_insert_stack_signal))
+
 	RegisterSignal(parent, COMSIG_PARENT_ATTACKBY, PROC_REF(OnAttackBy))
 	RegisterSignal(parent, COMSIG_PARENT_EXAMINE, PROC_REF(OnExamine))
 
@@ -49,13 +51,20 @@
 			var/mat_path = possible_mats[id]
 			materials[id] = new mat_path()
 
+/// Signal handler for stack insertion, returns container insertion flags.
+/datum/component/material_container/proc/on_insert_stack_signal(datum/source, obj/item/stack/stack, amt)
+	SIGNAL_HANDLER
+	if(insert_stack(stack, amt))
+		return CONTAINER_INSERT_SUCCESS
+	return CONTAINER_INSERT_FAILED
+
 /datum/component/material_container/proc/OnExamine(datum/source, mob/user, list/examine_list)
 	if(show_on_examine)
 		for(var/I in materials)
 			var/datum/material/M = materials[I]
 			var/amt = amount(M.id)
 			if(amt)
-				examine_list += "<span class='notice'>It has [amt] units of [lowertext(M.name)] stored.</span>"
+				examine_list += span_notice("It has [amt] units of [lowertext(M.name)] stored.")
 
 /datum/component/material_container/proc/OnAttackBy(datum/source, obj/item/I, mob/living/user)
 	var/list/tc = allowed_typecache
@@ -66,7 +75,7 @@
 	if(I.item_flags & ABSTRACT)
 		return
 	if((I.item_flags & NO_MAT_REDEMPTION) || (I.flags & HOLOGRAM) || (tc && !is_type_in_typecache(I, tc)))
-		to_chat(user, "<span class='warning'>[parent] won't accept [I]!</span>")
+		to_chat(user, span_warning("[parent] won't accept [I]!"))
 		return
 	. = COMPONENT_CANCEL_ATTACK_CHAIN|COMPONENT_NO_AFTERATTACK
 	var/datum/callback/pc = precondition
@@ -74,10 +83,10 @@
 		return
 	var/material_amount = get_item_material_amount(I)
 	if(!material_amount)
-		to_chat(user, "<span class='warning'>[I] does not contain sufficient amounts of metal or glass to be accepted by [parent].</span>")
+		to_chat(user, span_warning("[I] does not contain sufficient amounts of metal or glass to be accepted by [parent]."))
 		return
 	if(!has_space(material_amount))
-		to_chat(user, "<span class='warning'>[parent] is full. Please remove metal or glass from [parent] in order to insert more.</span>")
+		to_chat(user, span_warning("[parent] is full. Please remove metal or glass from [parent] in order to insert more."))
 		return
 	user_insert(I, user)
 
@@ -87,24 +96,22 @@
 	if(isstack(I) && precise_insertion)
 		var/atom/current_parent = parent
 		var/obj/item/stack/S = I
-		requested_amount = tgui_input_number(user, "How much do you want to insert?", "Inserting [S.singular_name]s", max_value = S.amount)
-		if(isnull(requested_amount) || (requested_amount <= 0))
-			return
+		requested_amount = S.amount
 		if(QDELETED(I) || QDELETED(user) || QDELETED(src) || parent != current_parent || user.incapacitated() || !in_range(current_parent, user) || user.l_hand != I && user.r_hand != I)
 			return
 	if(!user.drop_transfer_item_to_loc(I, parent))
-		to_chat(user, "<span class='warning'>[I] is stuck to you and cannot be placed into [parent].</span>")
+		to_chat(user, span_warning("[I] is stuck to you and cannot be placed into [parent]."))
 		return
 	var/inserted = insert_item(I, stack_amt = requested_amount)
 	if(inserted)
 		if(isstack(I))
 			var/obj/item/stack/S = I
-			to_chat(user, "<span class='notice'>You insert [inserted] [S.singular_name][inserted>1 ? "s" : ""] into [parent].</span>")
+			to_chat(user, span_notice("You insert [inserted] [S.singular_name][inserted>1 ? "s" : ""] into [parent]."))
 			if(!QDELETED(I) && !user.put_in_hands(I))
 				stack_trace("Warning: User could not put object back in hand during material container insertion, line [__LINE__]! This can lead to issues.")
 				I.forceMove(user.drop_location())
 		else
-			to_chat(user, "<span class='notice'>You insert a material total of [inserted] into [parent].</span>")
+			to_chat(user, span_notice("You insert a material total of [inserted] into [parent]."))
 			qdel(I)
 		if(after_insert)
 			after_insert.Invoke(I.type, last_inserted_id, inserted)
@@ -207,7 +214,7 @@
 			return amt
 	return FALSE
 
-/datum/component/material_container/proc/transer_amt_to(var/datum/component/material_container/T, amt, id)
+/datum/component/material_container/proc/transer_amt_to(datum/component/material_container/T, amt, id)
 	if((amt==0)||(!T)||(!id))
 		return FALSE
 	if(amt<0)

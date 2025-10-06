@@ -1,13 +1,18 @@
 /obj/item/gun/projectile/revolver
-	name = "\improper .357 revolver"
+	name = ".357 revolver"
 	desc = "A suspicious revolver. Uses .357 ammo."
 	icon_state = "revolver"
 	mag_type = /obj/item/ammo_box/magazine/internal/cylinder
 	origin_tech = "combat=3;materials=2"
 	fire_sound = 'sound/weapons/gunshots/1rev.ogg'
+	accuracy = GUN_ACCURACY_PISTOL
+	attachable_allowed = GUN_MODULE_CLASS_PISTOL_MUZZLE
+	attachable_offset = list(
+		ATTACHMENT_SLOT_MUZZLE = list("x" = 19, "y" = 4)
+	)
+	can_air_shoot = TRUE
 	/// If TRUE will show empty casing on examine
 	var/show_live_rounds = TRUE
-
 
 /obj/item/gun/projectile/revolver/Initialize(mapload)
 	. = ..()
@@ -46,8 +51,7 @@
 	return ..()
 
 
-/obj/item/gun/projectile/revolver/attack_self(mob/living/user)
-	add_fingerprint(user)
+/obj/item/gun/projectile/revolver/unload_act(mob/user)
 	var/num_unloaded = 0
 	chambered = null
 	var/atom/drop_loc = drop_location()
@@ -71,10 +75,11 @@
 
 /// Removes all the shells in the cylinder
 /obj/item/gun/projectile/revolver/proc/unload(user)
+	return
 
 /obj/item/gun/projectile/revolver/verb/spin()
-	set name = "Spin Chamber"
-	set category = "Object"
+	set name = "Вращать барабан"
+	set category = STATPANEL_OBJECT
 	set desc = "Click to spin your revolver's chamber."
 	set src in usr
 
@@ -85,7 +90,7 @@
 		var/obj/item/ammo_box/magazine/internal/cylinder/C = magazine
 		C.spin()
 		chamber_round(FALSE)
-		playsound(loc, 'sound/weapons/revolver_spin.ogg', 50, 1)
+		playsound(loc, 'sound/weapons/revolver_spin.ogg', 50, TRUE)
 		usr.visible_message("[usr] spins [src]'s chamber.",  span_notice("You spin [src]'s chamber."))
 	else
 		verbs -= /obj/item/gun/projectile/revolver/verb/spin
@@ -101,8 +106,49 @@
 
 /obj/item/gun/projectile/revolver/examine(mob/user)
 	. = ..()
-	if(show_live_rounds)
-		. += span_notice("[get_ammo(FALSE, FALSE)] of those are live rounds")
+	if(!show_live_rounds)
+		return
+
+	var/ammo_num = get_ammo(FALSE, FALSE)
+	. += span_notice("[ammo_num] из них боев[declension_ru(ammo_num, "ой", "ые", "ые")]")
+
+/obj/item/gun/projectile/revolver/try_air_fire(datum/source, mob/user)
+	. = ..()
+	if(!user || (user.a_intent != INTENT_GRAB) || !isturf(user.loc))
+		return NONE
+
+	INVOKE_ASYNC(src, PROC_REF(perform_air_fire), user)
+
+	return COMPONENT_CANCEL_ATTACK_CHAIN
+
+/obj/item/gun/projectile/revolver/proc/perform_air_fire(mob/user)
+	if(!can_shoot(user))
+		shoot_with_empty_chamber(user)
+		return
+
+	balloon_alert(user, "вы целитесь вверх...")
+	if(!do_after(user, 1.5 SECONDS, src, max_interact_count = 1, interaction_key = src, cancel_on_max = TRUE))
+		return
+
+	if(!can_shoot(user))
+		shoot_with_empty_chamber(user)
+		return
+
+	if(chambered)
+		QDEL_NULL(chambered.BB)
+		shoot_live_shot(user)
+
+	process_chamber()
+	user.balloon_alert(user, "выстрел в воздух")
+	user.visible_message(
+		span_cultlarge("[user] поднима[pluralize_ru(user.gender, "ет", "ют")] дуло вверх и стреля[pluralize_ru(user.gender, "ет", "ют")], используя [declent_ru(ACCUSATIVE)]!"),
+		ignored_mobs = user
+
+	)
+
+	playsound(user, fire_sound, 120, FALSE)
+
+	update_icon()
 
 
 /obj/item/gun/projectile/revolver/detective
@@ -111,8 +157,9 @@
 	icon_state = "detective"
 	mag_type = /obj/item/ammo_box/magazine/internal/cylinder/rev38
 	fire_sound = 'sound/weapons/gunshots/1rev38.ogg'
-	unique_rename = TRUE
 	unique_reskin = TRUE
+	accuracy = GUN_ACCURACY_PISTOL
+	recoil = GUN_RECOIL_MEDIUM
 
 
 /obj/item/gun/projectile/revolver/detective/update_gun_skins()
@@ -126,7 +173,7 @@
 
 
 /obj/item/gun/projectile/revolver/fingergun //Summoned by the Finger Gun spell, from advanced mimery traitor item
-	name = "\improper finger gun"
+	name = "finger gun"
 	desc = "Bang bang bang!"
 	icon_state = "fingergun"
 	mag_type = /obj/item/ammo_box/magazine/internal/cylinder/rev38/invisible
@@ -141,23 +188,18 @@
 	clumsy_check = FALSE //Stole your uplink! Honk!
 	needs_permit = FALSE //go away beepsky
 	var/obj/effect/proc_holder/spell/mime/fingergun/parent_spell
+	accuracy = GUN_ACCURACY_DEFAULT
 
 
-/obj/item/gun/projectile/revolver/fingergun/Initialize(mapload)
+/obj/item/gun/projectile/revolver/fingergun/Initialize(mapload, new_parent_spell)
 	. = ..()
 	ADD_TRAIT(src, TRAIT_NODROP, ABSTRACT_ITEM_TRAIT)
-
+	parent_spell = new_parent_spell
+	verbs -= /obj/item/gun/projectile/revolver/verb/spin
 
 /obj/item/gun/projectile/revolver/fingergun/fake
 	desc = "Pew pew pew!"
 	mag_type = /obj/item/ammo_box/magazine/internal/cylinder/rev38/invisible/fake
-
-
-/obj/item/gun/projectile/revolver/fingergun/Initialize(loc, new_parent_spell)
-	. = ..()
-	parent_spell = new_parent_spell
-	verbs -= /obj/item/gun/projectile/revolver/verb/spin
-
 
 /obj/item/gun/projectile/revolver/fingergun/Destroy()
 	if(parent_spell)
@@ -184,40 +226,50 @@
 
 
 /obj/item/gun/projectile/revolver/fingergun/attack_self(mob/living/user)
+	. = ..()
 	if(istype(user))
 		to_chat(user, span_notice("You holster your fingers. Another time."))
 	qdel(src)
 
+/obj/item/gun/projectile/revolver/fingergun/unload_act(mob/user)
+	return
+
 
 /obj/item/gun/projectile/revolver/mateba
-	name = "\improper Unica 6 auto-revolver"
+	name = "Unica 6 auto-revolver"
 	desc = "A retro high-powered autorevolver typically used by officers of the New Russia military. Uses .357 ammo."	//>10mm hole >.357
 	icon_state = "mateba"
+	accuracy = GUN_ACCURACY_PISTOL
+	recoil = GUN_RECOIL_HIGH
 
 /obj/item/gun/projectile/revolver/ga12
-	name = "\improper Tkach Ya-Sui GA 12 revolver"
+	name = "Tkach Ya-Sui GA 12 revolver"
 	desc = "An outdated sidearm rarely seen in use by certain PMCs that operate throughout the frontier systems, featuring a three-shell cylinder. Thats right, shell, this one shoots twelve gauge."
 	icon_state = "12garevolver"
 	mag_type = /obj/item/ammo_box/magazine/internal/cylinder/ga12
 	fire_sound = 'sound/weapons/gunshots/1rev12.ogg'
-	spread = 15
-	recoil = 1
 	fire_delay = 5
+	accuracy = new /datum/gun_accuracy/pistol/extends_spread()
+	accuracy = GUN_ACCURACY_PISTOL
+	recoil = GUN_RECOIL_HIGH
 
 /obj/item/gun/projectile/revolver/golden
 	name = "golden revolver"
 	desc = "This ain't no game, ain't never been no show, And I'll gladly gun down the oldest lady you know. Uses .357 ammo."
 	icon_state = "goldrevolver"
 	fire_sound = 'sound/weapons/resonator_blast.ogg'
-	recoil = 8
+	accuracy = new /datum/gun_accuracy/pistol/extends_spread()
+	accuracy = GUN_ACCURACY_PISTOL_UPLINK
+	recoil = GUN_RECOIL_MEGA
 
 /obj/item/gun/projectile/revolver/nagant
 	name = "nagant revolver"
 	desc = "An old model of revolver that originated in Russia. Able to be suppressed. Uses 7.62x38mmR ammo."
 	icon_state = "nagant"
 	origin_tech = "combat=3"
-	can_suppress = TRUE
 	mag_type = /obj/item/ammo_box/magazine/internal/cylinder/rev762
+	accuracy = GUN_ACCURACY_PISTOL_UPLINK
+	recoil = GUN_RECOIL_MEDIUM
 
 /obj/item/gun/projectile/revolver/c36
 	name = ".36 revolver"
@@ -225,16 +277,21 @@
 	icon_state = "detective"
 	mag_type = /obj/item/ammo_box/magazine/internal/cylinder/rev36
 	fire_sound = 'sound/weapons/gunshots/1rev38.ogg'
+	accuracy = GUN_ACCURACY_PISTOL
+	recoil = GUN_RECOIL_MEDIUM
 
 // A gun to play Russian Roulette!
 // You can spin the chamber to randomize the position of the bullet.
 
 /obj/item/gun/projectile/revolver/russian
-	name = "\improper Russian revolver"
+	name = "Russian revolver"
 	desc = "A Russian-made revolver for drinking games. Uses .357 ammo, and has a mechanism that spins the chamber before each trigger pull."
 	origin_tech = "combat=2;materials=2"
 	mag_type = /obj/item/ammo_box/magazine/internal/rus357
 	var/spun = FALSE
+	accuracy = GUN_ACCURACY_PISTOL
+	recoil = GUN_RECOIL_MEDIUM
+	can_air_shoot = FALSE
 
 
 /obj/item/gun/projectile/revolver/russian/Initialize(mapload)
@@ -321,16 +378,18 @@
 		if(chambered)
 			var/obj/item/ammo_casing/AC = chambered
 			if(AC.fire(user, user, firer_source_atom = src))
-				playsound(user, fire_sound, 50, 1)
+				playsound(user, fire_sound, 50, TRUE)
 				var/zone = check_zone(user.zone_selected)
 				if(zone == BODY_ZONE_HEAD || zone == BODY_ZONE_PRECISE_EYES || zone == BODY_ZONE_PRECISE_MOUTH)
 					shoot_self(user, zone)
 				else
 					user.visible_message(span_danger("[user.name] cowardly fires [src] at [user.p_their()] [zone]!"), span_userdanger("You cowardly fire [src] at your [zone]!"), span_italics("You hear a gunshot!"))
+				chambered.after_fire()
 				return
+			chambered.after_fire()
 
 		user.visible_message(span_danger("*click*"))
-		playsound(user, 'sound/weapons/empty.ogg', 100, 1)
+		playsound(user, 'sound/weapons/empty.ogg', 100, TRUE)
 
 /obj/item/gun/projectile/revolver/russian/proc/shoot_self(mob/living/carbon/human/user, affecting = BODY_ZONE_HEAD)
 	user.apply_damage(300, BRUTE, affecting)
@@ -353,6 +412,8 @@
 	desc = "Looks almost like the real thing! Ages 8 and up."
 	origin_tech = null
 	mag_type = /obj/item/ammo_box/magazine/internal/cylinder/cap
+	accuracy = GUN_ACCURACY_PISTOL
+	recoil = GUN_RECOIL_MEDIUM
 
 /obj/item/gun/projectile/revolver/improvised
 	name = "improvised revolver"
@@ -363,7 +424,8 @@
 	fire_sound = 'sound/weapons/gunshots/1rev257.ogg'
 	var/unscrewed = TRUE
 	var/obj/item/weaponcrafting/revolverbarrel/barrel
-
+	accuracy = GUN_ACCURACY_MINIMAL
+	recoil = GUN_RECOIL_MEGA
 
 /obj/item/gun/projectile/revolver/improvised/Initialize(mapload)
 	. = ..()
@@ -389,7 +451,7 @@
 	if(istype(barrel, /obj/item/weaponcrafting/revolverbarrel/steel) || prob(80))
 		return ..()
 	chamber_round(TRUE)
-	user.visible_message(span_dangerbigger("*CRACK*"))
+	user.visible_message(span_biggerdanger("*CRACK*"))
 	playsound(user, 'sound/weapons/jammed.ogg', 140, TRUE)
 
 /obj/item/gun/projectile/revolver/improvised/proc/radial_menu(mob/user)
@@ -416,7 +478,7 @@
 			user.put_in_hands(magazine)
 			magazine = null
 			verbs -= /obj/item/gun/projectile/revolver/verb/spin
-	playsound(src, 'sound/items/screwdriver.ogg', 40, 1)
+	playsound(src, 'sound/items/screwdriver.ogg', 40, TRUE)
 	update_icon(UPDATE_OVERLAYS)
 
 
@@ -489,15 +551,17 @@
 	w_class = WEIGHT_CLASS_BULKY
 	weapon_weight = WEAPON_HEAVY
 	force = 10
-	flags = CONDUCT
 	slot_flags = ITEM_SLOT_BACK
 	mag_type = /obj/item/ammo_box/magazine/internal/shot/dual
 	fire_sound = 'sound/weapons/gunshots/1shotgun_old.ogg'
 	sawn_desc = "Omar's coming!"
 	can_holster = FALSE
-	unique_rename = TRUE
 	unique_reskin = TRUE
 	pb_knockback = 3
+	accuracy = GUN_ACCURACY_SHOTGUN
+	recoil = GUN_RECOIL_HIGH
+	attachable_allowed = GUN_MODULE_CLASS_NONE
+	can_air_shoot = FALSE
 
 
 /obj/item/gun/projectile/revolver/doublebarrel/update_gun_skins()
@@ -531,10 +595,10 @@
 	if(.)
 		weapon_weight = WEAPON_MEDIUM
 		can_holster = TRUE
+		accuracy = GUN_ACCURACY_MINIMAL
 
 
-/obj/item/gun/projectile/revolver/doublebarrel/attack_self(mob/living/user)
-	add_fingerprint(user)
+/obj/item/gun/projectile/revolver/doublebarrel/unload_act(mob/user)
 	var/num_unloaded = 0
 	var/atom/drop_loc = drop_location()
 	while(get_ammo() > 0)
@@ -561,9 +625,6 @@
 	name = "improvised shotgun"
 	desc = "Essentially a tube that aims shotgun shells."
 	icon_state = "ishotgun"
-	item_state = "shotgun"
-	w_class = WEIGHT_CLASS_BULKY
-	force = 10
 	slot_flags = null
 	mag_type = /obj/item/ammo_box/magazine/internal/shot/improvised
 	fire_sound = 'sound/weapons/gunshots/1shotgunpipe.ogg'
@@ -572,6 +633,8 @@
 	unique_reskin = FALSE
 	pb_knockback = 0
 	var/slung = FALSE
+	accuracy = GUN_ACCURACY_MINIMAL
+	recoil = GUN_RECOIL_MEGA
 
 
 /obj/item/gun/projectile/revolver/doublebarrel/improvised/attackby(obj/item/I, mob/user, params)
@@ -625,7 +688,6 @@
 	item_state = "stick"
 	sawn_state = SAWN_OFF
 	w_class = WEIGHT_CLASS_SMALL
-	force = 10
 	can_unsuppress = FALSE
 	slot_flags = null
 	origin_tech = "" // NO GIVAWAYS
@@ -635,6 +697,8 @@
 	fire_sound = 'sound/weapons/gunshots/1suppres.ogg'
 	suppressed = TRUE
 	needs_permit = FALSE //its just a cane beepsky.....
+	accuracy = GUN_ACCURACY_SHOTGUN
+	recoil = GUN_RECOIL_MEDIUM
 
 
 /obj/item/gun/projectile/revolver/doublebarrel/improvised/cane/is_crutch()

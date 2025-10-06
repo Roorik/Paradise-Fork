@@ -1,10 +1,8 @@
 /obj/machinery/cooker
 	name = "cooker"
 	desc = "You shouldn't be seeing this!"
-	layer = 2.9
 	density = TRUE
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 5
 	var/on = 0
 	var/onicon = null
@@ -37,14 +35,14 @@
 // check if you can put it in the machine
 /obj/machinery/cooker/proc/checkValid(obj/item/check, mob/user)
 	if(on)
-		to_chat(user, "<span class='notice'>[src] is still active!</span>")
-		return 0
+		to_chat(user, span_notice("[src] is still active!"))
+		return FALSE
 	if(istype(check, /obj/item/reagent_containers/food/snacks))
-		return 1
+		return TRUE
 	if(has_specials && checkSpecials(check))
 		return TRUE
 	to_chat(user, "<span class ='notice'>You can only process food!</span>")
-	return 0
+	return FALSE
 
 /obj/machinery/cooker/proc/setIcon(obj/item/copyme, obj/item/copyto)
 	copyto.color = foodcolor
@@ -54,7 +52,7 @@
 
 /obj/machinery/cooker/proc/turnoff(obj/item/olditem)
 	icon_state = officon
-	playsound(loc, 'sound/machines/ding.ogg', 50, 1)
+	playsound(loc, 'sound/machines/ding.ogg', 50, TRUE)
 	on = 0
 	qdel(olditem)
 	return
@@ -89,7 +87,7 @@
 		return FALSE
 	. = TRUE
 	icon_state = onicon
-	to_chat(chef, "<span class='notice'>You put [tocook] into [src].</span>")
+	to_chat(chef, span_notice("You put [tocook] into [src]."))
 	on = 1
 
 
@@ -190,5 +188,5 @@
 		return 0
 	return 0
 
-/obj/machinery/cooker/proc/cookSpecial(var/special)
+/obj/machinery/cooker/proc/cookSpecial(special)
 	return

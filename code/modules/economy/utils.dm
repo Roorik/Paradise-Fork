@@ -4,12 +4,15 @@
 // Economy system is such a mess of spaghetti.  This should help.
 ////////////////////////
 
-/proc/get_money_account(var/account_number, var/from_z=-1)
-	for(var/obj/machinery/computer/account_database/DB in GLOB.machines)
-		if(from_z > -1 && DB.z != from_z) continue
-		if((DB.stat & NOPOWER) || !DB.activated ) continue
+/proc/get_money_account(account_number, from_z=-1)
+	for(var/obj/machinery/computer/account_database/DB in SSmachines.get_by_type(/obj/machinery/computer/account_database))
+		if(from_z > -1 && DB.z != from_z)
+			continue
+		if((DB.stat & NOPOWER) || !DB.activated)
+			continue
 		var/datum/money_account/acct = DB.get_account(account_number)
-		if(!acct) continue
+		if(!acct)
+			continue
 		return acct
 
 /proc/get_card_account(mob/user)
@@ -23,6 +26,9 @@
 	if(istype(id))
 		return get_money_account(id.associated_account_number)
 	return null
+
+/proc/get_account_from_card(obj/item/card/id/id)
+	return get_money_account(id.associated_account_number)
 
 /obj/machinery/proc/pay_with_cash(obj/item/stack/spacecash/cashmoney, mob/user, price, vended_name, datum/money_account/account_we_pay_on = GLOB.vendor_account)
 	if(price > cashmoney.amount)
@@ -80,8 +86,7 @@
 	return "$[num2septext(money)]"
 
 // Seperated from charge so they can reuse the code and also because there's many instances where a log will be made without actually making a transaction
-/datum/money_account/proc/makeTransactionLog(transaction_amount = 0, transaction_purpose, terminal_name = "",
- dest_name = "UNKNOWN", charging = TRUE, date = GLOB.current_date_string, time = "")
+/datum/money_account/proc/makeTransactionLog(transaction_amount = 0, transaction_purpose, terminal_name = "", dest_name = UNKNOWN_STATUS_RUS, charging = TRUE, date = GLOB.current_date_string, time = "")
 	var/datum/transaction/T = new()
 	T.target_name = dest_name
 	T.purpose = transaction_purpose
@@ -98,9 +103,8 @@
 		T.time = time
 	transaction_log.Add(T)
 
- // Charge is for transferring money from an account to another. The destination account can possibly not exist (Magical money sink)
-/datum/money_account/proc/charge(transaction_amount = 0, datum/money_account/dest, transaction_purpose,
- terminal_name = "", dest_name = "UNKNOWN", dest_purpose, dest_target_name)
+// Charge is for transferring money from an account to another. The destination account can possibly not exist (Magical money sink)
+/datum/money_account/proc/charge(transaction_amount = 0, datum/money_account/dest, transaction_purpose, terminal_name = "", dest_name = UNKNOWN_STATUS_RUS, dest_purpose, dest_target_name)
 	if(suspended)
 		to_chat(usr, "<span class='warning'>Unable to access source account: account suspended.</span>")
 		return 0
@@ -134,8 +138,7 @@
 		return 0
 
 // Credit is for giving money to an account out of thin air. Suspension does not matter.
-/datum/money_account/proc/credit(transaction_amount = 0, transaction_purpose,
- terminal_name = "", dest_name = "UNKNOWN", date = GLOB.current_date_string, time = "")
+/datum/money_account/proc/credit(transaction_amount = 0, transaction_purpose, terminal_name = "", dest_name = UNKNOWN_STATUS_RUS, date = GLOB.current_date_string, time = "")
 
 	money += transaction_amount
 	makeTransactionLog(transaction_amount, transaction_purpose, terminal_name, dest_name, FALSE, date, time)

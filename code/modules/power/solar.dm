@@ -1,14 +1,11 @@
-#define SOLAR_MAX_DIST 40
-
 /obj/machinery/power/solar
 	name = "solar panel"
-	desc = "A solar panel. Generates electricity when in contact with sunlight."
-	icon = 'icons/obj/engines_and_power/power.dmi'
-	icon_state = "sp_base"
+	desc = "Преобразует солнечный свет в электрическую энергию."
+	gender = FEMALE
+	icon = 'icons/obj/engines_and_power/solar_panels.dmi'
+	icon_state = "solar_panel_base"
+	var/broken_state = list("solar_panel_broken", "solar_panel_broken_alt")
 	density = TRUE
-	use_power = NO_POWER_USE
-	idle_power_usage = 0
-	active_power_usage = 0
 	max_integrity = 150
 	integrity_failure = 50
 	var/id = 0
@@ -18,6 +15,16 @@
 	var/ndir = SOUTH // target dir
 	var/turn_angle = 0
 	var/obj/machinery/power/solar_control/control = null
+
+/obj/machinery/power/solar/get_ru_names()
+	return list(
+		NOMINATIVE = "солнечная панель",
+		GENITIVE = "солнечной панели",
+		DATIVE = "солнечной панели",
+		ACCUSATIVE = "солнечную панель",
+		INSTRUMENTAL = "солнечной панелью",
+		PREPOSITIONAL = "солнечной панели"
+	)
 
 /obj/machinery/power/solar/Initialize(mapload, obj/item/solar_assembly/S)
 	. = ..()
@@ -29,7 +36,7 @@
 	return ..()
 
 //set the control of the panel to a given computer if closer than SOLAR_MAX_DIST
-/obj/machinery/power/solar/proc/set_control(var/obj/machinery/power/solar_control/SC)
+/obj/machinery/power/solar/proc/set_control(obj/machinery/power/solar_control/SC)
 	if(!SC || (get_dist(src, SC) > SOLAR_MAX_DIST))
 		return 0
 	control = SC
@@ -42,15 +49,15 @@
 		control.connected_panels.Remove(src)
 	control = null
 
-/obj/machinery/power/solar/proc/Make(var/obj/item/solar_assembly/S)
+/obj/machinery/power/solar/proc/Make(obj/item/solar_assembly/S)
 	if(!S)
 		S = new /obj/item/solar_assembly(src)
 		S.glass_type = /obj/item/stack/sheet/glass
 		S.set_anchored(TRUE)
 	S.loc = src
 	if(S.glass_type == /obj/item/stack/sheet/rglass) //if the panel is in reinforced glass
-		max_integrity *= 2 								 //this need to be placed here, because panels already on the map don't have an assembly linked to
-		obj_integrity = max_integrity
+		max_integrity *= 2								 //this need to be placed here, because panels already on the map don't have an assembly linked to
+		update_integrity(max_integrity)
 	update_icon(UPDATE_OVERLAYS)
 
 
@@ -58,10 +65,17 @@
 	. = TRUE
 	if(!I.tool_use_check(user, 0))
 		return
-	playsound(loc, 'sound/machines/click.ogg', 50, 1)
-	user.visible_message("[user] begins to take the glass off the solar panel.", "<span class='notice'>You begin to take the glass off the solar panel...</span>")
+	playsound(loc, 'sound/machines/click.ogg', 50, TRUE)
+	balloon_alert(user, "демонтаж...")
+	user.visible_message(
+		span_notice("[user] начина[pluralize_ru(user.gender, "ет", "ют")] снимать стекло с [declent_ru(GENITIVE)]."),
+		span_notice("Вы начинаете снимать стекло с [declent_ru(GENITIVE)]...")
+	)
 	if(I.use_tool(src, user, 50, volume = I.tool_volume))
-		user.visible_message("[user] takes the glass off the solar panel.", "<span class='notice'>You take the glass off the solar panel.</span>")
+		user.visible_message(
+			span_notice("[user] снима[pluralize_ru(user.gender, "ет", "ют")] стекло с [declent_ru(GENITIVE)]."),
+			span_notice("Вы снимаете стекло с [declent_ru(GENITIVE)].")
+		)
 		deconstruct(TRUE)
 
 /obj/machinery/power/solar/play_attack_sound(damage_amount, damage_type = BRUTE, damage_flag = 0)
@@ -84,32 +98,36 @@
 /obj/machinery/power/solar/deconstruct(disassembled = TRUE)
 	if(!(obj_flags & NODECONSTRUCT))
 		if(disassembled)
-			var/obj/item/solar_assembly/S = locate() in src
-			if(S)
-				S.forceMove(loc)
-				S.give_glass(stat & BROKEN)
+			var/obj/item/solar_assembly/assembly = locate() in src
+
+			if(assembly)
+				assembly.forceMove(loc)
+				assembly.give_glass(stat & BROKEN)
+
 		else
-			playsound(src, "shatter", 70, TRUE)
+			playsound(src, SFX_SHATTER, 70, TRUE)
 			new /obj/item/shard(src.loc)
 			new /obj/item/shard(src.loc)
+
 	qdel(src)
 
 /obj/machinery/power/solar/update_overlays()
 	. = ..()
 	if(stat & BROKEN)
-		. += image('icons/obj/engines_and_power/power.dmi', icon_state = "solar_panel-b", layer = FLY_LAYER)
+		. += image('icons/obj/engines_and_power/solar_panels.dmi', icon_state = broken_state, layer = FLY_LAYER)
 	else
-		. +=  image('icons/obj/engines_and_power/power.dmi', icon_state = "solar_panel", layer = FLY_LAYER)
+		. +=  image('icons/obj/engines_and_power/solar_panels.dmi', icon_state = "solar_panel", layer = FLY_LAYER)
 		dir = angle2dir(adir)
 
-//calculates the fraction of the sunlight that the panel recieves
+///calculates the fraction of the sunlight that the panel receives
 /obj/machinery/power/solar/proc/update_solar_exposure()
 	if(obscured)
 		sunfrac = 0
 		return
 
-	//find the smaller angle between the direction the panel is facing and the direction of the sun (the sign is not important here)
-	var/p_angle = min(abs(adir - SSsun.angle), 360 - abs(adir - SSsun.angle))
+	// find the smaller angle between the direction the panel is facing and the direction of the sun (the sign is not important here)
+	var/sun_angle = SSsun.angle
+	var/p_angle = min(abs(adir - sun_angle), 360 - abs(adir - sun_angle))
 
 	if(p_angle > 90)			// if facing more than 90deg from sun, zero output
 		sunfrac = 0
@@ -140,7 +158,7 @@
 	unset_control()
 	update_icon(UPDATE_OVERLAYS)
 
-/obj/machinery/power/solar/fake/New(var/turf/loc, var/obj/item/solar_assembly/S)
+/obj/machinery/power/solar/fake/New(turf/loc, obj/item/solar_assembly/S)
 	..(loc, S, 0)
 
 /obj/machinery/power/solar/fake/process()
@@ -149,10 +167,10 @@
 
 //trace towards sun to see if we're in shadow
 /obj/machinery/power/solar/proc/occlusion()
-
 	var/ax = x		// start at the solar panel
 	var/ay = y
 	var/turf/T = null
+
 	var/dx = SSsun.dx
 	var/dy = SSsun.dy
 
@@ -179,14 +197,24 @@
 
 /obj/item/solar_assembly
 	name = "solar panel assembly"
-	desc = "A solar panel assembly kit, allows constructions of a solar panel, or with a tracking circuit board, a solar tracker"
-	icon = 'icons/obj/engines_and_power/power.dmi'
-	icon_state = "sp_base"
+	desc = "Основание для сборки солнечной панели и солнечного датчика."
+	gender = FEMALE
+	icon = 'icons/obj/engines_and_power/solar_panels.dmi'
+	icon_state = "solar_panel_base"
 	item_state = "electropack"
 	w_class = WEIGHT_CLASS_BULKY // Pretty big!
-	anchored = FALSE
 	var/tracker = FALSE
 	var/glass_type = null
+
+/obj/item/solar_assembly/get_ru_names()
+	return list(
+		NOMINATIVE = "заготовка солнечной панели",
+		GENITIVE = "заготовки солнечной панели",
+		DATIVE = "заготовке солнечной панели",
+		ACCUSATIVE = "заготовку солнечной панели",
+		INSTRUMENTAL = "заготовкой солнечной панели",
+		PREPOSITIONAL = "заготовке солнечной панели"
+	)
 
 /obj/item/solar_assembly/attack_hand(mob/user)
 	if(!anchored && !isturf(loc)) // You can't pick it up
@@ -201,13 +229,13 @@
 
 /obj/item/solar_assembly/examine(mob/user)
 	. = ..()
-	. += "<span class='notice'>The solar assembly is <b>[anchored ? "wrenched into place" : "unwrenched"]</b>.</span>"
+	. += span_notice("Похоже, что [genderize_ru(gender, "он", "она", "оно", "они")] <b>[anchored ? "прикручен[genderize_ru(gender, "", "а", "о", "ы")]" : "не прикручен[genderize_ru(gender, "", "а", "о", "ы")]"]</b>.")
 	if(tracker)
-		. += "<span class='notice'>The solar assembly has a tracking circuit installed. It can be <b>pried out</b>.</span>"
+		. += span_notice("В [genderize_ru(gender, "нём", "ней", "нём", "них")] видно плату солнечного датчика. <b>Её можно достать</b>.")
 	else
-		. += "<span class='notice'>The solar assembly has a slot for a <i>tracking circuit<i> board.</span>"
+		. += span_notice("В [genderize_ru(gender, "нём", "ней", "нём", "них")] видно отсек под плату <i>датчика<i>.")
 	if(anchored)
-		.+= "<span class='notice'>The solar assembly needs <i>glass<i> to be completed.</span>"
+		.+= span_notice("Чтобы завершить сборку —  установите <b><i>стекло</i></b>.")
 
 
 /obj/item/solar_assembly/attackby(obj/item/I, mob/user, params)
@@ -215,16 +243,16 @@
 		add_fingerprint(user)
 		var/obj/item/stack/sheet/glass = I
 		if(!anchored)
-			to_chat(user, span_warning("The solar panel should be secured to the floor first."))
+			balloon_alert(user, "не прикручено!")
 			return ATTACK_CHAIN_PROCEED
 		var/cached_sound = glass.usesound
 		if(!glass.use(2))
-			to_chat(user, span_warning("You need at least two sheets of glass to put them into the solar panel."))
+			user.balloon_alert(user, "недостаточно стекла!")
 			return ATTACK_CHAIN_PROCEED
 		playsound(loc, cached_sound, 50, TRUE)
 		user.visible_message(
-			span_notice("[user] has constructed the glass panels on the solar assembly."),
-			span_notice("You have constructed the glass panels on the solar assembly."),
+			span_notice("[user] устанавлива[pluralize_ru(user.gender, "ет", "ют")] стеклянные панели на солнечной батарее."),
+			span_notice("Вы устанавливаете стеклянные панели на солнечной батарее."),
 		)
 		glass_type = glass.merge_type
 		var/obj/machinery/power/new_panel
@@ -239,17 +267,18 @@
 	if(istype(I, /obj/item/tracker_electronics))
 		add_fingerprint(user)
 		if(!anchored)
-			to_chat(user, span_warning("The solar panel should be secured to the floor first."))
+			balloon_alert(user, "не прикручено!")
 			return ATTACK_CHAIN_PROCEED
 		if(tracker)
-			to_chat(user, span_warning("The tracker electronics is already installed."))
+			balloon_alert(user, "занято!")
 			return ATTACK_CHAIN_PROCEED
 		if(!user.drop_transfer_item_to_loc(I, src))
 			return ..()
 		tracker = TRUE
+		balloon_alert(user, "установлено")
 		user.visible_message(
-			span_notice("[user] has inserted the tracker electronics into the solar assembly."),
-			span_notice("You have inserted the tracker electronics into the solar assembly."),
+			span_notice("[user] вставля[pluralize_ru(user.gender, "ет", "ют")] плату трекера в солнечную батарею."),
+			span_notice("Вы вставляете плату трекера в солнечную батарею."),
 		)
 		qdel(I)
 		return ATTACK_CHAIN_BLOCKED_ALL
@@ -261,56 +290,53 @@
 	. = TRUE
 	if(!anchored && !isturf(loc))
 		add_fingerprint(user)
-		to_chat(user, span_warning("You cannot wrench [src] [ismob(loc) ? "in inventory" : "in [loc]"]."))
+		to_chat(user, span_warning("Вы не можете открутить [declent_ru(ACCUSATIVE)], пока она [ismob(loc) ? "в инвентаре" : "на [loc.declent_ru(PREPOSITIONAL)]"]."))
 		return .
 	if(!I.use_tool(src, user, volume = I.tool_volume))
 		return .
 	set_anchored(!anchored)
 	if(anchored)
+		balloon_alert(user, "прикручено")
 		user.visible_message(
-			span_notice("[user] has wrenched the solar assembly into the floor."),
-			span_notice("You have wrenched the solar assembly into the floor."),
+			span_notice("[user] прикручива[pluralize_ru(user.gender, "ет", "ют")] солнечную батарею к полу."),
+			span_notice("Вы прикручиваете солнечную батарею к полу."),
 		)
 	else
+		balloon_alert(user, "откручено")
 		user.visible_message(
-			span_notice("[user] has unwrenched the solar assembly from the floor."),
-			span_notice("You have wrenched the solar assembly form the floor."),
+			span_notice("[user] откручива[pluralize_ru(user.gender, "ет", "ют")] солнечную батарею от пола."),
+			span_notice("Вы откручиваете солнечную батарею от пола."),
 		)
 
 
 /obj/item/solar_assembly/crowbar_act(mob/living/user, obj/item/I)
 	. = TRUE
 	if(!tracker)
-		to_chat(user, span_warning("The [name] has no tracker electronics installed."))
+		balloon_alert(user, "пусто!")
 		return .
 	if(!I.use_tool(src, user, volume = I.tool_volume))
 		return .
 	var/obj/item/tracker_electronics/electronics = new(drop_location())
 	electronics.add_fingerprint(user)
 	tracker = FALSE
+	balloon_alert(user, "плата извлечена")
 	user.visible_message(
-		span_notice("[user] has taken out the tracker electronics from the solar assembly."),
-		span_notice("You have taken out the tracker electronics from the solar assembly."),
+		span_notice("[user] доста[pluralize_ru(user.gender, "ет", "ют")] плату солнечного датчика из [declent_ru(GENITIVE)]."),
+		span_notice("Вы достаёте плату трекера из [declent_ru(GENITIVE)]."),
 	)
 
 //
 // Solar Control Computer
 //
 
-#define TRACKER_OFF 0
-#define TRACKER_TIMED 1
-#define TRACKER_AUTO 2
-
 /obj/machinery/power/solar_control
 	name = "solar panel control"
 	desc = "A controller for solar panel arrays."
 	icon = 'icons/obj/machines/computer.dmi'
 	icon_state = "computer"
-	anchored = TRUE
 	density = TRUE
 	use_power = IDLE_POWER_USE
 	idle_power_usage = 250
-	max_integrity = 200
 	integrity_failure = 100
 	var/icon_screen = "solar"
 	var/icon_keyboard = "power_key"
@@ -338,36 +364,45 @@
 	autostart = TRUE // Automatically search for connected devices
 
 /obj/machinery/power/solar_control/Initialize(mapload, obj/structure/computerframe)
-	SSsun.solars |= src
+	connect_to_network()
 	setup()
+
 	. = ..()
+
 	if(computerframe)
 		qdel(computerframe)
 
 /obj/machinery/power/solar_control/proc/setup()
-	connect_to_network()
 	set_panels(cdir)
+
 	if(autostart)
 		search_for_connected()
+
 		if(connected_tracker && track == TRACKER_AUTO)
 			connected_tracker.modify_angle(SSsun.angle)
+
 		set_panels(cdir)
 
 /obj/machinery/power/solar_control/Destroy()
-	for(var/obj/machinery/power/solar/M in connected_panels)
-		M.unset_control()
+	for(var/obj/machinery/power/solar/solar in connected_panels)
+		solar.unset_control()
+
 	if(connected_tracker)
 		connected_tracker.unset_control()
+
+	SSsun.solars -= src
 	return ..()
 
 /obj/machinery/power/solar_control/disconnect_from_network()
 	..()
-	SSsun.solars.Remove(src)
+	SSsun.solars -= src
 
 /obj/machinery/power/solar_control/connect_to_network()
 	var/to_return = ..()
-	if(powernet) //if connected and not already in solar list...
-		SSsun.solars |= src //... add it
+
+	if(powernet) // if connected and not already in solar list...
+		SSsun.solars |= src
+
 	return to_return
 
 //search for unconnected panels and trackers in the computer powernet and connect them
@@ -386,14 +421,11 @@
 
 //called by the sun controller, update the facing angle (either manually or via tracking) and rotates the panels accordingly
 /obj/machinery/power/solar_control/proc/update()
-	if(stat & (NOPOWER | BROKEN))
-		return
-
 	if(track == TRACKER_AUTO && connected_tracker) // auto-tracking
 		connected_tracker.modify_angle(SSsun.angle)
 		set_panels(cdir)
-	updateDialog()
 
+	updateDialog()
 
 /obj/machinery/power/solar_control/update_overlays()
 	. = ..()
@@ -490,12 +522,12 @@
 	for(var/obj/C in src)
 		C.forceMove(loc)
 	if(stat & BROKEN)
-		to_chat(user, "<span class='notice'>The broken glass falls out.</span>")
+		to_chat(user, span_notice("The broken glass falls out."))
 		A.state = 4	// STATE_WIRES
 		var/obj/item/shard/shard = new(drop_location())
 		shard.add_fingerprint(user)
 	else
-		to_chat(user, "<span class='notice'>You disconnect the monitor.</span>")
+		to_chat(user, span_notice("You disconnect the monitor."))
 		A.state = 5	// STATE_GLASS
 	A.dir = dir
 	A.circuit = M
@@ -519,6 +551,7 @@
 		playsound(loc, 'sound/effects/glassbr3.ogg', 100, TRUE)
 		stat |= BROKEN
 		update_icon(UPDATE_OVERLAYS)
+		SSsun.solars -= src
 
 /obj/machinery/power/solar_control/process()
 	lastgen = gen
@@ -532,13 +565,13 @@
 
 	//manual tracking and set a rotation speed
 	if(track == TRACKER_TIMED && trackrate && nexttime <= world.time) //every time we need to increase/decrease the angle by 1?...
-		targetdir = (targetdir + trackrate / abs(trackrate) + 360) % 360 	//... do it
+		targetdir = (targetdir + trackrate / abs(trackrate) + 360) % 360	//... do it
 		nexttime += 36000 / abs(trackrate) //reset the counter for the next 1?
 		cdir = targetdir
 		set_panels(cdir)
 
 //rotates the panel to the passed angle
-/obj/machinery/power/solar_control/proc/set_panels(var/cdir)
+/obj/machinery/power/solar_control/proc/set_panels(cdir)
 
 	for(var/obj/machinery/power/solar/S in connected_panels)
 		S.adir = cdir //instantly rotates the panel

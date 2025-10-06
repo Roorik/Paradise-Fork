@@ -6,7 +6,7 @@
 	icon_state = "hardsuit0-contractor"
 	item_state = "contractor_helm"
 	item_color = "contractor"
-	armor = list("melee" = 40, "bullet" = 50, "laser" = 30, "energy" = 30, "bomb" = 35, "bio" = 100, "rad" = 100, "fire" = 50, "acid" = 90)
+	armor = list(MELEE = 40, BULLET = 50, LASER = 30, ENERGY = 30, BOMB = 35, BIO = 100, RAD = 100, FIRE = 50, ACID = 90)
 	actions_types = list(/datum/action/item_action/toggle_helmet_light)
 
 /obj/item/clothing/suit/space/hardsuit/contractor
@@ -15,7 +15,7 @@
 	icon_state = "hardsuit-contractor"
 	item_state = "contractor_hardsuit"
 	item_color = "contractor"
-	armor = list("melee" = 40, "bullet" = 50, "laser" = 30, "energy" = 30, "bomb" = 35, "bio" = 100, "rad" = 100, "fire" = 50, "acid" = 90)
+	armor = list(MELEE = 40, BULLET = 50, LASER = 30, ENERGY = 30, BOMB = 35, BIO = 100, RAD = 100, FIRE = 50, ACID = 90)
 	slowdown = 0
 	w_class = WEIGHT_CLASS_NORMAL
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/contractor
@@ -49,8 +49,8 @@
 
 /obj/item/clothing/suit/space/hardsuit/contractor/proc/update_suit()
 	var/mob/living/carbon/human/H = src.loc
-	H.update_inv_head()
-	H.update_inv_wear_suit()
+	H.update_worn_head()
+	H.update_worn_oversuit()
 
 //agent version disguised as engi hardsuit
 
@@ -82,9 +82,7 @@
 	charge_type = ADV_ACTION_TYPE_TOGGLE_RECHARGE
 	charge_max = 6 SECONDS
 	use_itemicon = FALSE
-	icon_icon = 'icons/mob/actions/actions.dmi'
 	button_icon_state = "hook"
-	button_icon = 'icons/mob/actions/actions.dmi'
 
 /obj/item/clothing/suit/space/hardsuit/contractor/proc/toggle_hook()
 	if(scorpion)
@@ -99,8 +97,8 @@
 			hook.toggle_button_on_off()
 			break
 		usr.put_in_hands(scorpion)
-		playsound(src.loc, 'sound/mecha/mechmove03.ogg', 50, 1)
-		to_chat(usr, "<span class='notice'>You engage the [scorpion].</span>")
+		playsound(loc, 'sound/mecha/mechmove03.ogg', 50, TRUE)
+		to_chat(usr, span_notice("You engage the [scorpion]."))
 
 /datum/action/item_action/advanced/hook_upgrade/toggle_button_on_off()
 	if(action_ready)
@@ -157,8 +155,6 @@
 /obj/projectile/contractor_hook
 	name = "Hardlight hook"
 	icon_state = "hard_hook"
-	icon = 'icons/obj/weapons/projectiles.dmi'
-	pass_flags = PASSTABLE
 	damage = 0
 	stamina = 25
 	hitsound = 'sound/weapons/whip.ogg'
@@ -179,7 +175,7 @@
 	if(isliving(target))
 		var/mob/living/L = target
 		if(!L.anchored && L.loc)
-			L.visible_message("<span class='danger'>[L] is snagged by [firer]'s hook!</span>")
+			L.visible_message(span_danger("[L] is snagged by [firer]'s hook!"))
 			ADD_TRAIT(L, TRAIT_UNDENSE, UNIQUE_TRAIT_SOURCE(src))	// Ensures the hook does not hit the target multiple times
 			L.forceMove(firer_turf)
 			REMOVE_TRAIT(L, TRAIT_UNDENSE, UNIQUE_TRAIT_SOURCE(src))
@@ -200,15 +196,13 @@
 	desc = "An advanced version of chameleon tech, allowing you to disguise your hardsuit, giving you the opportunity to walk in full view of security and personnel without any difficulties."
 	charge_type = ADV_ACTION_TYPE_TOGGLE
 	use_itemicon = FALSE
-	icon_icon = 'icons/mob/actions/actions.dmi'
 	button_icon_state = "chameleon"
-	button_icon = 'icons/mob/actions/actions.dmi'
 
 /obj/item/clothing/suit/space/hardsuit/contractor/proc/toggle_chameleon()
 	if(disguise)
 		disguise = FALSE
 		disable_chameleon()
-		usr.visible_message("<span class='warning'>[usr] changes the look of his hardsuit!</span>", "<span class='notice'>Turning off the disguise..</span>")
+		usr.visible_message(span_warning("[usr] changes the look of his hardsuit!"), span_notice("Turning off the disguise.."))
 		return
 	var/list/choices = list(
 		"EVA" = image(icon = 'icons/mob/clothing/contractor.dmi', icon_state = "EVA"),
@@ -220,7 +214,7 @@
 	var/selected_chameleon = show_radial_menu(usr, loc, choices, require_near = TRUE)
 	switch(selected_chameleon)
 		if("EVA")
-			src = "EVA suit"
+			src.name = "EVA suit"
 			src.icon_state = "spacenew"
 			src.desc = "A lightweight space suit with the basic ability to protect the wearer from the vacuum of space during emergencies."
 			helmet.name = "EVA helmet"
@@ -228,7 +222,7 @@
 			helmet.icon_state = "spacenew"
 			helmet.item_color = "medical"
 		if("Mining Hardsuit")
-			src = "mining hardsuit"
+			src.name = "mining hardsuit"
 			src.icon_state = "hardsuit-mining"
 			src.desc = "A special suit that protects against hazardous, low pressure environments. Has reinforced plating."
 			helmet.name = "mining hardsuit helmet"
@@ -236,7 +230,7 @@
 			helmet.icon_state = "hardsuit0-mining"
 			helmet.item_color = "mining"
 		if("Medical Hardsuit")
-			src = "medical hardsuit"
+			src.name = "medical hardsuit"
 			src.icon_state = "hardsuit-medical"
 			src.desc = "A special suit designed for work in a hazardous, low pressure environment. Built with lightweight materials for extra comfort."
 			helmet.name = "medical hardsuit helmet"
@@ -244,7 +238,7 @@
 			helmet.icon_state = "hardsuit0-medical"
 			helmet.item_color = "medical"
 		if("Security Hardsuit")
-			src = "security hardsuit"
+			src.name = "security hardsuit"
 			src.icon_state = "hardsuit-sec"
 			src.desc = "A special suit that protects against hazardous, low pressure environments. Has an additional layer of armor."
 			helmet.name = "security hardsuit helmet"
@@ -252,7 +246,7 @@
 			helmet.icon_state = "hardsuit0-sec"
 			helmet.item_color = "sec"
 		if("Engineering Hardsuit")
-			src = "engineering hardsuit"
+			src.name = "engineering hardsuit"
 			src.icon_state = "hardsuit-engineering"
 			src.desc = "A special suit that protects against hazardous, low pressure environments. Has radiation shielding."
 			helmet.name = "engineering hardsuit helmet"
@@ -261,16 +255,16 @@
 			helmet.item_color = "engineering"
 		else
 			return
-	to_chat(usr, "<span class='notice'>Turning on the disguise..</span>")
+	to_chat(usr, span_notice("Turning on the disguise.."))
 	sleep(25)
-	usr.visible_message("<span class='warning'>[usr] changes the look of his hardsuit!</span>", "<span class='notice'>[selected_chameleon] selected.</span>")
-	playsound(loc, 'sound/items/screwdriver2.ogg', 50, 1)
+	usr.visible_message(span_warning("[usr] changes the look of his hardsuit!"), span_notice("[selected_chameleon] selected."))
+	playsound(loc, 'sound/items/screwdriver2.ogg', 50, TRUE)
 	update_suit()
 	disguise = TRUE
 
 
 /obj/item/clothing/suit/space/hardsuit/contractor/proc/disable_chameleon()
-	src = initial(src)
+	src.name = initial(name)
 	src.icon_state = initial(src.icon_state)
 	src.desc = initial(src.desc)
 	helmet.name = initial(helmet.name)
@@ -282,7 +276,7 @@
 /obj/item/clothing/suit/space/hardsuit/contractor/emp_act(severity)
 	. = ..()
 	if(disguise)
-		usr.visible_message("<span class='warning'>[usr] disguise is falling off!</span>", "<span class='notice'>Chameleon module overloading! Shutting down...</span>")
+		usr.visible_message(span_warning("[usr] disguise is falling off!"), span_notice("Chameleon module overloading! Shutting down..."))
 		disguise = FALSE
 		disable_chameleon()
 

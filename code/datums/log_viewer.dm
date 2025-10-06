@@ -51,7 +51,7 @@ if(!result || result.ckey != __ckey){\
 				log_records.Add(logs.Copy(start_index, end_index + 1))
 
 	if(length(invalid_mobs))
-		to_chat(user, "<span class='warning'>The search criteria contained invalid mobs. They have been removed from the criteria.</span>")
+		to_chat(user, span_warning("The search criteria contained invalid mobs. They have been removed from the criteria."))
 		for(var/i in invalid_mobs)
 			selected_mobs -= i // Cleanup
 
@@ -135,7 +135,7 @@ if(!result || result.ckey != __ckey){\
 	dat += "<div style='min-height:100px'>"
 	dat += "<span>Time Search Range:</span> <a href='byond://?src=[UID()];start_time=1'>[gameTimestamp(wtime = time_from)]</a>"
 	dat += " To: <a href='byond://?src=[UID()];end_time=1'>[gameTimestamp(wtime = time_to)]</a>"
-	dat += "<BR>"
+	dat += "<br>"
 
 	dat += "<span>Mobs being used:</span>"
 	for(var/i in selected_mobs)
@@ -146,14 +146,14 @@ if(!result || result.ckey != __ckey){\
 		dat += "<a href='byond://?src=[UID()];remove_mob=\ref[M]'>[get_display_name(M)]</a>"
 	dat += "<a href='byond://?src=[UID()];add_mob=1'>Add Mob</a>"
 	dat += "<a href='byond://?src=[UID()];clear_mobs=1'>Clear All Mobs</a>"
-	dat += "<BR>"
+	dat += "<br>"
 
 	dat += "<span>Ckeys being used:</span>"
 	for(var/ckey in selected_ckeys)
 		dat += "<a href='byond://?src=[UID()];remove_ckey=[ckey]'>[get_ckey_name(ckey)]</a>"
 	dat += "<a href='byond://?src=[UID()];add_ckey=1'>Add ckey</a>"
 	dat += "<a href='byond://?src=[UID()];clear_ckeys=1'>Clear All ckeys</a>"
-	dat += "<BR>"
+	dat += "<br>"
 
 	dat += "<span>Log Types:</span>"
 	for(var/log_type in all_log_types)
@@ -168,7 +168,7 @@ if(!result || result.ckey != __ckey){\
 
 		dat += "<a href='byond://?src=[UID()];toggle_log_type=[log_type]' style='[style]'>[text]</a>"
 
-	dat += "<BR>"
+	dat += "<br>"
 	dat += "<a href='byond://?src=[UID()];clear_all=1'>Clear All Settings</a>"
 	dat += "<a href='byond://?src=[UID()];search=1'>Search</a>"
 	dat += "</div>"
@@ -197,23 +197,23 @@ if(!result || result.ckey != __ckey){\
 
 /datum/log_viewer/Topic(href, href_list)
 	if(href_list["start_time"])
-		var/input = input(usr, "hh:mm:ss", "Start time", "00:00:00") as text|null
-		if(!input)
+		var/input = tgui_input_text(usr, "hh:mm:ss", "Start time", "00:00:00")
+		if(isnull(input))
 			return
 		var/res = timeStampToNum(input)
 		if(res < 0)
-			to_chat(usr, "<span class='warning'>'[input]' is an invalid input value.</span>")
+			to_chat(usr, span_warning("'[input]' is an invalid input value."))
 			return
 		time_from = res
 		show_ui(usr)
 		return
 	if(href_list["end_time"])
-		var/input = input(usr, "hh:mm:ss", "End time", "04:00:00") as text|null
-		if(!input)
+		var/input = tgui_input_text(usr, "hh:mm:ss", "End time", "04:00:00")
+		if(isnull(input))
 			return
 		var/res = timeStampToNum(input)
 		if(res < 0)
-			to_chat(usr, "<span class='warning'>'[input]' is an invalid input value.</span>")
+			to_chat(usr, span_warning("'[input]' is an invalid input value."))
 			return
 		time_to = res
 
@@ -232,7 +232,7 @@ if(!result || result.ckey != __ckey){\
 				log_records.Cut()
 			else
 				if(records_len > RECORD_HARD_LIMIT)
-					to_chat(usr, "<span class='warning'>Record limit reached. Limiting to [RECORD_HARD_LIMIT].</span>")
+					to_chat(usr, span_warning("Record limit reached. Limiting to [RECORD_HARD_LIMIT]."))
 					log_records.Cut(RECORD_HARD_LIMIT)
 		show_ui(usr)
 		return

@@ -14,12 +14,11 @@ BONUS
 //////////////////////////////////////
 */
 /datum/symptom/viraladaptation
-	name = "Viral self-adaptation"
+	name = "Вирусная самоадаптация"
 	id = "viraladaptation"
 	stealth = 3
 	resistance = 5
 	stage_speed = -3
-	transmittable = 0
 	level = 3
 
 /datum/symptom/viraladaptation/Activate(datum/disease/virus/advance/A)
@@ -28,9 +27,9 @@ BONUS
 		var/mob/living/M = A.affected_mob
 		switch(A.stage)
 			if(1)
-				to_chat(M, span_notice("You feel off, but no different from before."))
+				to_chat(M, span_notice("Вы чувствуете себя странно, всё кажется как-то по другому..."))
 			if(5)
-				to_chat(M, span_notice("You feel better, but nothing interesting happens."))
+				to_chat(M, span_notice("Вы чувствуете себя лучше, но ничего интересного не происходит."))
 
 /*
 //////////////////////////////////////
@@ -48,7 +47,7 @@ BONUS
 //////////////////////////////////////
 */
 /datum/symptom/viralevolution
-	name = "Viral evolutionary acceleration"
+	name = "Вирусное эволюционное ускорение"
 	id = "viralevolution"
 	stealth = -2
 	resistance = -3
@@ -62,6 +61,6 @@ BONUS
 		var/mob/living/M = A.affected_mob
 		switch(A.stage)
 			if(1)
-				to_chat(M, span_notice("You feel better, but no different from before."))
+				to_chat(M, span_notice("Вы чувствуете себя странно, всё кажется как-то по другому..."))
 			if(5)
-				to_chat(M, span_notice("You feel off, but nothing interesting happens."))
+				to_chat(M, span_notice("Вы чувствуете себя странно, но ничего интересного не происходит."))

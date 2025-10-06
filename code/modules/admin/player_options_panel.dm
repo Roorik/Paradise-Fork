@@ -18,7 +18,7 @@
 		return
 	var/mob = null
 	// First we get mob. Check for ckey and client inside
-	if(findtext(M.ckey, "@" ) || M.ckey == "" || M.ckey == null)
+	if(findtext(M.ckey, "@") || M.ckey == "" || M.ckey == null)
 		// No ckey? No problem, We will manipulate clientless mob then.
 		mob = M
 	// But we still need to check out ckey so /ui_data will properly work
@@ -54,7 +54,7 @@
 	)
 	if(selected_ckey == null || selected_ckey == "" || selected_ckey[1] == "@")
 		var/mob/player = selected_mob
-		player_data["characterName"] = player.name || "No Character"
+		player_data["characterName"] = player?.name || "No Character"
 		player_data["playtime"] = "No client"
 		player_data["mobType"] = "[initial(player.type)]" || "null"
 	else
@@ -158,7 +158,7 @@
 			usr.client.holder.Topic(null, list("Smite" = M.UID()))
 		// Message Section
 		if("pm")
-			if (!check_rights(NONE))
+			if(!check_rights(NONE))
 				return
 			usr.client.cmd_admin_pm(M.ckey)
 		if("sm")
@@ -193,6 +193,8 @@
 			usr.client.debug_variables(M)
 		if("tp")
 			usr.client.holder.Topic(null, list("traitor" = M.UID()))
+		if("obs")
+			usr.client.holder.Topic(null, list("observeinventory" = M.UID()))
 		if("logs")
 			usr.client.holder.Topic(null, list("open_logging_view" = M.UID()))
 		if("notes")
@@ -253,7 +255,7 @@
 		if("cureAllDiseases")
 			if(!check_rights(R_EVENT))
 				return
-			if (istype(M, /mob/living))
+			if(istype(M, /mob/living))
 				var/mob/living/L = M
 				for(var/datum/disease/D in L.diseases) // cure all crit conditions
 					D.cure()
@@ -331,14 +333,14 @@
 					cmd_admin_mute(M, MUTE_ALL)
 					ui.send_update()
 		if("someadminbutton")
-			SEND_SOUND(usr, 'sound/items/bikehorn.ogg')
+			SEND_SOUND(usr, sound('sound/items/bikehorn.ogg'))
 
 
 /datum/vuap_personal/ui_state(mob/user)
 	return GLOB.admin_mod_state
 
 /datum/admins/proc/vuap_open(ckey, mob/M)
-	if (!check_rights(NONE))
+	if(!check_rights(NONE))
 		message_admins("[key_name(src)] attempted to use VUAP without sufficient rights.")
 		return
 	var/datum/vuap_personal/tgui = new(usr)

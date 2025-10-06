@@ -27,6 +27,7 @@ GLOBAL_LIST_INIT(medical_positions, list(
 	JOB_TITLE_CMO,
 	JOB_TITLE_DOCTOR,
 	JOB_TITLE_GENETICIST,
+	JOB_TITLE_MINING_MEDIC,
 	JOB_TITLE_PSYCHIATRIST,
 	JOB_TITLE_CHEMIST,
 	JOB_TITLE_VIROLOGIST,
@@ -72,6 +73,7 @@ GLOBAL_LIST_INIT(support_positions, list(
 	JOB_TITLE_QUARTERMASTER,
 	JOB_TITLE_CARGOTECH,
 	JOB_TITLE_MINER,
+	JOB_TITLE_MINING_MEDIC,
 	JOB_TITLE_LAWYER,
 	JOB_TITLE_CHAPLAIN,
 	JOB_TITLE_CLOWN,
@@ -85,13 +87,20 @@ GLOBAL_LIST_INIT(support_positions, list(
 GLOBAL_LIST_INIT(supply_positions, list(
 	JOB_TITLE_QUARTERMASTER,
 	JOB_TITLE_CARGOTECH,
-	JOB_TITLE_MINER
+	JOB_TITLE_MINER,
+	JOB_TITLE_MINING_MEDIC,
+))
+
+GLOBAL_LIST_INIT(mining_positions, list(
+	JOB_TITLE_MINER,
+	JOB_TITLE_MINING_MEDIC
 ))
 
 GLOBAL_LIST_INIT(service_positions, (support_positions - supply_positions))
 
 GLOBAL_LIST_INIT(civilian_positions, list(
-	JOB_TITLE_CIVILIAN
+	JOB_TITLE_CIVILIAN,
+	JOB_TITLE_PRISONER
 ))
 
 GLOBAL_LIST_INIT(nonhuman_positions, list(
@@ -111,7 +120,7 @@ GLOBAL_LIST_INIT(whitelisted_positions, list(
 ))
 
 
-/proc/guest_jobbans(var/job)
+/proc/guest_jobbans(job)
 	return (job in GLOB.whitelisted_positions)
 
 /proc/get_job_datums()
@@ -125,7 +134,7 @@ GLOBAL_LIST_INIT(whitelisted_positions, list(
 
 	return occupations
 
-/proc/get_alternate_titles(var/job)
+/proc/get_alternate_titles(job)
 	var/list/jobs = get_job_datums()
 	var/list/titles = list()
 

@@ -2,7 +2,7 @@ GLOBAL_VAR(CMinutes)
 GLOBAL_DATUM(banlist_savefile, /savefile)
 GLOBAL_PROTECT(banlist_savefile) // Obvious reasons
 
-/proc/CheckBan(var/ckey, var/id, var/address)
+/proc/CheckBan(ckey, id, address)
 	if(!GLOB.banlist_savefile)		// if banlist_savefile cannot be located for some reason
 		LoadBans()		// try to load the bans
 		if(!GLOB.banlist_savefile)	// uh oh, can't find bans!
@@ -13,7 +13,7 @@ GLOBAL_PROTECT(banlist_savefile) // Obvious reasons
 	if(config && CONFIG_GET(string/banappeals))
 		appeal = "\nFor more information on your ban, or to appeal, head to <a href='[CONFIG_GET(string/banappeals)]'>[CONFIG_GET(string/banappeals)]</a>"
 	GLOB.banlist_savefile.cd = "/base"
-	if( "[ckey][id]" in GLOB.banlist_savefile.dir )
+	if("[ckey][id]" in GLOB.banlist_savefile.dir)
 		GLOB.banlist_savefile.cd = "[ckey][id]"
 		if(GLOB.banlist_savefile["temp"])
 			if(!GetExp(GLOB.banlist_savefile["minutes"]))
@@ -23,20 +23,20 @@ GLOBAL_PROTECT(banlist_savefile) // Obvious reasons
 				.["desc"] = "\nReason: [GLOB.banlist_savefile["reason"]]\nExpires: [GetExp(GLOB.banlist_savefile["minutes"])]\nBy: [GLOB.banlist_savefile["bannedby"]][appeal]"
 		else
 			GLOB.banlist_savefile.cd	= "/base/[ckey][id]"
-			.["desc"]	= "\nReason: [GLOB.banlist_savefile["reason"]]\nExpires: <B>PERMENANT</B>\nBy: [GLOB.banlist_savefile["bannedby"]][appeal]"
+			.["desc"]	= "\nReason: [GLOB.banlist_savefile["reason"]]\nExpires: <b>PERMENANT</b>\nBy: [GLOB.banlist_savefile["bannedby"]][appeal]"
 		.["reason"]	= "ckey/id"
 		return .
 	else
 		for(var/A in GLOB.banlist_savefile.dir)
 			GLOB.banlist_savefile.cd = "/base/[A]"
 			var/matches
-			if( ckey == GLOB.banlist_savefile["key"] )
+			if(ckey == GLOB.banlist_savefile["key"])
 				matches += "ckey"
-			if( id == GLOB.banlist_savefile["id"] )
+			if(id == GLOB.banlist_savefile["id"])
 				if(matches)
 					matches += "/"
 				matches += "id"
-			if( address == GLOB.banlist_savefile["ip"] )
+			if(address == GLOB.banlist_savefile["ip"])
 				if(matches)
 					matches += "/"
 				matches += "ip"
@@ -49,7 +49,7 @@ GLOBAL_PROTECT(banlist_savefile) // Obvious reasons
 					else
 						.["desc"] = "\nReason: [GLOB.banlist_savefile["reason"]]\nExpires: [GetExp(GLOB.banlist_savefile["minutes"])]\nBy: [GLOB.banlist_savefile["bannedby"]][appeal]"
 				else
-					.["desc"] = "\nReason: [GLOB.banlist_savefile["reason"]]\nExpires: <B>PERMENANT</B>\nBy: [GLOB.banlist_savefile["bannedby"]][appeal]"
+					.["desc"] = "\nReason: [GLOB.banlist_savefile["reason"]]\nExpires: <b>PERMENANT</b>\nBy: [GLOB.banlist_savefile["bannedby"]][appeal]"
 				.["reason"] = matches
 				return .
 	return 0
@@ -102,7 +102,7 @@ GLOBAL_PROTECT(banlist_savefile) // Obvious reasons
 		bantimestamp = GLOB.CMinutes + minutes
 
 	GLOB.banlist_savefile.cd = "/base"
-	if( GLOB.banlist_savefile.dir.Find("[ckey][computerid]") )
+	if(GLOB.banlist_savefile.dir.Find("[ckey][computerid]"))
 		if(usr)
 			to_chat(usr, "<span class='danger'>Ban already exists.</span>")
 		return 0
@@ -168,7 +168,7 @@ GLOBAL_PROTECT(banlist_savefile) // Obvious reasons
 
 /datum/admins/proc/unbanpanel()
 	var/count = 0
-	var/dat = {"<!DOCTYPE html><meta charset="UTF-8">"}
+	var/dat = ""
 	GLOB.banlist_savefile.cd = "/base"
 	for(var/A in GLOB.banlist_savefile.dir)
 		count++
@@ -185,11 +185,13 @@ GLOBAL_PROTECT(banlist_savefile) // Obvious reasons
 			if(!expiry)		expiry = "Removal Pending"
 		else				expiry = "Permaban"
 
-		dat += text("<tr><td><a href='byond://?src=[ref];unbanf=[key][id]'>(U)</A><a href='byond://?src=[ref];unbane=[key][id]'>(E)</A> Key: <B>[key]</B></td><td>ComputerID: <B>[id]</B></td><td>IP: <B>[ip]</B></td><td> [expiry]</td><td>(By: [by])</td><td>(Reason: [reason])</td></tr>")
+		dat += text("<tr><td><a href='byond://?src=[ref];unbanf=[key][id]'>(U)</a><a href='byond://?src=[ref];unbane=[key][id]'>(E)</a> Key: <b>[key]</b></td><td>ComputerID: <b>[id]</b></td><td>IP: <b>[ip]</b></td><td> [expiry]</td><td>(By: [by])</td><td>(Reason: [reason])</td></tr>")
 
 	dat += "</table>"
-	dat = "<HR><B>Bans:</B> <FONT COLOR=blue>(U) = Unban , (E) = Edit Ban</FONT> - <FONT COLOR=green>([count] Bans)</FONT><HR><table border=1 rules=all frame=void cellspacing=0 cellpadding=3 >[dat]"
-	usr << browse(dat, "window=unbanp;size=875x400")
+	dat = "<hr><b>Bans:</b> <span style='color: blue;'>(U) = Unban , (E) = Edit Ban</span> - <span style='color: green;'>([count] Bans)</span><hr><table border=1 rules=all frame=void cellspacing=0 cellpadding=3 >[dat]"
+	var/datum/browser/popup = new(usr, "unbanp", "Unban", 875, 400)
+	popup.set_content(dat)
+	popup.open(FALSE)
 
 //////////////////////////////////// DEBUG ////////////////////////////////////
 

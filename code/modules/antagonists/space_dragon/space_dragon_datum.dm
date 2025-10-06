@@ -1,5 +1,5 @@
 /datum/antagonist/space_dragon
-	name = "\improper Space Dragon"
+	name = "Space Dragon"
 	roundend_category = "space dragons"
 	job_rank = ROLE_SPACE_DRAGON
 	special_role = SPECIAL_ROLE_SPACE_DRAGON
@@ -155,8 +155,11 @@
 	var/datum/objective/summon_carp/main_objective = locate() in objectives
 	if(main_objective)
 		main_objective.completed = TRUE
-	GLOB.command_announcement.Announce("Огромное число форм жизни направляется к [station_name()] с высокой скоростью. \
-	Оставшемуся экипажу рекомендуется эвакуироваться как можно скорее...", "Отдел Изучения Дикой Природы")
+	GLOB.major_announcement.announce(
+		message = "Огромное число неопознанных форм жизни направляется к [station_name()] с высокой скоростью. Оставшемуся экипажу рекомендуется эвакуироваться как можно скорее...",
+		new_title = ANNOUNCE_WILDNATURE_RU,
+		new_sound = 'sound/AI/commandreport.ogg'
+	)
 	sound_to_playing_players('sound/creatures/space_dragon_roar.ogg')
 	for(var/obj/structure/carp_rift/rift as anything in rift_list)
 		rift.carp_stored = 999999
@@ -217,7 +220,7 @@
 	var/list/parts = list()
 	var/datum/objective/summon_carp/S = locate() in objectives
 	if(S.check_completion())
-		parts += "<span class='redtext big'>[name] - успех! Космические карпы вернули контроль над территорией расположения станции!</span>"
+		parts += span_redtext("<big>[name] - успех! Космические карпы вернули контроль над территорией расположения станции!</big>")
 	parts += printplayer(owner)
 	var/objectives_complete = TRUE
 	if(objectives.len)
@@ -227,11 +230,11 @@
 				objectives_complete = FALSE
 				break
 	if(objectives_complete)
-		parts += "<span class='greentext big'>[name] преуспел!</span>"
+		parts += span_greentext("<big>[name] преуспел!</big>")
 	else
-		parts += "<span class='redtext big'>[name] провалился!</span>"
+		parts += span_redtext("<big>[name] провалился!</big>")
 	if(carp.len)
-		parts += "<span class='header'>Помощниками [name] были:</span>"
+		parts += span_header("Помощниками [name] были:")
 		for(var/datum/mind/M in carp)
 			parts += "[printplayer(M)]"
 	return parts.Join("<br>")

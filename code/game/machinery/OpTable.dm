@@ -1,22 +1,33 @@
 /obj/machinery/optable
 	name = "operating table"
-	desc = "Used for advanced medical procedures."
+	desc = "Многофункциональный операционный стол, предназначенный для выполнения хирургических операций. \
+			Оснащён системой датчиков, подключаемых к хирургическому компьютеру для отслеживания жизненных показателей пациента в реальном времени. \
+			Встроенные анатомические фиксаторы исключают непроизвольные движения пациента и обеспечивают удобство для оперирующего хирурга."
 	icon = 'icons/obj/surgery.dmi'
 	icon_state = "table2-idle"
 	density = TRUE
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 1
 	active_power_usage = 5
 	var/mob/living/carbon/patient
 	var/obj/machinery/computer/operating/computer
 	var/no_icon_updates = FALSE //set this to TRUE if you don't want the icons ever changing
-	var/list/injected_reagents = list()
+	var/list/injected_reagents
 	var/reagent_target_amount = 1
 	var/inject_amount = 1
 
-/obj/machinery/optable/New()
-	..()
+/obj/machinery/optable/get_ru_names()
+	return list(
+		NOMINATIVE = "операционный стол",
+		GENITIVE = "операционного стола",
+		DATIVE = "операционному столу",
+		ACCUSATIVE = "операционный стол",
+		INSTRUMENTAL = "операционным столом",
+		PREPOSITIONAL = "операционном столе"
+	)
+
+/obj/machinery/optable/Initialize(mapload)
+	. = ..()
 	for(dir in list(NORTH,EAST,SOUTH,WEST))
 		computer = locate(/obj/machinery/computer/operating, get_step(src, dir))
 		if(computer)
@@ -45,8 +56,8 @@
 	return TRUE
 
 /**
-  * Updates the `patient` var to be the mob occupying the table
-  */
+ * Updates the `patient` var to be the mob occupying the table
+ */
 /obj/machinery/optable/proc/update_patient()
 	var/mob/living/carbon/patient_carbon = locate(/mob/living/carbon, loc)
 	if(patient_carbon && patient_carbon.body_position == LYING_DOWN)
@@ -75,9 +86,15 @@
 		return FALSE
 
 	if(new_patient == user)
-		user.visible_message("[user] climbs on the operating table.","You climb on the operating table.")
+		user.visible_message(
+			"[user] забира[pluralize_ru(user.gender, "ет", "ют")]ся на [declent_ru(ACCUSATIVE)].",
+			"Вы забираетесь на на [declent_ru(ACCUSATIVE)]."
+		)
 	else
-		visible_message(span_alert("[new_patient] has been laid on the operating table by [user]."))
+		visible_message(
+			span_alert("[user] укладыва[pluralize_ru(user.gender, "ет", "ют")] [new_patient] на [declent_ru(ACCUSATIVE)]."),
+			span_alert("Вы укладываете [new_patient] на [declent_ru(ACCUSATIVE)].")
+		)
 	if(user.pulling == new_patient)
 		user.stop_pulling()
 	new_patient.forceMove(loc)
@@ -107,7 +124,7 @@
 /obj/machinery/optable/proc/check_table()
 	update_patient()
 	if(patient != null)
-		balloon_alert(usr, span_notice("уже занято!"))
+		balloon_alert(usr, "уже занято!")
 		return FALSE
 	else
 		return TRUE

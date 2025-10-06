@@ -25,13 +25,13 @@
 	uniform = /obj/item/clothing/under/plasmaman/centcomm
 
 /datum/outfit/plasmaman/nt_rep
-	name = "NanoTrasen Representative Plasmaman"
+	name = "Nanotrasen Representative Plasmaman"
 
 	head = /obj/item/clothing/head/helmet/space/plasmaman/nt_rep
 	uniform = /obj/item/clothing/under/plasmaman/nt
 
 /datum/outfit/plasmaman/nt
-	name = "NanoTrasen Plasmaman"
+	name = "Nanotrasen Plasmaman"
 
 	head = /obj/item/clothing/head/helmet/space/plasmaman/nt
 	uniform = /obj/item/clothing/under/plasmaman/enviroslacks
@@ -75,8 +75,6 @@
 /datum/outfit/plasmaman/security/pod
 	name = "Security Pod Pilot Plasmaman"
 
-	head = /obj/item/clothing/head/helmet/space/plasmaman/security
-	uniform = /obj/item/clothing/under/plasmaman/security
 	glasses = /obj/item/clothing/glasses/hud/diagnostic/sunglasses
 
 /datum/outfit/plasmaman/detective
@@ -115,6 +113,11 @@
 
 	head = /obj/item/clothing/head/helmet/space/plasmaman/mining
 	uniform = /obj/item/clothing/under/plasmaman/mining
+
+/datum/outfit/plasmaman/mining_medic
+	name = "Mining Medic Plasmaman"
+	head = /obj/item/clothing/head/helmet/space/plasmaman/mining_medic
+	uniform = /obj/item/clothing/under/plasmaman/mining_medic
 
 /datum/outfit/plasmaman/medical
 	name = "Medical Plasmaman"

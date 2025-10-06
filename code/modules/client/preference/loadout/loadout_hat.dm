@@ -1,19 +1,21 @@
 /datum/gear/hat
 	subtype_path = /datum/gear/hat
 	slot = ITEM_SLOT_HEAD
-	sort_category = "Headwear"
+	sort_category = "Головные уборы"
 
 /datum/gear/hat/hhat
 	index_name = "hardhat, select"
-	display_name = "hardhat"
+	display_name = "Строительная каска"
 	path = /obj/item/clothing/head/hardhat
 	allowed_roles = list(JOB_TITLE_CHIEF, JOB_TITLE_ENGINEER, JOB_TITLE_ENGINEER_TRAINEE, JOB_TITLE_MECHANIC, JOB_TITLE_ATMOSTECH)
 
 /datum/gear/hat/hhat/New()
 	..()
-	var/list/hats = list("yellow" = /obj/item/clothing/head/hardhat,
-						 "orange" = /obj/item/clothing/head/hardhat/orange,
-						 "blue" = /obj/item/clothing/head/hardhat/dblue)
+	var/list/hats = list(
+		"yellow" = /obj/item/clothing/head/hardhat,
+		"orange" = /obj/item/clothing/head/hardhat/orange,
+		"blue" = /obj/item/clothing/head/hardhat/dblue
+	)
 	gear_tweaks += new /datum/gear_tweak/path(hats, src)
 
 /datum/gear/hat/that
@@ -46,14 +48,16 @@
 
 /datum/gear/hat/fedora
 	index_name = "fedora, select"
-	display_name = "fedora"
+	display_name = "Федора"
 	path = /obj/item/clothing/head/fedora
 
 /datum/gear/hat/fedora/New()
 	..()
-	var/list/hats = list(/obj/item/clothing/head/fedora,
-						 /obj/item/clothing/head/fedora/whitefedora,
-						 /obj/item/clothing/head/fedora/brownfedora)
+	var/list/hats = list(
+		/obj/item/clothing/head/fedora,
+		/obj/item/clothing/head/fedora/whitefedora,
+		/obj/item/clothing/head/fedora/brownfedora
+	)
 	gear_tweaks += new /datum/gear_tweak/path(hats, src, TRUE)
 
 /datum/gear/hat/capcsec
@@ -68,47 +72,53 @@
 
 /datum/gear/hat/capred
 	index_name = "cap, select"
-	display_name = "cap"
+	display_name = "Кепка"
 	path = /obj/item/clothing/head/soft/red
 
 /datum/gear/hat/capred/New()
 	..()
-	var/list/hats = list(/obj/item/clothing/head/soft/red,
-						 /obj/item/clothing/head/soft/blue,
-						 /obj/item/clothing/head/soft/green,
-						 /obj/item/clothing/head/soft/black,
-						 /obj/item/clothing/head/soft/purple,
-						 /obj/item/clothing/head/soft/mime,
-						 /obj/item/clothing/head/soft/orange,
-						 /obj/item/clothing/head/soft/grey,
-						 /obj/item/clothing/head/soft/yellow,
-						 /obj/item/clothing/head/soft/solgov,)
+	var/list/hats = list(
+		/obj/item/clothing/head/soft/red,
+		/obj/item/clothing/head/soft/blue,
+		/obj/item/clothing/head/soft/green,
+		/obj/item/clothing/head/soft/black,
+		/obj/item/clothing/head/soft/purple,
+		/obj/item/clothing/head/soft/mime,
+		/obj/item/clothing/head/soft/orange,
+		/obj/item/clothing/head/soft/grey,
+		/obj/item/clothing/head/soft/yellow,
+		/obj/item/clothing/head/soft/solgov
+	)
 	gear_tweaks += new /datum/gear_tweak/path(hats, src, TRUE)
 /datum/gear/hat/cowboyhat
 	index_name = "cowboy hat, select"
-	display_name = "cowboy hat"
+	display_name = "Ковбойская шляпа"
 	path = /obj/item/clothing/head/cowboyhat
 
 /datum/gear/hat/cowboyhat/New()
 	..()
-	var/list/hats = list(/obj/item/clothing/head/cowboyhat,
-						 /obj/item/clothing/head/cowboyhat/tan,
-						 /obj/item/clothing/head/cowboyhat/black,
-						 /obj/item/clothing/head/cowboyhat/white,
-						 /obj/item/clothing/head/cowboyhat/pink)
+	var/list/hats = list(
+		/obj/item/clothing/head/cowboyhat,
+		/obj/item/clothing/head/cowboyhat/tan,
+		/obj/item/clothing/head/cowboyhat/black,
+		/obj/item/clothing/head/cowboyhat/white,
+		/obj/item/clothing/head/cowboyhat/pink
+	)
 	gear_tweaks += new /datum/gear_tweak/path(hats, src, TRUE)
 
 /datum/gear/hat/beret
 	index_name = "beret, select"
-	display_name = "beret"
+	display_name = "Берет"
 	path = /obj/item/clothing/head/beret
 
 /datum/gear/hat/beret/New()
 	..()
-	var/list/berets = list("red" = /obj/item/clothing/head/beret,
-						   "purple" = /obj/item/clothing/head/beret/purple_normal,
-						   "black" = /obj/item/clothing/head/beret/black,
-						   "blue" = /obj/item/clothing/head/beret/blue)
+	var/list/berets = list(
+		"red" = /obj/item/clothing/head/beret,
+		"purple" = /obj/item/clothing/head/beret/purple_normal,
+		"black" = /obj/item/clothing/head/beret/black,
+		"blue" = /obj/item/clothing/head/beret/blue
+		)
 	gear_tweaks += new /datum/gear_tweak/path(berets, src)
 
 /datum/gear/hat/beret_job
@@ -143,7 +153,7 @@
 /datum/gear/hat/beret_job/med
 	index_name = "medical beret"
 	path = /obj/item/clothing/head/beret/med
-	allowed_roles = list(JOB_TITLE_CMO, JOB_TITLE_DOCTOR, JOB_TITLE_INTERN, JOB_TITLE_VIROLOGIST, JOB_TITLE_BRIGDOC, JOB_TITLE_CORONER, JOB_TITLE_PARAMEDIC, JOB_TITLE_CHEMIST, JOB_TITLE_GENETICIST, JOB_TITLE_PSYCHIATRIST)
+	allowed_roles = list(JOB_TITLE_CMO, JOB_TITLE_DOCTOR, JOB_TITLE_MINING_MEDIC, JOB_TITLE_INTERN, JOB_TITLE_VIROLOGIST, JOB_TITLE_BRIGDOC, JOB_TITLE_CORONER, JOB_TITLE_PARAMEDIC, JOB_TITLE_CHEMIST, JOB_TITLE_GENETICIST, JOB_TITLE_PSYCHIATRIST)
 
 /datum/gear/hat/beret_job/eng
 	index_name = "engineering beret"
@@ -157,15 +167,17 @@
 
 /datum/gear/hat/surgicalcap
 	index_name = "surgical cap, select"
-	display_name = "surgical cap"
+	display_name = "Хирургическая шапочка"
 	path = /obj/item/clothing/head/surgery/purple
-	allowed_roles = list(JOB_TITLE_CMO, JOB_TITLE_DOCTOR, JOB_TITLE_INTERN)
+	allowed_roles = list(JOB_TITLE_CMO, JOB_TITLE_DOCTOR, JOB_TITLE_MINING_MEDIC, JOB_TITLE_INTERN)
 
 /datum/gear/hat/surgicalcap/New()
 	..()
-	var/list/caps = list("purple" = /obj/item/clothing/head/surgery/purple,
-						 "lightgreen" = /obj/item/clothing/head/surgery/lightgreen,
-						 "green" = /obj/item/clothing/head/surgery/green,)
+	var/list/caps = list(
+		"purple" = /obj/item/clothing/head/surgery/purple,
+		"lightgreen" = /obj/item/clothing/head/surgery/lightgreen,
+		"green" = /obj/item/clothing/head/surgery/green
+	)
 	gear_tweaks += new /datum/gear_tweak/path(caps, src)
 
 /datum/gear/hat/flowerpin
@@ -179,7 +191,7 @@
 
 /datum/gear/hat/beanie
 	index_name = "beanie, select"
-	display_name = "beanie"
+	display_name = "Шапочка"
 	path = /obj/item/clothing/head/beanie
 
 /datum/gear/hat/beanie/New()
@@ -199,3 +211,11 @@
 							/obj/item/clothing/head/beanie/stripedgreen,
 							/obj/item/clothing/head/beanie/stripedred)
 	gear_tweaks += new /datum/gear_tweak/path(beanies, src, TRUE)
+
+/datum/gear/hat/shapka_pepega
+	index_name = "frog_hat"
+	path = /obj/item/clothing/head/shapka_pepega
+
+/datum/gear/hat/carp_hat
+	index_name = "carp_hat"
+	path = /obj/item/clothing/head/carp_hat

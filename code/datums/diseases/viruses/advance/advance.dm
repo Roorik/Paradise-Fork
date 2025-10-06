@@ -5,15 +5,15 @@
 
 */
 
-#define VIRUS_SYMPTOM_LIMIT	6
-#define VIRUS_MAX_SYMPTOM_LEVEL	6
+#define VIRUS_SYMPTOM_LIMIT 6
+#define VIRUS_MAX_SYMPTOM_LEVEL 6
 
 // The order goes from easy to cure to hard to cure.
 GLOBAL_LIST_INIT(advance_cures, list(
-									"sodiumchloride", "sugar", "orangejuice",
-									"spaceacillin", "salglu_solution", "ethanol",
-									"teporone", "diphenhydramine", "lipolicide",
-									"silver", "gold"
+	"sodiumchloride", "sugar", "orangejuice",
+	"spaceacillin", "salglu_solution", "ethanol",
+	"teporone", "diphenhydramine", "lipolicide",
+	"silver", "gold"
 ))
 
 GLOBAL_LIST_EMPTY(archive_diseases)
@@ -26,11 +26,9 @@ GLOBAL_LIST_EMPTY(archive_diseases)
 
 /datum/disease/virus/advance
 
-	name = "Unknown" // We will always let our Virologist name our disease.
 	desc = "Спроектированная болезнь, может содержать сразу несколько симптомов."
 	form = "Продвинутая болезнь" // Will let med-scanners know that this disease was engineered.
-	agent = "advance microbes"
-	max_stages = 5
+	agent = "Продвинутые микробы"
 
 	// NEW VARS
 
@@ -92,8 +90,8 @@ GLOBAL_LIST_EMPTY(archive_diseases)
 /datum/disease/virus/advance/Copy()
 	var/datum/disease/virus/advance/copy = new
 	var/list/required_vars = list(
-		"name","severity","id","visibility_flags","spread_flags", "additional_info", "stage_prob", "cures",
-		"cure_prob","cure_text", "permeability_mod", "mutation_chance", "mutation_reagents", "possible_mutations")
+		"name", "severity", "id", "visibility_flags", "spread_flags", "additional_info", "stage_prob", "cures",
+		"cure_prob", "cure_text", "permeability_mod", "mutation_chance", "mutation_reagents", "possible_mutations")
 	for(var/V in required_vars)
 		if(istype(vars[V], /list))
 			var/list/L = vars[V]
@@ -158,7 +156,7 @@ GLOBAL_LIST_EMPTY(archive_diseases)
 		name = A.name
 	else
 		if(reset_name)
-			name = "Unknown"
+			name = UNKNOWN_STATUS_RUS
 		AddToArchive()
 
 /datum/disease/virus/advance/proc/AddToArchive()
@@ -265,7 +263,7 @@ GLOBAL_LIST_EMPTY(archive_diseases)
 	return
 
 // Name the disease.
-/datum/disease/virus/advance/proc/AssignName(name = "Unknown")
+/datum/disease/virus/advance/proc/AssignName(name = UNKNOWN_STATUS_RUS)
 	src.name = name
 	return
 
@@ -308,7 +306,7 @@ GLOBAL_LIST_EMPTY(archive_diseases)
 */
 
 // Mix a list of advance diseases and return the mixed result.
-/proc/Advance_Mix(var/list/D_list)
+/proc/Advance_Mix(list/D_list)
 
 	var/list/diseases = list()
 
@@ -332,7 +330,7 @@ GLOBAL_LIST_EMPTY(archive_diseases)
 		var/datum/disease/virus/advance/D2 = pick(diseases)
 		D2.Mix(D1)
 
-	 // Should be only 1 entry left, but if not let's only return a single entry
+	// Should be only 1 entry left, but if not let's only return a single entry
 //	to_chat(world, "END MIXING!!!!!")
 	var/datum/disease/virus/advance/to_return = pick(diseases)
 	to_return.Refresh(reset_name = TRUE)
@@ -364,7 +362,7 @@ GLOBAL_LIST_EMPTY(archive_diseases)
 	symptoms += GLOB.list_symptoms.Copy()
 	do
 		if(user)
-			var/symptom = input(user, "Choose a symptom to add ([i] remaining)", "Choose a Symptom") in symptoms
+			var/symptom = tgui_input_list(user, "Choose a symptom to add ([i] remaining)", "Choose a Symptom", symptoms)
 			if(isnull(symptom))
 				return
 			else if(istext(symptom))
@@ -378,7 +376,7 @@ GLOBAL_LIST_EMPTY(archive_diseases)
 
 	if(D.symptoms.len > 0)
 
-		var/new_name = stripped_input(user, "Name your new disease.", "New Name")
+		var/new_name = tgui_input_text(user, "Name your new disease.", "New Name")
 		if(!new_name)
 			return
 		D.AssignName(new_name)

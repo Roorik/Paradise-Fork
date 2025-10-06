@@ -9,22 +9,22 @@
 	flags = CONDUCT
 	slot_flags = ITEM_SLOT_BELT
 	force = 6
+	throwforce = 5
 	throw_speed = 3
-	throw_range = 7
 	w_class = WEIGHT_CLASS_SMALL
 	materials = list(MAT_METAL=80)
 	origin_tech = "materials=1;engineering=1"
 	attack_verb = list("ущипнул", "тяпнул")
 	hitsound = 'sound/items/wirecutter.ogg'
 	usesound = 'sound/items/wirecutter.ogg'
-	drop_sound = 'sound/items/handling/wirecutter_drop.ogg'
-	pickup_sound =  'sound/items/handling/wirecutter_pickup.ogg'
+	drop_sound = 'sound/items/handling/drop/wirecutter_drop.ogg'
+	pickup_sound =  'sound/items/handling/pickup/wirecutter_pickup.ogg'
 	sharp = 1
 	embed_chance = 5
 	embedded_ignore_throwspeed_threshold = TRUE
-	toolspeed = 1
-	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 30)
+	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, RAD = 0, FIRE = 50, ACID = 30)
 	tool_behaviour = TOOL_WIRECUTTER
+	toolbox_radial_menu_compatibility = TRUE
 	var/random_color = TRUE
 
 /obj/item/wirecutters/Initialize(mapload, param_color = null)
@@ -51,8 +51,8 @@
 
 
 /obj/item/wirecutters/suicide_act(mob/user)
-	user.visible_message("<span class='suicide'>[user] is cutting at [user.p_their()] arteries with [src]! It looks like [user.p_theyre()] trying to commit suicide!</span>")
-	playsound(loc, usesound, 50, 1, -1)
+	user.visible_message(span_suicide("[user] is cutting at [user.p_their()] arteries with [src]! It looks like [user.p_theyre()] trying to commit suicide!"))
+	playsound(loc, usesound, 50, TRUE, -1)
 	return BRUTELOSS
 
 /obj/item/wirecutters/brass
@@ -67,7 +67,6 @@
 	name = "alien wirecutters"
 	desc = "Extremely sharp wirecutters, made out of a silvery-green metal."
 	icon = 'icons/obj/abductor.dmi'
-	icon_state = "cutters"
 	item_state = "cutters_alien"
 	belt_icon = "alien_wirecutters"
 	toolspeed = 0.1
@@ -75,8 +74,6 @@
 	random_color = FALSE
 
 /obj/item/wirecutters/cyborg
-	name = "wirecutters"
-	desc = "This cuts wires."
 	toolspeed = 0.5
 
 /obj/item/wirecutters/power
@@ -90,21 +87,22 @@
 	usesound = 'sound/items/jaws_cut.ogg'
 	toolspeed = 0.25
 	random_color = FALSE
+	w_class = WEIGHT_CLASS_NORMAL
 
 /obj/item/wirecutters/power/suicide_act(mob/user)
-	user.visible_message("<span class='suicide'>[user] is wrapping \the [src] around [user.p_their()] neck. It looks like [user.p_theyre()] trying to rip [user.p_their()] head off!</span>")
-	playsound(loc, 'sound/items/jaws_cut.ogg', 50, 1, -1)
+	user.visible_message(span_suicide("[user] is wrapping \the [src] around [user.p_their()] neck. It looks like [user.p_theyre()] trying to rip [user.p_their()] head off!"))
+	playsound(loc, 'sound/items/jaws_cut.ogg', 50, TRUE, -1)
 	if(ishuman(user))
 		var/mob/living/carbon/human/H = user
 		var/obj/item/organ/external/head/head = H.bodyparts_by_name[BODY_ZONE_HEAD]
 		if(head)
 			head.droplimb(0, DROPLIMB_BLUNT, FALSE, TRUE)
-			playsound(loc,"desceration" ,50, 1, -1)
+			playsound(loc, SFX_DESECRATION, 50, TRUE, -1)
 	return BRUTELOSS
 
 /obj/item/wirecutters/power/attack_self(mob/user)
-	playsound(get_turf(user), 'sound/items/change_jaws.ogg', 50, 1)
+	playsound(get_turf(user), 'sound/items/change_jaws.ogg', 50, TRUE)
 	var/obj/item/crowbar/power/pryjaws = new /obj/item/crowbar/power
-	to_chat(user, "<span class='notice'>You attach the pry jaws to [src].</span>")
+	to_chat(user, span_notice("You attach the pry jaws to [src]."))
 	qdel(src)
 	user.put_in_active_hand(pryjaws)

@@ -8,28 +8,32 @@
 	if(CONFIG_GET(flag/log_access))
 		for(var/mob/M in GLOB.player_list)
 			if(M == src)	continue
-			if( M.key && (M.key != key) )
+			if(M.key && (M.key != key))
 				var/matches
-				if( (M.lastKnownIP == client.address) )
+				if(M.lastKnownIP == client.address)
 					matches += "IP ([client.address])"
-				if( (M.computer_id == client.computer_id) )
+				if(M.computer_id == client.computer_id)
 					if(matches)	matches += " and "
 					matches += "ID ([client.computer_id])"
 					if(!CONFIG_GET(flag/disable_cid_warn_popup))
 						spawn() alert("You have logged in already with another key this round, please log out of this one NOW or risk being banned!")
 				if(matches)
 					if(M.client)
-						message_admins("<font color='red'><B>Notice: </B><font color='#EB4E00'><a href='byond://?src=[usr.UID()];priv_msg=[src.client.ckey]'>[key_name_admin(src)]</A> has the same [matches] as <a href='byond://?src=[usr.UID()];priv_msg=[M.client.ckey]'>[key_name_admin(M)]</A>.</font>")
+						message_admins("<span style='color: red'><b>Notice: </b><span style='color: #EB4E00'><a href='byond://?src=[usr.UID()];priv_msg=[src.client.ckey]'>[key_name_admin(src)]</a> has the same [matches] as <a href='byond://?src=[usr.UID()];priv_msg=[M.client.ckey]'>[key_name_admin(M)]</a>.</span>")
 						log_adminwarn("Notice: [key_name(src)] has the same [matches] as [key_name(M)].")
 					else
-						message_admins("<font color='red'><B>Notice: </B><font color='#EB4E00'><a href='byond://?src=[usr.UID()];priv_msg=[src.client.ckey]'>[key_name_admin(src)]</A> has the same [matches] as [key_name_admin(M)] (no longer logged in). </font>")
+						message_admins("span style='color: red'><b>Notice: </b><span style='color: #EB4E00'><a href='byond://?src=[usr.UID()];priv_msg=[src.client.ckey]'>[key_name_admin(src)]</a> has the same [matches] as [key_name_admin(M)] (no longer logged in). </span>")
 						log_adminwarn("Notice: [key_name(src)] has the same [matches] as [key_name(M)] (no longer logged in).")
 
 /mob/Login()
 	if(!client)
 		return FALSE
+
 	canon_client = client
+
 	add_to_player_list()
+	GLOB.left_player_list -= src
+
 	last_known_ckey = ckey
 	update_Login_details()
 	world.update_status()
@@ -70,7 +74,7 @@
 	reset_perspective(loc)
 
 
-	if((ckey in GLOB.de_admins) || (ckey in GLOB.de_mentors))
+	if((ckey in GLOB.de_admins) || (ckey in GLOB.de_mentors) || (ckey in GLOB.de_devs))
 		add_verb(src, /client/proc/readmin)
 
 	//Clear ability list and update from mob.
@@ -91,6 +95,9 @@
 	update_client_colour(0)
 	update_morgue()
 	client.init_verbs()
+
+	clear_important_client_contents(client)
+	enable_client_mobs_in_contents(client)
 
 	SEND_SIGNAL(src, COMSIG_MOB_CLIENT_LOGIN, client)
 	SEND_SIGNAL(src, COMSIG_MOB_LOGIN)

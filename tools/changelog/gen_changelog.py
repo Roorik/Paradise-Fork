@@ -23,6 +23,8 @@ validPrefixes = [
     "image",
     "imageadd",
     "imagedel",
+    "local",
+    "map",
     "qol",
     "refactor",
     "rscadd",
@@ -32,6 +34,7 @@ validPrefixes = [
     "soundadd",
     "sounddel",
     "spellcheck",
+    "tgs",
     "tweak",
     "unknown",
     "wip",
@@ -82,18 +85,23 @@ for i in commitsSorted:
     if len(split) > 1:
         prefix = split[0].lower()
         change = split[1]
-        if prefix.startswith("fix") or prefix == "hotfix":
-            prefix = "bugfix"
-        elif prefix == "buff":
-            prefix = "tweak"
-        elif prefix == "feat":
-            prefix = "add"
-        elif prefix.startswith("ref"):
-            prefix = "refactor"
-        elif prefix.startswith("revert"):
-            prefix = "del"
-        elif prefix not in validPrefixes:
-            prefix = "unknown"
+        prefixes = prefix.split('/')
+        for j in range(len(prefixes)):
+            temp_prefix = prefixes[j]
+            if temp_prefix.startswith("fix") or temp_prefix == "hotfix":
+                prefixes[j] = "bugfix"
+            elif temp_prefix == "buff":
+                prefixes[j] = "tweak"
+            elif temp_prefix == "feat":
+                prefixes[j] = "add"
+            elif temp_prefix.startswith("ref"):
+                prefixes[j] = "refactor"
+            elif temp_prefix.startswith("revert"):
+                prefixes[j] = "del"
+            elif temp_prefix not in validPrefixes:
+                prefixes[j] = "unknown"
+
+        prefix = '/'.join(prefixes)
     else:
         prefix = "server"
         change = split[0]

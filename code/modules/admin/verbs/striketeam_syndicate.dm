@@ -1,9 +1,11 @@
 //STRIKE TEAMS
 
 #define SYNDICATE_COMMANDOS_POSSIBLE 6 //if more Commandos are needed in the future
+
 GLOBAL_VAR_INIT(sent_syndicate_strike_team, 0)
+
 /client/proc/syndicate_strike_team()
-	set category = "Admin.Event"
+	set category = STATPANEL_ADMIN_EVENT
 	set name = "Заспавнить Ударный Отряд Синдиката"
 	set desc = "Спавнит Ударный Отряд Синдиката в месте их дислокации на СЦК."
 	if(!src.holder)
@@ -36,13 +38,7 @@ GLOBAL_VAR_INIT(sent_syndicate_strike_team, 0)
 	var/is_leader = TRUE // set to FALSE after leader is spawned
 
 	// Find the nuclear auth code
-	var/nuke_code
-	var/temp_code
-	for(var/obj/machinery/nuclearbomb/N in GLOB.machines)
-		temp_code = text2num(N.r_code)
-		if(temp_code)//if it's actually a number. It won't convert any non-numericals.
-			nuke_code = N.r_code
-			break
+	var/nuke_code = GLOB.nuke_codes[/obj/machinery/nuclearbomb]
 
 	// Find ghosts willing to be SST
 	var/image/I = new('icons/obj/cardboard_cutout.dmi', "cutout_commando")
@@ -80,10 +76,10 @@ GLOBAL_VAR_INIT(sent_syndicate_strike_team, 0)
 
 			//So they don't forget their code or mission.
 			if(nuke_code)
-				new_syndicate_commando.mind.store_memory("<B>Коды от боеголовки:</B> <span class='warning'>[nuke_code]</span>.")
-			new_syndicate_commando.mind.store_memory("<B>Миссия:</B> <span class='warning'>[input]</span>.")
+				new_syndicate_commando.mind.store_memory("<b>Коды от боеголовки:</b> <span class='warning'>[nuke_code]</span>.")
+			new_syndicate_commando.mind.store_memory("<b>Миссия:</b> <span class='warning'>[input]</span>.")
 
-			to_chat(new_syndicate_commando, span_notice("Вы [is_leader ? "<B>Лидер</B>" : "боец"] Элитного Отряда в подчинении Синдиката. \nВаша миссия: <span class='userdanger'>[input]</span>"))
+			to_chat(new_syndicate_commando, span_notice("Вы [is_leader ? "<b>Лидер</b>" : "боец"] Элитного Отряда в подчинении Синдиката. \nВаша миссия: <span class='userdanger'>[input]</span>"))
 			new_syndicate_commando.faction += "syndicate"
 			var/datum/atom_hud/antag/opshud = GLOB.huds[ANTAG_HUD_OPS]
 			opshud.join_hud(new_syndicate_commando.mind.current)
@@ -94,7 +90,7 @@ GLOBAL_VAR_INIT(sent_syndicate_strike_team, 0)
 
 	message_admins(span_notice("[key_name_admin(usr)] has spawned a Syndicate strike squad."))
 	log_admin("[key_name(usr)] used Spawn Syndicate Squad.")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Send SST") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Send SST")
 
 /client/proc/create_syndicate_death_commando(obj/spawn_location, is_leader = FALSE)
 	var/mob/living/carbon/human/new_syndicate_commando = new(spawn_location.loc)
@@ -125,3 +121,5 @@ GLOBAL_VAR_INIT(sent_syndicate_strike_team, 0)
 		new_syndicate_commando.equipOutfit(/datum/outfit/admin/syndicate_strike_team)
 	qdel(spawn_location)
 	return new_syndicate_commando
+
+#undef SYNDICATE_COMMANDOS_POSSIBLE

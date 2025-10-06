@@ -3,13 +3,11 @@
 	icon_state = "guardian"
 	damage = 20
 	armour_penetration = 100
-	damage_type = BRUTE
 
 /mob/living/simple_animal/hostile/guardian/ranged
 	friendly = "quietly assesses"
 	melee_damage_lower = 10
 	melee_damage_upper = 10
-	damage_transfer = 1
 	projectiletype = /obj/projectile/guardian
 	ranged_cooldown_time = 5 //fast!
 	projectilesound = 'sound/effects/hit_on_shattered_glass.ogg'
@@ -33,7 +31,7 @@
 		if(energy>=20)
 			ranged = 1
 		if(energy<=5)
-			to_chat(src, "<span class='danger'>Энергия на нуле. Стрельба заблокирована.</span>")
+			to_chat(src, span_danger("Энергия на нуле. Стрельба заблокирована."))
 			ranged = 0
 
 /mob/living/simple_animal/hostile/guardian/ranged/get_status_tab_items()
@@ -58,7 +56,7 @@
 			alpha = 255
 			range = 13
 			incorporeal_move = INCORPOREAL_NONE
-			to_chat(src, "<span class='danger'>Вы переключились в боевой режим.</span>")
+			to_chat(src, span_danger("Вы переключились в боевой режим."))
 			toggle = FALSE
 		else
 			ranged = 0
@@ -69,21 +67,21 @@
 			alpha = 60
 			range = 255
 			incorporeal_move = INCORPOREAL_NORMAL
-			to_chat(src, "<span class='danger'>Вы переключились в режим разведки.</span>")
+			to_chat(src, span_danger("Вы переключились в режим разведки."))
 			toggle = TRUE
 	else
-		to_chat(src, "<span class='danger'>Нужно быть в хозяине для смены режимов!</span>")
+		to_chat(src, span_danger("Нужно быть в хозяине для смены режимов!"))
 
 /mob/living/simple_animal/hostile/guardian/ranged/ToggleLight()
 	var/msg
 	switch(lighting_alpha)
-		if (LIGHTING_PLANE_ALPHA_VISIBLE)
+		if(LIGHTING_PLANE_ALPHA_VISIBLE)
 			lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_VISIBLE
 			msg = "Вы активировали ночное зрение."
-		if (LIGHTING_PLANE_ALPHA_MOSTLY_VISIBLE)
+		if(LIGHTING_PLANE_ALPHA_MOSTLY_VISIBLE)
 			lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE
 			msg = "Вы усилили ночное зрение."
-		if (LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE)
+		if(LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE)
 			lighting_alpha = LIGHTING_PLANE_ALPHA_INVISIBLE
 			msg = "Вы увеличили ночное зрение до максимума."
 		else
@@ -92,30 +90,30 @@
 
 	update_sight()
 
-	to_chat(src, "<span class='notice'>[msg]</span>")
+	to_chat(src, span_notice("[msg]"))
 
 /mob/living/simple_animal/hostile/guardian/ranged/verb/Snare()
-	set name = "Установить ловушку для слежки"
-	set category = "Guardian"
+	set name = "Установить ловушку"
+	set category = STATPANEL_GUARDIAN
 	set desc = "Установите невидимую ловушку, которая оповестит вас, когда по ней пройдут живые существа. Максимум 5"
 	if(snares.len <6)
 		var/turf/snare_loc = get_turf(loc)
 		var/obj/item/effect/snare/snare = new(snare_loc, src)
 		snare.name = "[get_area(snare_loc)] trap ([rand(1, 1000)])"
 		snares |= snare
-		to_chat(src, "<span class='danger'>Ловушка слежения установлена!</span>")
+		to_chat(src, span_danger("Ловушка слежения установлена!"))
 	else
-		to_chat(src, "<span class='danger'>У вас установлено слишком много ловушек. Сначала удалите некоторые.</span>")
+		to_chat(src, span_danger("У вас установлено слишком много ловушек. Сначала удалите некоторые."))
 
 /mob/living/simple_animal/hostile/guardian/ranged/verb/DisarmSnare()
-	set name = "Удалить ловушку для наблюдения"
-	set category = "Guardian"
-	set desc = "Обезвреживание нежелательных ловушек наблюдения."
-	var/picked_snare = input(src, "Выберите ловушку для обезвреживания", "Уничтожить ловушку") as null|anything in snares
+	set name = "Удалить ловушку"
+	set category = STATPANEL_GUARDIAN
+	set desc = "Обезвреживание нежелательных ловушек слежения."
+	var/picked_snare = tgui_input_list(src, "Выберите ловушку для обезвреживания", "Уничтожить ловушку", snares)
 	if(picked_snare)
 		snares -= picked_snare
 		qdel(picked_snare)
-		to_chat(src, "<span class='danger'>Ловушка убрана.</span>")
+		to_chat(src, span_danger("Ловушка убрана."))
 
 
 /obj/item/effect/snare

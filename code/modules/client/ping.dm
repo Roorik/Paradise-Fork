@@ -3,7 +3,7 @@
 	set name = ".update_ping"
 	var/ping = pingfromtime(time)
 	lastping = ping
-	if (!avgping)
+	if(!avgping)
 		avgping = ping
 	else
 		avgping = MC_AVERAGE_SLOW(avgping, ping)
@@ -17,6 +17,6 @@
 	to_chat(src, span_notice("Round trip ping took [round(pingfromtime(time),1)]ms"))
 
 /client/verb/ping()
-	set name = "Ping"
-	set category = "OOC"
+	set name = "Пинг"
+	set category = STATPANEL_OOC
 	winset(src, null, "command=.display_ping+[num2text(world.time+world.tick_lag*TICK_USAGE_REAL/100, 32)]")

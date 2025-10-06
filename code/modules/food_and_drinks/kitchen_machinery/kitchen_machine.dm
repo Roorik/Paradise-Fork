@@ -8,10 +8,8 @@
 /obj/machinery/kitchen_machine
 	name = "Base Kitchen Machine"
 	desc = "If you are seeing this, a coder/mapper messed up. Please report it."
-	layer = 2.9
 	density = TRUE
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 5
 	active_power_usage = 100
 	container_type = OPENCONTAINER
@@ -42,8 +40,8 @@
 *   Initialising
 ********************/
 
-/obj/machinery/kitchen_machine/New()
-	..()
+/obj/machinery/kitchen_machine/Initialize(mapload)
+	. = ..()
 	create_reagents(100)
 	reagents.set_reacting(FALSE)
 	init_lists()
@@ -121,7 +119,7 @@
 				return ..()
 			updateUsrDialog()
 			return ATTACK_CHAIN_BLOCKED_ALL
-		var/obj/item/stack/to_add = stack.split_stack(user, 1)
+		var/obj/item/stack/to_add = stack.split(user, 1)
 		to_add.forceMove(src)
 		updateUsrDialog()
 		user.visible_message(
@@ -158,7 +156,7 @@
 /obj/machinery/kitchen_machine/examine(mob/user)
 	. = ..()
 	if(in_range(src, user))
-		. += span_info("<b>Alt-click</b> to activate it.<br/><b>Ctrl-Shift-click</b> to dispose content.")
+		. += span_notice("<b>Alt-click</b> to activate it.<br/><b>Ctrl-Shift-click</b> to dispose content.")
 
 /obj/machinery/kitchen_machine/click_alt(mob/living/carbon/human/human)
 	if(operating)
@@ -287,13 +285,13 @@
 /obj/machinery/kitchen_machine/interact(mob/user) // The microwave Menu
 	if(panel_open || !anchored)
 		return
-	var/dat = {"<!DOCTYPE html><meta charset="UTF-8">"}
+	var/dat = ""
 	if(broken)
 		dat = {"<code>Bzzzzttttt</code>"}
 	else if(operating)
-		dat = {"<code>[pick(cook_verbs)] in progress!<BR>Please wait...!</code>"}
+		dat = {"<code>[pick(cook_verbs)] in progress!<br>Please wait...!</code>"}
 	else if(dirty==100)
-		dat = {"<code>This [name] is dirty!<BR>Please clean it before use!</code>"}
+		dat = {"<code>This [name] is dirty!<br>Please clean it before use!</code>"}
 	else
 		var/list/items_counts = new
 		var/list/items_measures = new
@@ -320,12 +318,12 @@
 		for(var/O in items_counts)
 			var/N = items_counts[O]
 			if(!(O in items_measures))
-				dat += {"<B>[capitalize(O)]:</B> [N] [lowertext(O)]\s<BR>"}
+				dat += {"<b>[capitalize(O)]:</b> [N] [lowertext(O)]\s<br>"}
 			else
 				if(N==1)
-					dat += {"<B>[capitalize(O)]:</B> [N] [items_measures[O]]<BR>"}
+					dat += {"<b>[capitalize(O)]:</b> [N] [items_measures[O]]<br>"}
 				else
-					dat += {"<B>[capitalize(O)]:</B> [N] [items_measures_p[O]]<BR>"}
+					dat += {"<b>[capitalize(O)]:</b> [N] [items_measures_p[O]]<br>"}
 
 		for(var/datum/reagent/R in reagents.reagent_list)
 			var/display_name = R.name
@@ -333,15 +331,15 @@
 				display_name = "Hotsauce"
 			if(R.id == "frostoil")
 				display_name = "Coldsauce"
-			dat += {"<B>[display_name]:</B> [R.volume] unit\s<BR>"}
+			dat += {"<b>[display_name]:</b> [R.volume] unit\s<br>"}
 
 		if(items_counts.len==0 && reagents.reagent_list.len==0)
-			dat = {"<B>The [src] is empty</B><BR>"}
+			dat = {"<b>The [src] is empty</b><br>"}
 		else
 			dat = {"<b>Ingredients:</b><br>[dat]"}
-		dat += {"<HR><BR>\
-<a href='byond://?src=[UID()];action=cook'>Turn on!</A><BR>\
-<a href='byond://?src=[UID()];action=dispose'>Eject ingredients!</A><BR>\
+		dat += {"<hr><br>\
+<a href='byond://?src=[UID()];action=cook'>Turn on!</a><br>\
+<a href='byond://?src=[UID()];action=dispose'>Eject ingredients!</a><br>\
 "}
 
 	var/datum/browser/popup = new(user, name, name, 400, 400)
@@ -481,7 +479,7 @@
 	return 0
 
 /obj/machinery/kitchen_machine/proc/start()
-	visible_message("<span class='notice'>\The [src] turns on.</span>", "<span class='notice'>You hear \a [src].</span>")
+	visible_message(span_notice("\The [src] turns on."), span_notice("You hear \a [src]."))
 	operating = TRUE
 	update_icon(UPDATE_ICON_STATE)
 	updateUsrDialog()
@@ -492,7 +490,7 @@
 	updateUsrDialog()
 
 /obj/machinery/kitchen_machine/proc/stop()
-	playsound(loc, 'sound/machines/ding.ogg', 50, 1)
+	playsound(loc, 'sound/machines/ding.ogg', 50, TRUE)
 	operating = FALSE // Turn it off again aferwards
 	update_icon(UPDATE_ICON_STATE)
 	updateUsrDialog()
@@ -510,11 +508,11 @@
 	updateUsrDialog()
 
 /obj/machinery/kitchen_machine/proc/muck_start()
-	playsound(loc, 'sound/effects/splat.ogg', 50, 1) // Play a splat sound
+	playsound(loc, 'sound/effects/splat.ogg', 50, TRUE) // Play a splat sound
 
 /obj/machinery/kitchen_machine/proc/muck_finish()
-	playsound(loc, 'sound/machines/ding.ogg', 50, 1)
-	visible_message("<span class='alert'>\The [src] gets covered in muck!</span>")
+	playsound(loc, 'sound/machines/ding.ogg', 50, TRUE)
+	visible_message(span_alert("\The [src] gets covered in muck!"))
 	if(can_be_dirty) //this vars are much more easy than copy-paste all that code to tribal oven
 		dirty = MAX_DIRT // Make it dirty so it can't be used util cleaned
 	container_type = NONE
@@ -523,8 +521,8 @@
 	updateUsrDialog()
 
 /obj/machinery/kitchen_machine/proc/broke()
-	do_sparks(2, 1, src)
-	visible_message("<span class='alert'>The [src] breaks!</span>") //Let them know they're stupid
+	do_sparks(2, TRUE, src)
+	visible_message(span_alert("The [src] breaks!")) //Let them know they're stupid
 	if(can_broke)
 		broken = BROKEN_NEEDS_SCREWDRIVER // Make it broken so it can't be used util fixed
 	container_type = NONE

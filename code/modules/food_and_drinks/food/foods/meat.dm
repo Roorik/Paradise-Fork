@@ -6,14 +6,7 @@
 /obj/item/reagent_containers/food/snacks/meat
 	name = "meat"
 	desc = "Кусок сырого мяса. Большинство гуманоидов не стало бы есть его в сыром виде."
-	ru_names = list(
-		NOMINATIVE = "кусок мяса",
-		GENITIVE = "куска мяса",
-		DATIVE = "куску мяса",
-		ACCUSATIVE = "кусок мяса",
-		INSTRUMENTAL = "куском мяса",
-		PREPOSITIONAL = "куске мяса"
-	)
+	w_class = WEIGHT_CLASS_SMALL
 	gender = MALE
 	icon_state = "meat"
 	filling_color = "#FF1C1C"
@@ -21,6 +14,16 @@
 	list_reagents = list("protein" = 3)
 	tastes = list("мяса" = 1)
 	foodtype = MEAT
+
+/obj/item/reagent_containers/food/snacks/meat/get_ru_names()
+	return list(
+		NOMINATIVE = "кусок мяса",
+		GENITIVE = "куска мяса",
+		DATIVE = "куску мяса",
+		ACCUSATIVE = "кусок мяса",
+		INSTRUMENTAL = "куском мяса",
+		PREPOSITIONAL = "куске мяса"
+	)
 
 
 /obj/item/reagent_containers/food/snacks/meat/attackby(obj/item/I, mob/user, params)
@@ -74,15 +77,7 @@
 /obj/item/reagent_containers/food/snacks/roasted_meat
 	name = "roasted meat"
 	desc = "Хорошо прожаренный стейк. Отличный источник белков и жиров."
-	ru_names = list(
-		NOMINATIVE = "жаренное мясо",
-		GENITIVE = "жаренного мяса",
-		DATIVE = "жаренному мясу",
-		ACCUSATIVE = "жаренное мясо",
-		INSTRUMENTAL = "жаренным мясом",
-		PREPOSITIONAL = "жаренном мясе"
-	)
-	gender = NEUTER
+	w_class = WEIGHT_CLASS_SMALL
 	resistance_flags = LAVA_PROOF | FIRE_PROOF
 	icon_state = "roasted_meat"
 	lefthand_file = 'icons/mob/inhands/items_lefthand.dmi'
@@ -90,6 +85,16 @@
 	list_reagents = list("protein" = 4, "vitamin" = 1)
 	tastes = list("мяса" = 1)
 	foodtype = MEAT
+
+/obj/item/reagent_containers/food/snacks/roasted_meat/get_ru_names()
+	return list(
+		NOMINATIVE = "жаренное мясо",
+		GENITIVE = "жаренного мяса",
+		DATIVE = "жаренному мясу",
+		ACCUSATIVE = "жаренное мясо",
+		INSTRUMENTAL = "жаренным мясом",
+		PREPOSITIONAL = "жаренном мясе"
+	)
 
 /obj/item/reagent_containers/food/snacks/meat/syntiflesh
 	name = "synthetic meat"
@@ -247,7 +252,6 @@
 	name = "monkey meat"
 	tastes = list("salty meat" = 1)
 	list_reagents = list("protein" = 2)
-	filling_color = "#FF1C1C"
 
 /obj/item/reagent_containers/food/snacks/meat/humanoid/farwa
 	name = "farwa meat"
@@ -292,7 +296,6 @@
 /obj/item/reagent_containers/food/snacks/meat/bird
 	name = "bird meat"
 	desc = "Light and tasty meat"
-	icon = 'icons/obj/food/food.dmi'
 	icon_state = "birdmeat"
 
 /obj/item/reagent_containers/food/snacks/meat/corgi
@@ -412,7 +415,7 @@
 /obj/item/reagent_containers/food/snacks/monstermeat/bearmeat
 	name = "bear meat"
 	desc = "A very manly slab of meat."
-	icon_state = "bearmeat"
+	w_class = WEIGHT_CLASS_SMALL
 	filling_color = "#DB0000"
 	bitesize = 3
 	list_reagents = list("protein" = 12, "morphine" = 5, "vitamin" = 2)
@@ -422,6 +425,7 @@
 /obj/item/reagent_containers/food/snacks/monstermeat/xenomeat
 	name = "meat"
 	desc = "A slab of meat. It's green!"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "xenomeat"
 	filling_color = "#43DE18"
 	bitesize = 6
@@ -449,7 +453,13 @@
 /obj/item/reagent_containers/food/snacks/monstermeat/spiderleg
 	name = "spider leg"
 	desc = "Всё ещё дёргающаяся лапка гигантского паука. Вы ведь не будете это есть, правда?"
-	ru_names = list(
+	gender = FEMALE
+	icon_state = "spiderleg"
+	list_reagents = list("protein" = 2, "toxin" = 2)
+	tastes = list("паутины" = 1, "слабых подёргиваний во рту" = 1)
+
+/obj/item/reagent_containers/food/snacks/monstermeat/spiderleg/get_ru_names()
+	return list(
 		NOMINATIVE = "паучья лапка",
 		GENITIVE = "паучьей лапки",
 		DATIVE = "паучьей лапке",
@@ -457,10 +467,6 @@
 		INSTRUMENTAL = "паучьей лапкой",
 		PREPOSITIONAL = "паучьей лапке"
 	)
-	gender = FEMALE
-	icon_state = "spiderleg"
-	list_reagents = list("protein" = 2, "toxin" = 2)
-	tastes = list("паутины" = 1, "слабых подёргиваний во рту" = 1)
 
 /obj/item/reagent_containers/food/snacks/monstermeat/spiderleg/burn()
 	visible_message(span_notice("[capitalize(declent_ru(NOMINATIVE))] приготовилась!"))
@@ -485,7 +491,13 @@
 /obj/item/reagent_containers/food/snacks/monstermeat/goliath
 	name = "goliath meat"
 	desc = "Кусок мяса голиафа. Сейчас не очень съедобно, но в лаве оно готовится отлично."
-	ru_names = list(
+	w_class = WEIGHT_CLASS_SMALL
+	icon_state = "goliathmeat"
+	list_reagents = list("protein" = 3, "toxin" = 5)
+	tastes = list("жёсткого мяса" = 1)
+
+/obj/item/reagent_containers/food/snacks/monstermeat/goliath/get_ru_names()
+	return list(
 		NOMINATIVE = "мясо голиафа",
 		GENITIVE = "мяса голиафа",
 		DATIVE = "мясу голиафа",
@@ -493,10 +505,6 @@
 		INSTRUMENTAL = "мясом голиафа",
 		PREPOSITIONAL = "мясе голиафа"
 	)
-	gender = NEUTER
-	icon_state = "goliathmeat"
-	list_reagents = list("protein" = 3, "toxin" = 5)
-	tastes = list("жёсткого мяса" = 1)
 
 /obj/item/reagent_containers/food/snacks/monstermeat/goliath/burn()
 	visible_message(span_notice("[capitalize(declent_ru(NOMINATIVE))] приготовилось!"))
@@ -506,7 +514,12 @@
 /obj/item/reagent_containers/food/snacks/monstermeat/goldgrub
 	name = "goldgrub meat"
 	desc = "Плотные слизистые, покрытые золотистой шкурой зелёные внутренности. Были извлечены из Златожора. Легенды гласят, что мясо ценится в традиционной медицине, однако сейчас оно крайне ядовито."
-	ru_names = list(
+	icon_state = "Goldgrubmeat"
+	list_reagents = list("grub_juice" = 5, "toxin" = 10)
+	tastes = list("слизистого мяса" = 1)
+
+/obj/item/reagent_containers/food/snacks/monstermeat/goldgrub/get_ru_names()
+	return list(
 		NOMINATIVE = "мясо златожора",
 		GENITIVE = "мяса златожора",
 		DATIVE = "мясу златожору",
@@ -514,11 +527,6 @@
 		INSTRUMENTAL = "мясом златожором",
 		PREPOSITIONAL = "мясе златожора"
 	)
-	gender = NEUTER
-	icon_state = "Goldgrubmeat"
-	list_reagents = list("grub_juice" = 5, "toxin" = 10)
-	bitesize = 2
-	tastes = list("слизистого мяса" = 1)
 
 /obj/item/reagent_containers/food/snacks/monstermeat/goldgrub/burn()
 	visible_message(span_notice("[capitalize(declent_ru(NOMINATIVE))] приготовилось!"))
@@ -527,6 +535,7 @@
 
 /obj/item/reagent_containers/food/snacks/monstermeat/rotten
 	name = "rotten meat"
+	w_class = WEIGHT_CLASS_SMALL
 	desc = "A slab of rotten meat. Looks really awful, a couple of flies sit on it."
 	icon_state = "rottenmeatslab"
 	list_reagents = list("protein" = 1, "toxin" = 10, "????" = 20)
@@ -540,6 +549,7 @@
 /obj/item/reagent_containers/food/snacks/meatsteak
 	name = "meat steak"
 	desc = "A piece of hot spicy meat."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "meatstake"
 	trash = /obj/item/trash/plate
 	filling_color = "#7A3D11"
@@ -663,6 +673,7 @@
 
 /obj/item/reagent_containers/food/snacks/birdsteak
 	name = "Chicken steak"
+	w_class = WEIGHT_CLASS_SMALL
 	desc = "A piece of hot light bird meat."
 	icon_state = "birdsteak"
 	filling_color = "#7A3D11"
@@ -728,6 +739,7 @@
 /obj/item/reagent_containers/food/snacks/spidereggsham
 	name = "green eggs and ham"
 	desc = "Would you eat them on a train? Would you eat them on a plane? Would you eat them on a state of the art corporate deathtrap floating through space?"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "spidereggsham"
 	trash = /obj/item/trash/plate
 	bitesize = 4
@@ -738,6 +750,7 @@
 /obj/item/reagent_containers/food/snacks/boiledspiderleg
 	name = "boiled spider leg"
 	desc = "A giant spider's leg that's still twitching after being cooked. Gross!"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "spiderlegcooked"
 	trash = /obj/item/trash/plate
 	bitesize = 3
@@ -748,6 +761,7 @@
 /obj/item/reagent_containers/food/snacks/wingfangchu
 	name = "wing fang chu"
 	desc = "A savory dish of alien wing wang in soy. Wait, what?"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "wingfangchu"
 	trash = /obj/item/trash/snack_bowl
 	filling_color = "#43DE18"
@@ -758,14 +772,7 @@
 /obj/item/reagent_containers/food/snacks/goliath_steak
 	name = "goliath steak"
 	desc = "Восхитительный стейк из мяса голиафа, прожаренный прямо в лаве. Так первобытно."
-	ru_names = list(
-		NOMINATIVE = "стейк из мяса голиафа",
-		GENITIVE = "стейка из мяса голиафа",
-		DATIVE = "стейку из мяса голиафа",
-		ACCUSATIVE = "стейк из мяса голиафа",
-		INSTRUMENTAL = "стейком из мяса голиафа",
-		PREPOSITIONAL = "стейке из мяса голиафа"
-	)
+	w_class = WEIGHT_CLASS_SMALL
 	gender = MALE
 	resistance_flags = LAVA_PROOF | FIRE_PROOF
 	icon_state = "goliathsteak"
@@ -774,17 +781,19 @@
 	tastes = list("нежного мяса" = 1)
 	foodtype = MEAT
 
+/obj/item/reagent_containers/food/snacks/goliath_steak/get_ru_names()
+	return list(
+		NOMINATIVE = "стейк из мяса голиафа",
+		GENITIVE = "стейка из мяса голиафа",
+		DATIVE = "стейку из мяса голиафа",
+		ACCUSATIVE = "стейк из мяса голиафа",
+		INSTRUMENTAL = "стейком из мяса голиафа",
+		PREPOSITIONAL = "стейке из мяса голиафа"
+	)
+
 /obj/item/reagent_containers/food/snacks/roasted_spiderleg
 	name = "roasted spider leg"
 	desc = "Жаренная паучья лапка, теперь оно точно мертво."
-	ru_names = list(
-		NOMINATIVE = "жаренная паучья лапка",
-		GENITIVE = "жаренной паучьей лапки",
-		DATIVE = "жаренной паучьей лапке",
-		ACCUSATIVE = "жаренную паучью лапку",
-		INSTRUMENTAL = "жаренной паучьей лапкой",
-		PREPOSITIONAL = "жаренной паучьей лапке"
-	)
 	gender = FEMALE
 	resistance_flags = LAVA_PROOF | FIRE_PROOF
 	icon_state = "roasted_spiderleg"
@@ -793,6 +802,16 @@
 	list_reagents = list("protein" = 4, "vitamin" = 1)
 	tastes = list("паутины" = 1, "мяса" = 1)
 	foodtype = MEAT
+
+/obj/item/reagent_containers/food/snacks/roasted_spiderleg/get_ru_names()
+	return list(
+		NOMINATIVE = "жаренная паучья лапка",
+		GENITIVE = "жаренной паучьей лапки",
+		DATIVE = "жаренной паучьей лапке",
+		ACCUSATIVE = "жаренную паучью лапку",
+		INSTRUMENTAL = "жаренной паучьей лапкой",
+		PREPOSITIONAL = "жаренной паучьей лапке"
+	)
 
 /obj/item/reagent_containers/food/snacks/goldgrubmeat
 	name= "goldgrub steak"
@@ -806,6 +825,7 @@
 /obj/item/reagent_containers/food/snacks/smokedsausage
 	name = "Smoked sausage"
 	desc = "Piece of smoked sausage. Oh, really?"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "smokedsausage"
 	list_reagents = list("protein" = 12)
 	tastes = list("meat" = 3)
@@ -814,6 +834,7 @@
 /obj/item/reagent_containers/food/snacks/sliceable/salami
 	name = "Salami"
 	desc = "Not the best for sandwiches."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "salami"
 	slice_path = /obj/item/reagent_containers/food/snacks/slice/salami
 	slices_num = 6
@@ -825,7 +846,6 @@
 	name = "Salami's slice"
 	desc = "A slice of salami. The best for sandwiches"
 	icon_state = "salami_s"
-	bitesize = 2
 	foodtype = MEAT
 
 //////////////////////
@@ -860,12 +880,12 @@
 		//Due to server crashing capabilities, chat feature is disabled.
 
 		//if(fingerprintslast)
-		//	to_chat(get_mob_by_ckey(fingerprintslast), "<span class='warning'>Bluespace harmonics prevent the spawning of more than [CONFIG_GET(number/cubemonkey_cap)] monkeys on the station at one time!</span>")
+		//	to_chat(get_mob_by_ckey(fingerprintslast), span_warning("Bluespace harmonics prevent the spawning of more than [CONFIG_GET(number/cubemonkey_cap)] monkeys on the station at one time!"))
 		//else
-		//	visible_message("<span class='notice'>[src] fails to expand!</span>")
+		//	visible_message(span_notice("[src] fails to expand!"))
 
 	if(!QDELETED(src))
-		visible_message("<span class='notice'>[src] expands!</span>")
+		visible_message(span_notice("[src] expands!"))
 		if(fingerprintslast)
 			add_misc_logs(what = "Cube ([monkey_type]) inflated, last touched by: " + fingerprintslast)
 		else
@@ -910,6 +930,8 @@
 	list_reagents = list("protein" = 1, "egg" = 5)
 	tastes = list("egg" = 1)
 	foodtype = EGG
+
+	var/amount_grown = 0
 
 
 /obj/item/reagent_containers/food/snacks/egg/throw_impact(atom/hit_atom, datum/thrownthing/throwingdatum)
@@ -985,6 +1007,7 @@
 /obj/item/reagent_containers/food/snacks/friedegg
 	name = "fried egg"
 	desc = "A fried egg, with a touch of salt and pepper."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "friedegg"
 	filling_color = "#FFDF78"
 	bitesize = 1
@@ -996,7 +1019,6 @@
 	name = "boiled egg"
 	desc = "A hard boiled egg."
 	icon_state = "egg"
-	filling_color = "#FFFFFF"
 	list_reagents = list("nutriment" = 2, "egg" = 5, "vitamin" = 1)
 	foodtype = EGG
 
@@ -1011,6 +1033,7 @@
 /obj/item/reagent_containers/food/snacks/omelette
 	name = "omelette du fromage"
 	desc = "That's all you can say!"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "omelette"
 	trash = /obj/item/trash/plate
 	filling_color = "#FFF9A8"
@@ -1022,6 +1045,7 @@
 /obj/item/reagent_containers/food/snacks/benedict
 	name = "eggs benedict"
 	desc = "There is only one egg on this, how rude."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "benedict"
 	bitesize = 3
 	list_reagents = list("nutriment" = 6, "egg" = 3, "vitamin" = 4)
@@ -1036,6 +1060,7 @@
 /obj/item/reagent_containers/food/snacks/hotdog
 	name = "hotdog"
 	desc = "Not made with actual dogs. Hopefully."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "hotdog"
 	bitesize = 3
 	list_reagents = list("nutriment" = 6, "ketchup" = 3, "vitamin" = 3)
@@ -1054,6 +1079,7 @@
 /obj/item/reagent_containers/food/snacks/sliceable/turkey
 	name = "turkey"
 	desc = "A traditional turkey served with stuffing."
+	w_class = WEIGHT_CLASS_HUGE
 	icon_state = "turkey"
 	slice_path = /obj/item/reagent_containers/food/snacks/turkeyslice
 	slices_num = 6
@@ -1064,6 +1090,7 @@
 /obj/item/reagent_containers/food/snacks/turkeyslice
 	name = "turkey serving"
 	desc = "A serving of some tender and delicious turkey."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "turkeyslice"
 	trash = /obj/item/trash/plate
 	filling_color = "#B97A57"
@@ -1076,13 +1103,13 @@
 	icon_state = "pelmeni"
 	filling_color = "#d9be29"
 	list_reagents = list("protein" = 2)
-	bitesize = 2
 	tastes = list("raw meat" = 1, "raw dough" = 1)
 	foodtype = MEAT | RAW | GRAIN
 
 /obj/item/reagent_containers/food/snacks/boiledpelmeni
 	name = "boiled pelmeni"
 	desc = "We don't know what was Siberia, but these tasty pelmeni definitely arrived from there."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "boiledpelmeni"
 	trash = /obj/item/trash/snack_bowl
 	filling_color = "#d9be29"
@@ -1098,13 +1125,31 @@
 	icon_state = "appendix"
 	filling_color = "#E00D34"
 	bitesize = 3
-	list_reagents = list("protein" = 4, "vitamin" = 4)
+	list_reagents = list("protein" = 4, "vitamin" = 4, "nutriment" = 5)
 	foodtype = MEAT | GROSS
+
+/obj/item/reagent_containers/food/snacks/organ/update_icon_state()
+	return
+
+/obj/item/organ/internal/attack(mob/living/carbon/human/target, mob/living/user, params, def_zone, skip_attack_anim = FALSE)
+	if(target != user || !ishuman(target) || !user.can_unEquip(src))
+		return ..()
+
+	var/obj/item/reagent_containers/food/snacks/snack = prepare_eat()
+
+	if(!snack)
+		return ATTACK_CHAIN_PROCEED
+
+	user.temporarily_remove_item_from_inventory(src)
+	target.put_in_active_hand(snack, silent = TRUE)
+	snack.attack(target, target, params)
+	qdel(src)
+	return ATTACK_CHAIN_BLOCKED_ALL
 
 /obj/item/reagent_containers/food/snacks/appendix
 //yes, this is the same as meat. I might do something different in future
 	name = "appendix"
-	desc = "An appendix which looks perfectly healthy."
+	desc = "Придаток слепой кишки. Является рудиментарным органом, поэтому не несёт полезной функции для организма."
 	icon = 'icons/obj/surgery.dmi'
 	icon_state = "appendix"
 	filling_color = "#E00D34"
@@ -1122,6 +1167,7 @@
 /obj/item/reagent_containers/food/snacks/fried_vox
 	name = "Kentucky Fried Vox"
 	desc = "Bucket of voxxy, yaya!"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "fried_vox"
 	trash = /obj/item/trash/fried_vox
 	list_reagents = list("nutriment" = 3, "protein" = 5)
@@ -1131,6 +1177,7 @@
 /obj/item/reagent_containers/food/snacks/kidanragu
 	name = "Spicy chitin ragu"
 	desc = "Stew with very tough chitinous meat and stewed vegetables."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "kidanragu"
 	list_reagents = list("nutriment" = 8, "vitamin" = 4, "protein" = 4)
 	tastes = list("insect" = 3, "vegetable" = 2)
@@ -1139,6 +1186,7 @@
 /obj/item/reagent_containers/food/snacks/sliceable/lizard
 	name = "Fried reptile meat"
 	desc = " A Juicy steaks from the tail of a large lizard, makes you want to lie on warm rocks. Slicable"
+	w_class = WEIGHT_CLASS_NORMAL
 	icon_state = "lizard_steak"
 	slice_path = /obj/item/reagent_containers/food/snacks/lizardslice
 	slices_num = 5
@@ -1149,6 +1197,7 @@
 /obj/item/reagent_containers/food/snacks/lizardslice
 	name = "reptile steak"
 	desc = "A serving of unathi meat."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "lizard_slice"
 	trash = /obj/item/trash/plate
 	filling_color = "#a55f3a"
@@ -1158,6 +1207,7 @@
 /obj/item/reagent_containers/food/snacks/tajaroni
 	name = "Tajaroni"
 	desc = "Spicy dried sausage with pepper and... Did it just meow?"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "tajaroni"
 	list_reagents = list("nutriment" = 8, "vitamin" = 4, "protein" = 4)
 	tastes = list("dry meat" = 3, "cat meat" = 2)
@@ -1167,6 +1217,7 @@
 /obj/item/reagent_containers/food/snacks/vulpix
 	name = "Vulpixes"
 	desc = "Appetizing-looking meat balls in the dough.. The main thing is not to think about WHO they are made of!"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "vulpix"
 	list_reagents = list("nutriment" = 10, "vitamin" = 4, "protein" = 5)
 	tastes = list("dough" = 2, "dog meat" = 3)
@@ -1193,6 +1244,7 @@
 /obj/item/reagent_containers/food/snacks/bakedvulp
 	name = "oven-baked vulp"
 	desc = "Oven-baked vulp meat with a juicy apple in the mouth. She was unintelligent... Wasn't she?"
+	w_class = WEIGHT_CLASS_NORMAL
 	icon_state = "bakedvulp"
 	trash = /obj/item/trash/tray
 	list_reagents = list("protein" = 12, "nutriment" = 10, "vitamin" = 5)

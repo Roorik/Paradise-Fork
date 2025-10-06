@@ -7,7 +7,7 @@
 	actions_types = list(/datum/action/item_action/voice_changer/toggle, /datum/action/item_action/voice_changer/voice)
 
 	var/obj/item/parent
-	//Флаг для Ниндзя и других подобных случаев, когда мы применяем войс ченджер, но не даём кнопок его контролировать на прямую
+	/// Флаг для Ниндзя и других подобных случаев, когда мы применяем войс ченджер, но не даём кнопок его контролировать на прямую
 	var/inform_about_toggle = TRUE
 
 	var/voice
@@ -50,14 +50,14 @@
 	var/mimic_option = tgui_alert(user, "What voice do you want to mimic?", "Set Voice Changer", list("Real Voice", "Custom Voice", "Cancel"))
 	switch(mimic_option)
 		if("Real Voice")
-			var/mob/living/carbon/human/human = input(user, "Select a voice to copy from.", "Set Voice Changer") in GLOB.human_list
+			var/mob/living/carbon/human/human = tgui_input_list(user, "Select a voice to copy from.", "Set Voice Changer", GLOB.human_list)
 			if(!human)
 				return
 
 			mimic_voice = human.real_name
 			mimic_voice_tts = human.dna.tts_seed_dna
 		if("Custom Voice")
-			mimic_voice = reject_bad_name(stripped_input(user, "Enter a name to mimic.", "Set Voice Changer", null, MAX_NAME_LEN), TRUE)
+			mimic_voice = reject_bad_name(tgui_input_text(user, "Enter a name to mimic.", "Set Voice Changer", null, max_length = MAX_NAME_LEN), TRUE)
 			if(!mimic_voice)
 				to_chat(user, span_warning("Invalid name, try again."))
 				return
@@ -94,7 +94,7 @@
 /obj/item/voice_changer/voice_modulator
 	name = "voice modulator"
 	desc = "A voice scrambling module."
-	voice = "Unknown"
+	voice = UNKNOWN_NAME_RUS
 	actions_types = list(/datum/action/item_action/voice_changer/toggle)
 
 /obj/item/voice_changer/ghostface

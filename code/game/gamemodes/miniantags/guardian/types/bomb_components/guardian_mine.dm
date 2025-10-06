@@ -1,7 +1,7 @@
 /**
  *  Guardian's mines. Can be attached to anything to do explosive stuff on a victim.
  */
-#define MINE_LIFE_TIME (60 SECONDS)
+#define MINE_LIFE_TIME 60 SECONDS
 
 ///Datum specialized for guardian(holoparasite)-bomber.
 /datum/component/guardian_mine
@@ -68,11 +68,12 @@
 		return
 	add_attack_logs(victim, parent_atom, "booby trap TRIGGERED (spawner: [bomber], ckey: [bomber.ckey])")
 	to_chat(victim, span_danger("Это ловушка! [parent_atom] был заминирован!"))
-	playsound(get_turf(parent_atom),'sound/effects/bomb_activate.ogg', 200, 1)
-	playsound(get_turf(parent_atom),'sound/effects/explosion1.ogg', 200, 1)
-	victim.ex_act(3)
+	playsound(get_turf(parent_atom),'sound/effects/bomb_activate.ogg', 200, TRUE)
+	playsound(get_turf(parent_atom),'sound/effects/explosion1.ogg', 200, TRUE)
+	victim.ex_act(EXPLODE_LIGHT)
 	victim.Weaken(6 SECONDS)
 	victim.adjustBruteLoss(20)
 	is_exploded = TRUE
 	UnregisterFromParent()
 
+#undef MINE_LIFE_TIME

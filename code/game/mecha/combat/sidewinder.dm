@@ -1,5 +1,5 @@
 /obj/mecha/combat/sidewinder // если вдруг будет введен оригинал, просьба заменить адрес на sidewinder/full_load для соблюдения логики и избежания ошибок
-	name = "\improper Экспериментальный Сайдвиндер"
+	name = "Экспериментальный Сайдвиндер"
 	desc = "Экпериментальная разработка НТ, стоимость которой сравнится со всей станцией Керберос и всем её содержимым. Смотря на это чудо, вы нутром понимаете последствия, если она поломается. Они будут печальными. Очень. Для всех."
 	icon_state = "sidewinder"
 	initial_icon = "sidewinder"
@@ -7,7 +7,7 @@
 	dir_in = 1 //Facing North.
 	max_integrity = 1000 // мы ОЧЕНЬ хотим пострелять
 	deflect_chance = 0 // никакого рандома
-	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 0, "acid" = 0) // мех для тестов, не для боя
+	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, RAD = 0, FIRE = 0, ACID = 0) // мех для тестов, не для боя
 	max_temperature = 15000
 	wreckage = /obj/structure/mecha_wreckage/sidewinder
 	maint_access = TRUE
@@ -21,8 +21,8 @@
 /obj/mecha/combat/sidewinder/add_cell()
 	cell = new /obj/item/stock_parts/cell/infinite/abductor(src)
 
-/obj/mecha/combat/sidewinder/New() // мех для тестов всех модулей, пихаемых в конкретно боевые мехи. Если будете вводить/удалять модули - просьба трогать эту строчку.
-	..()
+/obj/mecha/combat/sidewinder/Initialize(mapload) // мех для тестов всех модулей, пихаемых в конкретно боевые мехи. Если будете вводить/удалять модули - просьба трогать эту строчку.
+	. = ..()
 	//mime
 	var/obj/item/mecha_parts/mecha_equipment/ME = new /obj/item/mecha_parts/mecha_equipment/weapon/ballistic/carbine/silenced
 	ME.attach(src)

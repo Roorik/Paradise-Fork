@@ -82,11 +82,10 @@
 	invocation_type = "none"
 	action_icon_state = "fake_death"
 	action_background_icon_state = "bg_terror"
-	selection_activated_message	= span_notice("Вы подготавливаете свой ядовитый плевок! <B>ЛКМ, чтобы плюнуть в цель</B>.")
+	selection_activated_message	= span_notice("Вы подготавливаете свой ядовитый плевок! <b>ЛКМ, чтобы плюнуть в цель</b>.")
 	selection_deactivated_message = span_notice("Вы отменяете свой плевок.")
 	sound = 'sound/creatures/terrorspiders/spit2.ogg'
 	need_active_overlay = TRUE
-	human_req = FALSE
 	base_cooldown = 25 SECONDS
 	fireball_type = /obj/projectile/terrorspider/widow/venom
 
@@ -123,11 +122,10 @@
 	invocation_type = "none"
 	action_icon_state = "smoke"
 	action_background_icon_state = "bg_terror"
-	selection_activated_message	= span_notice("Вы подготавливаете дымный плевок! <B>ЛКМ, чтобы плюнуть в цель</B>")
+	selection_activated_message	= span_notice("Вы подготавливаете дымный плевок! <b>ЛКМ, чтобы плюнуть в цель</b>")
 	selection_deactivated_message = span_notice("Вы отменяете свой плевок.")
 	sound = 'sound/creatures/terrorspiders/spit2.ogg'
 	need_active_overlay = TRUE
-	human_req = FALSE
 	base_cooldown = 10 SECONDS
 	fireball_type = /obj/projectile/terrorspider/widow/smoke
 
@@ -177,7 +175,6 @@
 /obj/effect/proc_holder/spell/explosion/terror_burn
 	name = "Воспламенение"
 	desc = "Высвободить энергию, создавая огромное огненное кольцо."
-	action_icon_state = "explosion"
 	action_background_icon_state = "bg_terror"
 	base_cooldown = 60 SECONDS
 	clothes_req = FALSE
@@ -211,7 +208,6 @@
 /obj/effect/forcefield/terror
 	name = "Защитная мембрана"
 	desc = "Толстая защитная мембрана, созданная Защитником Ужаса."
-	icon = 'icons/effects/effects.dmi'
 	icon_state = "terror_shield"
 	lifetime = 16.5 SECONDS                       //max 2 shields existing at one time
 	light_color = LIGHT_COLOR_PURPLE
@@ -291,7 +287,6 @@
 	base_cooldown = 60 SECONDS
 	clothes_req = FALSE
 	human_req = FALSE
-	aoe_range = 7
 	sound = 'sound/creatures/terrorspiders/white_shriek.ogg'
 
 
@@ -312,9 +307,9 @@
 
 		if(issilicon(target))
 			to_chat(target, span_warning("<b>ОШИБКА $!(@ ОШИБКА )#^! СЕНСОРНАЯ ПЕРЕГРУЗКА \[$(!@#</b>"))
-			target << 'sound/misc/interference.ogg'
+			SEND_SOUND(target, sound('sound/misc/interference.ogg'))
 			playsound(target, 'sound/machines/warning-buzzer.ogg', 50, TRUE)
-			do_sparks(5, 1, target)
+			do_sparks(5, TRUE, target)
 			target.Weaken(12 SECONDS)
 
 
@@ -352,9 +347,9 @@
 
 		if(issilicon(target))
 			to_chat(target, span_warning("<b>ОШИБКА $!(@ ОШИБКА )#^! СЕНСОРНАЯ ПЕРЕГРУЗКА \[$(!@#</b>"))
-			target << 'sound/misc/interference.ogg'
+			SEND_SOUND(target, sound('sound/misc/interference.ogg'))
 			playsound(target, 'sound/machines/warning-buzzer.ogg', 50, TRUE)
-			do_sparks(5, 1, target)
+			do_sparks(5, TRUE, target)
 			target.Weaken(12 SECONDS)
 
 //PRINCE//
@@ -428,7 +423,6 @@
 	base_cooldown = 45 SECONDS
 	clothes_req = FALSE
 	human_req = FALSE
-	aoe_range = 7
 	sound = 'sound/creatures/terrorspiders/queen_shriek.ogg'
 
 
@@ -450,9 +444,9 @@
 
 			if(issilicon(target))
 				to_chat(target, span_warning("<b>ОШИБКА $!(@ ОШИБКА )#^! СЕНСОРНАЯ ПЕРЕГРУЗКА \[$(!@#</b>"))
-				target << 'sound/misc/interference.ogg'
-				playsound(target, 'sound/machines/warning-buzzer.ogg', 50, 1)
-				do_sparks(5, 1, target)
+				SEND_SOUND(target, sound('sound/misc/interference.ogg'))
+				playsound(target, 'sound/machines/warning-buzzer.ogg', 50, TRUE)
+				do_sparks(5, TRUE, target)
 				target.Weaken(16 SECONDS)
 
 		for(var/obj/machinery/light/lamp in target_turf.contents)

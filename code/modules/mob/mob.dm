@@ -3,6 +3,11 @@
 	remove_from_alive_mob_list()
 	remove_from_dead_mob_list()
 	focus = null
+	for(var/mob/dead/observer/observe in orbiters)
+		if(!istype(observe))
+			continue
+		observe.stop_orbit()
+		observe.reset_perspective(null)
 	QDEL_NULL(hud_used)
 	if(mind && mind.current == src)
 		spellremove(src)
@@ -21,7 +26,13 @@
 		for(var/datum/alternate_appearance/AA in viewing_alternate_appearances)
 			AA.viewers -= src
 		viewing_alternate_appearances = null
+
 	LAssailant = null
+	GLOB.left_player_list -= src
+
+	if(mind?.current == src)
+		mind.current = null
+
 	return ..()
 
 /mob/Initialize(mapload)
@@ -32,6 +43,7 @@
 		add_to_alive_mob_list()
 	set_focus(src)
 	prepare_huds()
+	become_hearing_sensitive()
 	. = ..()
 	update_config_movespeed()
 	update_movespeed()
@@ -73,16 +85,20 @@
 
 
 /atom/proc/prepare_huds()
+	if(hud_list) // I choose to be lienient about people calling this proc more then once
+		return
 	hud_list = list()
 	for(var/hud in hud_possible)
 		var/hint = hud_possible[hud]
-		switch(hint)
-			if(HUD_LIST_LIST)
-				hud_list[hud] = list()
-			else
-				var/image/I = image('icons/mob/hud.dmi', src, "")
-				I.appearance_flags = RESET_COLOR | RESET_TRANSFORM
-				hud_list[hud] = I
+
+		if(hint == HUD_LIST_LIST)
+			hud_list[hud] = list()
+
+		else
+			var/image/I = image('icons/mob/hud.dmi', src, "")
+			I.appearance_flags = RESET_COLOR|RESET_TRANSFORM
+			hud_list[hud] = I
+		set_hud_image_active(hud, update_huds = FALSE) //by default everything is active. but dont add it to huds to keep control.
 
 /mob/proc/generate_name()
 	return name
@@ -91,7 +107,7 @@
 	return ""
 
 /mob/proc/Cell()
-	set category = "Admin.Debug"
+	set category = STATPANEL_ADMIN_DEBUG
 	set hidden = 1
 
 	if(!loc) return 0
@@ -110,31 +126,39 @@
 	usr.show_message(t, 1)
 
 
-/mob/proc/show_message(msg, type, alt, alt_type, chat_message_type)
+/mob/proc/show_message(msg, type, alt_msg, alt_type, chat_message_type, avoid_highlighting = FALSE)
 
 	if(!client)
 		return
 
+	msg = copytext_char(msg, 1, MAX_MESSAGE_LEN)
+
+	// Return TRUE if we sent the original msg, otherwise return FALSE
+	. = TRUE
+
 	if(type)
 		if((type & EMOTE_VISIBLE) && !has_vision(information_only = TRUE))	//Vision related
-			if(!alt)
-				return
-			msg = alt
+			if(!alt_msg)
+				return FALSE
+			msg = alt_msg
 			type = alt_type
+			. = FALSE
 
 		if(type & EMOTE_AUDIBLE && !can_hear())	//Hearing related
-			if(!alt)
-				return
-			msg = alt
+			if(!alt_msg)
+				return FALSE
+			msg = alt_msg
 			type = alt_type
+			. = FALSE
 			if((type & EMOTE_VISIBLE) && !has_vision(information_only = TRUE))
-				return
+				return FALSE
 
 	// Added voice muffling for Issue 41.
 	if(stat == UNCONSCIOUS)
-		to_chat(src, "<I>…Вам почти удаётся расслышать чьи-то слова…</I>", MESSAGE_TYPE_LOCALCHAT)
-	else
-		to_chat(src, msg, chat_message_type)
+		if(type & EMOTE_AUDIBLE) //audio
+			to_chat(src, "<i>…Вам почти удаётся расслышать чьи-то слова…</i>", MESSAGE_TYPE_LOCALCHAT)
+			return FALSE
+	to_chat(src, msg, chat_message_type)
 
 
 // Show a message to all mobs in sight of this one
@@ -142,45 +166,74 @@
 // message is the message output to anyone who can see e.g. "[src] does something!"
 // self_message (optional) is what the src mob sees  e.g. "You do something!"
 // blind_message (optional) is what blind people will hear e.g. "You hear something!"
-/mob/visible_message(message, self_message, blind_message, list/ignored_mobs, chat_message_type, projectile_message = FALSE)
-	if(!isturf(loc)) // mobs inside objects (such as lockers) shouldn't have their actions visible to those outside the object
-		for(var/mob/mob as anything in viewers(3, src) - ignored_mobs)
-			if(mob.see_invisible < invisibility)
-				continue //can't view the invisible
-			if(projectile_message && (mob?.client?.prefs.toggles2 & PREFTOGGLE_2_OFF_PROJECTILE_MESSAGES))
-				continue
-			var/msg = message
-			if(self_message && mob == src)
-				msg = self_message
-			if(mob.loc != loc)
-				if(!blind_message) // for some reason VISIBLE action has blind_message param so if we are not in the same object but next to it, lets show it
-					continue
-				msg = blind_message
-			mob.show_message(msg, EMOTE_VISIBLE, blind_message, EMOTE_AUDIBLE, chat_message_type)
+/mob/visible_message(message, self_message, blind_message, list/ignored_mobs, chat_message_type, projectile_message = FALSE, vision_distance = DEFAULT_MESSAGE_RANGE, visible_message_flags = NONE)
+	if(!isturf(loc))
+		vision_distance = floor(vision_distance / 2)
+	. = ..()
+	if(!self_message)
 		return
+	var/block_self_highlight = (visible_message_flags & BLOCK_SELF_HIGHLIGHT_MESSAGE)
+	if(visible_message_flags & WITH_EMPHASIS_MESSAGE)
+		self_message = apply_message_emphasis(self_message)
+	if(visible_message_flags & EMOTE_MESSAGE)
+		self_message = span_emote("<b>[declent_ru(NOMINATIVE)]</b> [self_message]") // May make more sense as "You do x"
 
-	for(var/mob/mob as anything in viewers(7, src) - ignored_mobs)
-		if(mob.see_invisible < invisibility)
-			continue //can't view the invisible
+	if(visible_message_flags & ALWAYS_SHOW_SELF_MESSAGE)
+		to_chat(src, self_message, avoid_highlighting = block_self_highlight)
+	else
+		show_message(self_message, EMOTE_VISIBLE, blind_message, EMOTE_AUDIBLE, avoid_highlighting = block_self_highlight)
 
-		if(projectile_message && (mob?.client?.prefs.toggles2 & PREFTOGGLE_2_OFF_PROJECTILE_MESSAGES))
-			continue
-
-		var/msg = message
-		if(self_message && mob == src)
-			msg = self_message
-		mob.show_message(msg, EMOTE_VISIBLE, blind_message, EMOTE_AUDIBLE, chat_message_type)
 
 
 // Show a message to all mobs in sight of this atom
 // Use for objects performing visible actions
 // message is output to anyone who can see, e.g. "The [src] does something!"
 // blind_message (optional) is what blind people will hear e.g. "You hear something!"
-/atom/proc/visible_message(message, self_message, blind_message, list/ignored_mobs, chat_message_type, projectile_message = FALSE)
-	for(var/mob/mob as anything in viewers(7, src) - ignored_mobs)
+/atom/proc/visible_message(message, self_message, blind_message, list/ignored_mobs, chat_message_type, projectile_message = FALSE, vision_distance = DEFAULT_MESSAGE_RANGE, visible_message_flags = NONE)
+	var/turf/turf = get_turf(src)
+	if(!turf)
+		return
+
+	if(!islist(ignored_mobs))
+		ignored_mobs = list(ignored_mobs)
+
+	var/list/hearers = get_hearers_in_view(vision_distance, src) //caches the hearers and then removes ignored mobs.
+	hearers -= ignored_mobs
+
+	if(self_message)
+		hearers -= src
+
+	if(visible_message_flags & WITH_EMPHASIS_MESSAGE)
+		message = apply_message_emphasis(message)
+	if(visible_message_flags & EMOTE_MESSAGE)
+		message = span_emote("<b>[declent_ru(NOMINATIVE)]</b> [message]")
+
+	for(var/mob/mob in hearers)
+		if(!mob.client)
+			continue
+
 		if(projectile_message && (mob?.client?.prefs.toggles2 & PREFTOGGLE_2_OFF_PROJECTILE_MESSAGES))
 			continue
-		mob.show_message(message, EMOTE_VISIBLE, blind_message, EMOTE_AUDIBLE)
+
+		//This entire if/else chain could be in two lines but isn't for readibilties sake.
+		var/msg = message
+		var/msg_type = EMOTE_VISIBLE
+
+		if(mob.see_invisible < invisibility)//if src is invisible to M
+			msg = blind_message
+			msg_type = EMOTE_AUDIBLE
+		else if(turf != loc && turf != src) //if src is inside something and not a turf.
+			if(mob != loc) // Only give the blind message to hearers that aren't the location
+				msg = blind_message
+				msg_type = EMOTE_AUDIBLE
+		else if(!HAS_TRAIT(mob, TRAIT_HEAR_THROUGH_DARKNESS) && mob.lighting_alpha < LIGHTING_PLANE_ALPHA_MOSTLY_VISIBLE && turf.is_softly_lit() && !in_range(turf, mob)) //if it is too dark, unless we're right next to them.
+			msg = blind_message
+			msg_type = EMOTE_AUDIBLE
+		if(!msg)
+			continue
+
+		mob.show_message(msg, msg_type, blind_message, EMOTE_AUDIBLE)
+
 
 
 // Show a message to all mobs in earshot of this one
@@ -198,7 +251,7 @@
 		M.show_message(msg, EMOTE_AUDIBLE, deaf_message, EMOTE_VISIBLE)
 
 	// based on say code
-	var/omsg = replacetext(message, "<B>[src]</B> ", "")
+	var/omsg = replacetext(message, "<b>[capitalize(declent_ru(NOMINATIVE))]</b> ", "")
 	var/list/listening_obj = new
 	for(var/atom/movable/A in view(range, src))
 		if(ismob(A))
@@ -240,19 +293,19 @@
 	return seen_mobs
 
 /**
-  * Called by using Activate Held Object with an empty hand/limb
-  *
-  * Does nothing by default. The intended use is to allow limbs to call their
-  * own attack_self procs. It is up to the individual mob to override this
-  * parent and actually use it.
-  */
+ * Called by using Activate Held Object with an empty hand/limb
+ *
+ * Does nothing by default. The intended use is to allow limbs to call their
+ * own attack_self procs. It is up to the individual mob to override this
+ * parent and actually use it.
+ */
 /mob/proc/limb_attack_self()
 	return
 
 /**
  * Returns an assoc list which contains the mobs in range and their "visible" name.
  * Mobs out of view but in range will be listed as unknown. Else they will have their visible name
-*/
+ */
 /mob/proc/get_telepathic_targets()
 	var/list/validtargets = new /list()
 	var/turf/T = get_turf(src)
@@ -286,6 +339,7 @@
  */
 /mob/proc/reset_perspective(atom/new_eye)
 	SHOULD_CALL_PARENT(TRUE)
+	SEND_SIGNAL(src, COMSIG_MOB_RESET_PERSPECTIVE)
 	if(!client)
 		return
 
@@ -323,11 +377,12 @@
 
 /mob/living/reset_perspective(atom/new_eye)
 	. = ..()
-	if(.)
-		// Above check means the mob has a client
-		update_sight()
-		update_fullscreen()
-		update_pipe_vision()
+	if(!.)
+		return
+	// Above check means the mob has a client
+	update_sight()
+	update_fullscreen()
+	update_pipe_vision()
 
 
 /// Proc used to handle the fullscreen overlay updates, realistically meant for the reset_perspective() proc.
@@ -339,22 +394,35 @@
 		clear_fullscreen("remote_view", 0)
 
 
-/mob/dead/reset_perspective(atom/A)
+/mob/dead/reset_perspective(atom/new_eye)
 	. = ..()
 	if(.)
 		// Allows sharing HUDs with ghosts
 		if(hud_used)
-			client.screen = list()
+			client.clear_screen()
 			hud_used.show_hud(hud_used.hud_version)
+		if(!new_eye)
+			client.set_eye(src)
+			client.perspective = MOB_PERSPECTIVE
+
+/mob/proc/clear_client_in_contents()
+	if(!client?.movingmob)
+		return
+	LAZYREMOVE(client.movingmob.client_mobs_in_contents, src)
+	client.movingmob = null
 
 //mob verbs are faster than object verbs. See http://www.byond.com/forum/?post=1326139&page=2#comment8198716 for why this isn't atom/verb/examine()
 /mob/verb/examinate(atom/A as mob|obj|turf in view())
-	set name = "Examine"
-	set category = "IC"
+	set name = "Осмотреть"
+	set category = STATPANEL_IC
+
+	if(!client)
+		return
 
 	DEFAULT_QUEUE_OR_CALL_VERB(VERB_CALLBACK(src, PROC_REF(run_examinate), A))
 
 /mob/proc/run_examinate(atom/target)
+	// TODO: TG Double Examine
 	var/list/result = target.examine(src)
 	SEND_SIGNAL(src, COMSIG_MOB_RUN_EXAMINATE, target, result)
 
@@ -362,7 +430,7 @@
 
 
 /mob/verb/mode()
-	set name = "Activate Held Object"
+	set name = "Использовать объект"
 	set src = usr
 
 	if(ismecha(loc))
@@ -374,7 +442,7 @@
 	var/obj/item/I = get_active_hand()
 	if(I)
 		I.attack_self(src)
-		update_inv_hands()
+		update_held_items()
 		return
 
 	if(pulling && isliving(src))
@@ -398,21 +466,22 @@
 		canon_client.movingmob = null
 
 	canon_client = null
+	GLOB.left_player_list |= src
 
 /mob/verb/memory()
-	set name = "Notes"
-	set category = "IC"
+	set name = "Заметки"
+	set category = STATPANEL_IC
 	if(mind)
 		mind.show_memory(src)
 	else
 		to_chat(src, "The game appears to have misplaced your mind datum, so we can't show you your notes.")
 
 /mob/verb/add_memory(msg as message)
-	set name = "Add Note"
-	set category = "IC"
+	set name = "Добавить заметку"
+	set category = STATPANEL_IC
 
 	msg = copytext(msg, 1, MAX_MESSAGE_LEN)
-	msg = sanitize_simple(html_encode(msg), list("\n" = "<BR>"))
+	msg = sanitize_simple(html_encode(msg), list("\n" = "<br>"))
 	msg = sanitize_censored_patterns(msg)
 
 	var/combined = length(memory + msg)
@@ -433,7 +502,7 @@
 	if(length(memory) == 0)
 		memory += msg
 	else
-		memory += "<BR>[msg]"
+		memory += "<br>[msg]"
 
 	if(popup)
 		memory()
@@ -451,7 +520,7 @@
 	msg = copytext(msg, 1, MAX_MESSAGE_LEN)
 	flavor_text = msg
 
-/mob/proc/print_flavor_text(var/shrink = TRUE)
+/mob/proc/print_flavor_text(shrink = TRUE)
 	if(flavor_text && flavor_text != "")
 		var/msg = replacetext(flavor_text, "\n", " ")
 		if(length(msg) <= 60 || !shrink)
@@ -459,12 +528,9 @@
 		else
 			return "<span class='notice'>[copytext_preserve_html(msg, 1, 57)]... <a href='byond://?src=[UID()];flavor_more=1'>More...</a></span>"
 
-/mob
-	var/newPlayerType = /mob/new_player
-
 /mob/verb/abandon_mob()
-	set name = "Respawn"
-	set category = "OOC"
+	set name = "Возродиться"
+	set category = STATPANEL_OOC
 
 	if(!GLOB.abandon_allowed)
 		to_chat(usr, "<span class='warning'>Respawning is disabled.</span>")
@@ -495,7 +561,7 @@
 		pluralcheck = " [deathtimeminutes] minutes and"
 	var/deathtimeseconds = round((deathtime - deathtimeminutes * 600) / 10,1)
 
-	if(deathtimeminutes < CONFIG_GET(number/respawn_delay))
+	if(deathtimeminutes < GLOB.respawn_delay)
 		to_chat(usr, "You have been dead for[pluralcheck] [deathtimeseconds] seconds.")
 		to_chat(usr, "<span class='warning'>You must wait [CONFIG_GET(number/respawn_delay)] minutes to respawn!</span>")
 		return
@@ -532,8 +598,8 @@
 	return stat == DEAD
 
 /mob/verb/cancel_camera()
-	set name = "Cancel Camera View"
-	set category = "OOC"
+	set name = "Сбросить позицию камеры"
+	set category = STATPANEL_OOC
 	reset_perspective(null)
 	unset_machine()
 	if(isliving(src))
@@ -543,25 +609,28 @@
 /mob/Topic(href, href_list)
 	. = ..()
 	if(href_list["mach_close"])
-		var/t1 = text("window=[href_list["mach_close"]]")
 		unset_machine()
-		src << browse(null, t1)
+		close_window(src, href_list["mach_close"])
 
 	if(href_list["flavor_more"])
-		usr << browse(text({"<HTML><meta charset="UTF-8"><HEAD><TITLE>[]</TITLE></HEAD><BODY><TT>[]</TT></BODY></HTML>"}, name, replacetext(flavor_text, "\n", "<BR>")), text("window=[];size=500x200", name))
-		onclose(usr, "[name]")
+		var/datum/browser/popup = new(usr, name, name, 500, 200)
+		popup.set_content("<tt>[replacetext(flavor_text, "\n", "<br>")]</tt>")
+		popup.open(TRUE)
+		onclose(usr, name)
 	if(href_list["flavor_change"])
 		update_flavor_text()
 
 	if(href_list["scoreboard"])
-		usr << browse(GLOB.scoreboard, "window=roundstats;size=700x900")
+		var/datum/browser/popup = new(usr, "roundstats", "Round Stats", 700, 900)
+		popup.set_content(GLOB.scoreboard)
+		popup.open(FALSE)
 
 
 /mob/MouseDrop(mob/living/user, src_location, over_location, src_control, over_control, params)
 	. = ..()
 	if(!. || usr != user || usr == src || !HAS_TRAIT(user, TRAIT_CAN_STRIP))
 		return FALSE
-	if(isliving(user) && user.mob_size <= MOB_SIZE_SMALL)
+	if(!user.can_strip || isliving(user) && user.mob_size <= MOB_SIZE_SMALL)
 		return FALSE // Stops pAI drones and small mobs (borers, parrots, crabs) from stripping people. --DZD
 	if(IsFrozen(src) && !is_admin(user))
 		to_chat(usr, span_boldnotice("Interacting with admin-frozen players is not permitted."))
@@ -689,19 +758,19 @@
 	return
 
 /mob/dead/observer/verb/respawn()
-	set name = "Respawn as NPC"
-	set category = "Ghost"
+	set name = "Играть за НИП"
+	set category = STATPANEL_GHOST
 
 	if(jobban_isbanned(usr, ROLE_SENTIENT))
-		to_chat(usr, span_warning("You are banned from playing as sentient animals."))
+		to_chat(usr, span_warning("Вам запрещено играть за разумных животных."))
 		return
 
 	if(!SSticker || SSticker.current_state < GAME_STATE_PLAYING)
-		to_chat(src, span_warning("You can't respawn as an NPC before the game starts!"))
+		to_chat(src, span_warning("Вы не можете возродиться как НИП до начала игры!"))
 		return
 
 	if(stat != DEAD && !isobserver(usr))
-		to_chat(usr, span_warning("You are not dead or you have given up your right to be respawned!"))
+		to_chat(usr, span_warning("Вы не мертвы или отказались от права на возрождение!"))
 		return
 
 	var/list/allowed_creatures = list()
@@ -712,7 +781,7 @@
 
 	allowed_creatures.Insert(1, "Mouse")
 
-	var/mob/living/picked = tgui_input_list(usr, "Please select an NPC to respawn as", "Respawn as NPC", allowed_creatures)
+	var/mob/living/picked = tgui_input_list(usr, "Пожалуйста, выберите НИП для возрождения", "Возродиться как НИП", allowed_creatures)
 	if(!picked)
 		return
 
@@ -724,7 +793,7 @@
 	var/message = picked_mob.get_npc_respawn_message()
 
 	if(QDELETED(picked_mob) || picked_mob.key || picked_mob.stat == DEAD)
-		to_chat(usr, span_warning("[capitalize(picked_mob)] is no longer available to respawn!"))
+		to_chat(usr, span_warning("[capitalize(picked_mob)] больше недоступен для возрождения!"))
 		return
 
 	if(istype(picked_mob, /mob/living/simple_animal/borer))
@@ -732,7 +801,7 @@
 		borer.transfer_personality(usr.client)
 		return
 
-	to_chat(usr, span_notify(message))
+	to_chat(usr, span_notice(message))
 	GLOB.respawnable_list -= usr
 	picked_mob.key = key
 
@@ -753,7 +822,7 @@
 		var/choosen_type = prob(90) ? /mob/living/simple_animal/mouse : /mob/living/simple_animal/mouse/rat
 		var/mob/living/simple_animal/mouse/host = new choosen_type(vent_found.loc)
 		host.ckey = src.ckey
-		to_chat(host, "<span class='info'>You are now a mouse. Try to avoid interaction with players, and do not give hints away that you are more than a simple rodent.</span>")
+		to_chat(host, span_notice("You are now a mouse. Try to avoid interaction with players, and do not give hints away that you are more than a simple rodent."))
 	else
 		to_chat(src, "<span class='warning'>Unable to find any unwelded vents to spawn mice at.</span>")
 
@@ -813,12 +882,12 @@
 
 
 /**
-  * Buckle to another mob
-  *
-  * You can buckle on mobs if you're next to them since most are dense
-  *
-  * Turns you to face the other mob too
-  */
+ * Buckle to another mob
+ *
+ * You can buckle on mobs if you're next to them since most are dense
+ *
+ * Turns you to face the other mob too
+ */
 /mob/is_buckle_possible(mob/living/target, force = FALSE, check_loc = TRUE)
 	if(target.buckled)
 		return FALSE
@@ -955,33 +1024,33 @@
 
 /mob/vv_get_dropdown()
 	. = ..()
-	.["Show player panel"] = "?_src_=vars;mob_player_panel=[UID()]"
+	.["Show player panel"] = "byond://?_src_=vars;mob_player_panel=[UID()]"
 
-	.["Give Spell"] = "?_src_=vars;give_spell=[UID()]"
-	.["Give Martial Art"] = "?_src_=vars;givemartialart=[UID()]"
-	.["Give Disease"] = "?_src_=vars;give_disease=[UID()]"
-	.["Give Taipan Hud"] = "?_src_=vars;give_taipan_hud=[UID()]"
-	.["Toggle Godmode"] = "?_src_=vars;godmode=[UID()]"
-	.["Toggle Build Mode"] = "?_src_=vars;build_mode=[UID()]"
+	.["Give Spell"] = "byond://?_src_=vars;give_spell=[UID()]"
+	.["Give Martial Art"] = "byond://?_src_=vars;givemartialart=[UID()]"
+	.["Give Disease"] = "byond://?_src_=vars;give_disease=[UID()]"
+	.["Give Taipan Hud"] = "byond://?_src_=vars;give_taipan_hud=[UID()]"
+	.["Toggle Godmode"] = "byond://?_src_=vars;godmode=[UID()]"
+	.["Toggle Build Mode"] = "byond://?_src_=vars;build_mode=[UID()]"
 
-	.["Make 2spooky"] = "?_src_=vars;make_skeleton=[UID()]"
+	.["Make 2spooky"] = "byond://?_src_=vars;make_skeleton=[UID()]"
 
-	.["Assume Direct Control"] = "?_src_=vars;direct_control=[UID()]"
-	.["Offer Control to Ghosts"] = "?_src_=vars;offer_control=[UID()]"
-	.["Drop Everything"] = "?_src_=vars;drop_everything=[UID()]"
+	.["Assume Direct Control"] = "byond://?_src_=vars;direct_control=[UID()]"
+	.["Offer Control to Ghosts"] = "byond://?_src_=vars;offer_control=[UID()]"
+	.["Drop Everything"] = "byond://?_src_=vars;drop_everything=[UID()]"
 
-	.["Regenerate Icons"] = "?_src_=vars;regenerateicons=[UID()]"
-	.["Add Language"] = "?_src_=vars;addlanguage=[UID()]"
-	.["Remove Language"] = "?_src_=vars;remlanguage=[UID()]"
-	.["Grant All Language"] = "?_src_=vars;grantalllanguage=[UID()]"
-	.["Change Voice"] = "?_src_=vars;changevoice=[UID()]"
-	.["Add Organ"] = "?_src_=vars;addorgan=[UID()]"
-	.["Remove Organ"] = "?_src_=vars;remorgan=[UID()]"
+	.["Regenerate Icons"] = "byond://?_src_=vars;regenerateicons=[UID()]"
+	.["Add Language"] = "byond://?_src_=vars;addlanguage=[UID()]"
+	.["Remove Language"] = "byond://?_src_=vars;remlanguage=[UID()]"
+	.["Grant All Language"] = "byond://?_src_=vars;grantalllanguage=[UID()]"
+	.["Change Voice"] = "byond://?_src_=vars;changevoice=[UID()]"
+	.["Add Organ"] = "byond://?_src_=vars;addorgan=[UID()]"
+	.["Remove Organ"] = "byond://?_src_=vars;remorgan=[UID()]"
 
-	.["Add Verb"] = "?_src_=vars;addverb=[UID()]"
-	.["Remove Verb"] = "?_src_=vars;remverb=[UID()]"
+	.["Add Verb"] = "byond://?_src_=vars;addverb=[UID()]"
+	.["Remove Verb"] = "byond://?_src_=vars;remverb=[UID()]"
 
-	.["Gib"] = "?_src_=vars;gib=[UID()]"
+	.["Gib"] = "byond://?_src_=vars;gib=[UID()]"
 
 ///Can this mob resist (default FALSE)
 /mob/proc/can_resist()
@@ -1057,6 +1126,11 @@
 	QDEL_NULL(vision_type)
 	if(O) //in case of null
 		vision_type = new O
+		for(var/mob/dead/observer/observe as anything in inventory_observers)
+			if(!observe.client)
+				LAZYREMOVE(inventory_observers, observe)
+				continue
+			observe.vision_type = vision_type
 	update_sight()
 
 /mob/proc/sync_lighting_plane_alpha()
@@ -1092,32 +1166,26 @@
 	. = ..()
 	if(bloody_hands && clean_hands)
 		bloody_hands = 0
-		update_inv_gloves()
-	if(l_hand)
-		if(l_hand.clean_blood())
-			update_inv_l_hand()
-	if(r_hand)
-		if(r_hand.clean_blood())
-			update_inv_r_hand()
-	if(back)
-		if(back.clean_blood())
-			update_inv_back()
-	if(wear_mask && clean_mask)
-		if(wear_mask.clean_blood())
-			update_inv_wear_mask()
+		update_worn_gloves()
+	if(l_hand?.clean_blood() || r_hand?.clean_blood())
+		update_held_items()
+	if(back?.clean_blood())
+		update_worn_back()
+	if(clean_mask && wear_mask?.clean_blood())
+		update_worn_mask()
 	if(clean_feet)
 		feet_blood_color = null
 		qdel(feet_blood_DNA)
 		bloody_feet = list(BLOOD_STATE_HUMAN = 0, BLOOD_STATE_XENO = 0,  BLOOD_STATE_NOT_BLOODY = 0)
 		blood_state = BLOOD_STATE_NOT_BLOODY
-		update_inv_shoes()
+		update_worn_shoes()
 	update_icons()	//apply the now updated overlays to the mob
 
 ///Makes a call in the context of a different usr. Use sparingly
 /world/proc/invoke_callback_with_usr(mob/user_mob, datum/callback/invoked_callback, ...)
 	var/temp = usr
 	usr = user_mob
-	if (length(args) > 2)
+	if(length(args) > 2)
 		. = invoked_callback.Invoke(arglist(args.Copy(3)))
 	else
 		. = invoked_callback.Invoke()
@@ -1258,3 +1326,58 @@ GLOBAL_LIST_INIT(holy_areas, typecacheof(list(
 
 /mob/proc/set_key(key)
 	src.key = key
+
+/// Assigns a (c)key to this mob.
+/mob/proc/possess_by_player(ckey)
+	SHOULD_NOT_OVERRIDE(TRUE)
+	if(isnull(ckey))
+		return
+
+	if(!istext(ckey))
+		CRASH("Tried to assign a mob a non-text ckey, wtf?!")
+
+	src.ckey = ckey(ckey)
+
+
+/**
+ * set every hud image in the given category active so other people with the given hud can see it.
+ * Arguments:
+ * * hud_category - the index in our active_hud_list corresponding to an image now being shown.
+ * * update_huds - if FALSE we will just put the hud_category into active_hud_list without actually updating the atom_hud datums subscribed to it
+ * * exclusive_hud - if given a reference to an atom_hud, will just update that hud instead of all global ones attached to that category.
+ * This is because some atom_hud subtypes arent supposed to work via global categories, updating normally would affect all of these which we dont want.
+ */
+/atom/proc/set_hud_image_active(hud_category, update_huds = TRUE, datum/atom_hud/exclusive_hud)
+	if(!istext(hud_category) || !hud_list?[hud_category] || active_hud_list?[hud_category])
+		return FALSE
+
+	LAZYSET(active_hud_list, hud_category, hud_list[hud_category])
+
+	if(!update_huds)
+		return TRUE
+
+	if(exclusive_hud)
+		exclusive_hud.add_single_hud_category_on_atom(src, hud_category)
+	else
+		for(var/datum/atom_hud/hud_to_update as anything in GLOB.huds_by_category[hud_category])
+			hud_to_update.add_single_hud_category_on_atom(src, hud_category)
+
+	return TRUE
+
+///sets every hud image in the given category inactive so no one can see it
+/atom/proc/set_hud_image_inactive(hud_category, update_huds = TRUE, datum/atom_hud/exclusive_hud)
+	if(!istext(hud_category))
+		return FALSE
+
+	LAZYREMOVE(active_hud_list, hud_category)
+
+	if(!update_huds)
+		return TRUE
+
+	if(exclusive_hud)
+		exclusive_hud.remove_single_hud_category_on_atom(src, hud_category)
+	else
+		for(var/datum/atom_hud/hud_to_update as anything in GLOB.huds_by_category[hud_category])
+			hud_to_update.remove_single_hud_category_on_atom(src, hud_category)
+
+	return TRUE

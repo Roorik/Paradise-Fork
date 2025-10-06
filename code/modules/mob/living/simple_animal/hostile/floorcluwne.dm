@@ -14,13 +14,11 @@
 	maxHealth = 200
 	health = 200
 	speed = -1
-	attacktext = "атакует"
 	anchored = TRUE
 	attack_sound = 'sound/items/bikehorn.ogg'
 	del_on_death = TRUE
 	pass_flags = PASSTABLE | PASSGRILLE | PASSMOB | LETPASSTHROW | PASSGLASS | PASSBLOB//it's practically a ghost when unmanifested (under the floor)
 	loot = list(/obj/item/clothing/mask/cursedclown)
-	a_intent = INTENT_HARM
 	wander = FALSE
 	minimum_distance = 2
 	move_to_delay = 1
@@ -69,7 +67,7 @@
 
 /mob/living/simple_animal/hostile/floor_cluwne/attack_hand(mob/living/carbon/human/M)
 	..()
-	playsound(src.loc, 'sound/items/bikehorn.ogg', 50, 1)
+	playsound(src.loc, 'sound/items/bikehorn.ogg', 50, TRUE)
 
 
 /mob/living/simple_animal/hostile/floor_cluwne/CanAllowThrough(atom/movable/mover, border_dir)
@@ -85,8 +83,8 @@
 	pixel_y = 8
 
 	if(is_type_in_typecache(get_area(loc), invalid_area_typecache))
-		var/area = pick(GLOB.teleportlocs)
-		var/area/tp = GLOB.teleportlocs[area]
+		var/area = pick(SSmapping.teleportlocs)
+		var/area/tp = SSmapping.teleportlocs[area]
 		forceMove(pick(get_area_turfs(tp.type)))
 
 	if((!current_victim && !admincluwne) || QDELETED(current_victim))
@@ -96,7 +94,7 @@
 		On_Stage()
 
 	if(stage == STAGE_ATTACK)
-		playsound(src, 'sound/spookoween/ghost_whisper.ogg', 75, 1)
+		playsound(src, 'sound/spookoween/ghost_whisper.ogg', 75, TRUE)
 
 	if(eating)
 		return
@@ -145,7 +143,7 @@
 	return
 
 
-/mob/living/simple_animal/hostile/floor_cluwne/LoseTarget()
+/mob/living/simple_animal/hostile/floor_cluwne/lose_target()
 	return
 
 
@@ -336,18 +334,18 @@
 
 
 /mob/living/simple_animal/hostile/floor_cluwne/proc/Grab(mob/living/carbon/human/H)
-	to_chat(H, "<span class='userdanger'>You feel a cold, gloved hand clamp down on your ankle!</span>")
+	to_chat(H, span_userdanger("You feel a cold, gloved hand clamp down on your ankle!"))
 	for(var/I in 1 to get_dist(src, H))
 
 		if(do_after(src, 1 SECONDS, H))
 			step_towards(H, src)
-			playsound(H, pick('sound/effects/bodyscrape-01.ogg', 'sound/effects/bodyscrape-02.ogg'), 20, 1, -4)
+			playsound(H, pick('sound/effects/bodyscrape-01.ogg', 'sound/effects/bodyscrape-02.ogg'), 20, TRUE, -4)
 			H.emote("scream")
 			if(prob(25))
-				playsound(src, pick('sound/hallucinations/growl1.ogg', 'sound/hallucinations/growl2.ogg', 'sound/items/bikehorn.ogg'), 50, 1)
+				playsound(src, pick('sound/hallucinations/growl1.ogg', 'sound/hallucinations/growl2.ogg', 'sound/items/bikehorn.ogg'), 50, TRUE)
 
 	if(get_dist(src,H) <= 1)
-		visible_message("<span class='danger'>[src] begins dragging [H] under the floor!</span>")
+		visible_message(span_danger("[src] begins dragging [H] under the floor!"))
 
 		if(do_after(src, 5 SECONDS, H) && eating)
 			if(!HAS_TRAIT_FROM(H, TRAIT_BLIND, FLOOR_CLUWNE_TRAIT))
@@ -364,7 +362,7 @@
 			ADD_TRAIT(H, TRAIT_UNDENSE, FLOOR_CLUWNE_TRAIT)
 			H.set_anchored(TRUE)
 			addtimer(CALLBACK(src, TYPE_PROC_REF(/mob/living/simple_animal/hostile/floor_cluwne, Kill), H), 100)
-			H.visible_message("<span class='userdanger'>[src] pulls [H] under the floor!</span>")
+			H.visible_message(span_userdanger("[src] pulls [H] under the floor!"))
 		else//some fuck pulled away our food
 			stage = STAGE_TORMENT
 			eating = FALSE
@@ -378,7 +376,7 @@
 
 
 /mob/living/simple_animal/hostile/floor_cluwne/proc/Kill(mob/living/carbon/human/H)
-	playsound(H, 'sound/spookoween/scary_horn2.ogg', 100, 0)
+	playsound(H, 'sound/spookoween/scary_horn2.ogg', 100, FALSE)
 	var/old_color = H.client?.color
 	client_kill_animation(H)
 
@@ -404,7 +402,7 @@
 	if(prob(2))
 		switch_stage = max(switch_stage * 0.75, switch_stage_min) //he gets a chance to be faster after each feast
 	if(smiting)
-		playsound(loc, 'sound/spookoween/scary_horn2.ogg', 100, 0, -4)
+		playsound(loc, 'sound/spookoween/scary_horn2.ogg', 100, FALSE, -4)
 		qdel(src)
 	else
 		Acquire_Victim()
@@ -431,7 +429,7 @@
 
 /obj/effect/temp_visual/fcluwne_manifest/New()
 	. = ..()
-	playsound(src, 'sound/spookoween/scary_clown_appear.ogg', 100, 1)
+	playsound(src, 'sound/spookoween/scary_clown_appear.ogg', 100, TRUE)
 
 #undef STAGE_HAUNT
 #undef STAGE_SPOOK

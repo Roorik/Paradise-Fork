@@ -1,7 +1,7 @@
 GLOBAL_DATUM_INIT(requests, /datum/request_manager, new)
 
 /**
- * # Request Manager
+ * MARK: Request Manager
  *
  * Handles all player requests (prayers, centcom requests, syndicate requests)
  * that occur in the duration of a round.
@@ -17,9 +17,9 @@ GLOBAL_DATUM_INIT(requests, /datum/request_manager, new)
 	return ..()
 
 /datum/request_manager/proc/client_login(client/C)
-	if (!requests[C.ckey])
+	if(!requests[C.ckey])
 		return
-	for (var/datum/request/request as anything in requests[C.ckey])
+	for(var/datum/request/request as anything in requests[C.ckey])
 		request.owner = C
 
 /datum/request_manager/proc/pray(client/C, message, is_chaplain)
@@ -50,7 +50,7 @@ GLOBAL_DATUM_INIT(requests, /datum/request_manager, new)
  */
 /datum/request_manager/proc/request_for_client(client/C, type, message)
 	var/datum/request/request = new(C, type, message)
-	if (!requests[C.ckey])
+	if(!requests[C.ckey])
 		requests[C.ckey] = list()
 	requests[C.ckey] += request
 	requests_by_id.len++
@@ -70,96 +70,108 @@ GLOBAL_DATUM_INIT(requests, /datum/request_manager, new)
 		ui.open()
 
 /datum/request_manager/ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
-	if (..())
+	if(..())
 		return
 
 	// Only admins should be sending actions
-	if (!check_rights(R_ADMIN))
+	if(!check_rights(R_ADMIN))
 		to_chat(usr, "You do not have permission to do this, you require +ADMIN")
 		return
 
 	// Get the request this relates to
 	var/id = params["id"] != null ? text2num(params["id"]) : null
-	if (!id)
+	if(!id)
 		to_chat(usr, "Failed to find a request ID in your action, please report this")
 		CRASH("Received an action without a request ID, this shouldn't happen!")
 	var/datum/request/request = !id ? null : requests_by_id[id]
 
 	switch(action)
-		if ("pp")
+		if("pp")
 			var/mob/M = request.owner?.mob
 			usr.client.holder.show_player_panel(M)
 			return TRUE
-		if ("vv")
+		if("vv")
 			var/mob/M = request.owner?.mob
 			usr.client.debug_variables(M)
 			return TRUE
-		if ("sm")
+		if("sm")
 			var/mob/M = request.owner?.mob
 			usr.client.cmd_admin_subtle_message(M)
 			return TRUE
-		if ("tp")
+		if("tp")
 			if(!SSticker.HasRoundStarted())
 				tgui_alert(usr, "The game hasn't started yet!")
 				return TRUE
 			var/mob/M = request.owner?.mob
 			usr.client.holder.show_traitor_panel(M)
 			return TRUE
-		if ("logs")
+		if("logs")
 			var/mob/M = request.owner?.mob
 			if(!ismob(M))
 				to_chat(usr, "This can only be used on instances of type /mob.")
 				return TRUE
 			usr.client.open_logging_view(list(M), TRUE)
 			return TRUE
-		if ("bless")
+		if("bless")
 			if(!check_rights(R_EVENT))
 				to_chat(usr, "Insufficient permissions to bless, you require +EVENT")
 				return TRUE
 			var/mob/living/M = request.owner?.mob
 			usr.client.bless(M)
 			return TRUE
-		if ("smite")
+		if("smite")
 			if(!check_rights(R_EVENT))
 				to_chat(usr, "Insufficient permissions to smite, you require +EVENT")
 				return TRUE
 			var/mob/living/M = request.owner?.mob
 			usr.client.smite(M)
 			return TRUE
-		if ("rply")
-			if (request.req_type == REQUEST_PRAYER)
+		if("rply")
+			if(request.req_type == REQUEST_PRAYER)
 				to_chat(usr, "Cannot reply to a prayer")
 				return TRUE
 			var/mob/M = request.owner?.mob
 			usr.client.admin_headset_message(M, request.req_type == REQUEST_SYNDICATE ? "Syndicate" : "Centcomm")
 			return TRUE
-		if ("ertreply")
-			if (request.req_type != REQUEST_ERT)
+		if("ertreply")
+			if(request.req_type != REQUEST_ERT)
 				to_chat(usr, "You cannot respond with ert for a non-ert-request request!")
 				return TRUE
-			if(tgui_alert(usr, "Accept or Deny ERT request?", "CentComm Response", list("Accept", "Deny")) == "Deny")
+
+			if(tgui_alert(usr, "Accept or Deny ERT request?", "CentComm Response", list("Accept", "Deny")) == "No")
 				var/mob/living/carbon/human/H = request.owner?.mob
 				if(!istype(H))
-					to_chat(usr, "<span class='warning'>This can only be used on instances of type /mob/living/carbon/human</span>")
-					return
-				if(H.stat != 0)
-					to_chat(usr, "<span class='warning'>The person you are trying to contact is not conscious.</span>")
-					return
-				if(!istype(H.l_ear, /obj/item/radio/headset) && !istype(H.r_ear, /obj/item/radio/headset))
-					to_chat(usr, "<span class='warning'>The person you are trying to contact is not wearing a headset</span>")
+					to_chat(usr, span_warning("This can only be used on instances of type /mob/living/carbon/human"))
 					return
 
-				var/input = tgui_input_text(usr, "Please enter a reason for denying [key_name(H)]'s ERT request.", "Outgoing message from CentComm", "", multiline = TRUE, encode = FALSE)
-				if(!input)	return
+				var/reason = tgui_input_text(usr, "Please enter a reason for denying [key_name(H)]'s ERT request.", "Outgoing message from CentComm", multiline = TRUE, encode = FALSE)
+				if(!reason)
+					return
+				var/announce_to_crew = tgui_alert(usr, "Announce ERT request denial to crew or only to the sender [key_name(H)]?", "Send reason to who", "Crew", "Sender") == "Crew"
 				GLOB.ert_request_answered = TRUE
-				to_chat(usr, "You sent [input] to [H] via a secure channel.")
-				log_admin("[usr] denied [key_name(H)]'s ERT request with the message [input].")
-				to_chat(H, "<span class='specialnoticebold'>Incoming priority transmission from Central Command. Message as follows,</span><span class='specialnotice'> Your ERT request has been denied for the following reasons: [input].</span>")
+				log_admin("[usr] denied [key_name(H)]'s ERT request with the message [reason]. Announced to [announce_to_crew ? "the entire crew." : "only the sender"].")
+
+				if(announce_to_crew)
+					GLOB.major_announcement.announce(
+						message = "[station_name()], к сожалению, в настоящее время мы не можем направить к вам отряд быстрого реагирования. Ваш запрос на ОБР был отклонен по следующим причинам:\n[reason]",
+						new_title = ANNOUNCE_ERT_UNAVAIL_RU
+					)
+					return
+
+				if(H.stat != CONSCIOUS)
+					to_chat(usr, span_warning("The person you are trying to contact is not conscious. ERT denied but no message has been sent."))
+					return
+				if(!istype(H.l_ear, /obj/item/radio/headset) && !istype(H.r_ear, /obj/item/radio/headset))
+					to_chat(usr, span_warning("The person you are trying to contact is not wearing a headset. ERT denied but no message has been sent."))
+					return
+				to_chat(usr, span_notice("You sent [reason] to [H] via a secure channel."))
+				to_chat(H, "[span_specialnotice("Incoming priority transmission from Central Command. Message as follows,")][span_specialnotice(" Ваш запрос на ОБР был отклонен по следующим причинам: [reason].")]")
 			else
 				usr.client.response_team()
-		if ("getcode")
+
+		if("getcode")
 			if(request.req_type != REQUEST_NUKE)
-				to_chat(usr, "<span class='warning'>Warning! That this is a non-nuke-code-request request!</span>")
+				to_chat(usr, span_warning("Warning! That this is a non-nuke-code-request request!"))
 			to_chat(usr, "<b>The nuke code is: [get_nuke_code()]!</b>")
 			return TRUE
 
@@ -167,8 +179,8 @@ GLOBAL_DATUM_INIT(requests, /datum/request_manager, new)
 	. = list(
 		"requests" = list()
 	)
-	for (var/ckey in requests)
-		for (var/datum/request/request as anything in requests[ckey])
+	for(var/ckey in requests)
+		for(var/datum/request/request as anything in requests[ckey])
 			var/list/data = list(
 				"id" = request.id,
 				"req_type" = request.req_type,

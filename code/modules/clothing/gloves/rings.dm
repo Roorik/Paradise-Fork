@@ -7,8 +7,8 @@
 	icon_state = "ironring"
 	item_state = ""
 	icon = 'icons/obj/clothing/rings.dmi'
-	pickup_sound = 'sound/items/handling/ring_pickup.ogg'
-	drop_sound = 'sound/items/handling/ring_drop.ogg'
+	pickup_sound = 'sound/items/handling/pickup/ring_pickup.ogg'
+	drop_sound = 'sound/items/handling/drop/ring_drop.ogg'
 	var/fluff_material = FALSE	//If true, will ignore the material when examining
 	var/material = "iron"
 	var/stud = FALSE
@@ -24,9 +24,9 @@
 /obj/item/clothing/gloves/ring/examine(mob/user)
 	. = ..()
 	if(!fluff_material)
-		. += "<span class='notice'>This one is made of [material].</span>"
+		. += span_notice("This one is made of [material].")
 	if(stud)
-		. += "<span class='notice'>It is adorned with a single gem.</span>"
+		. += span_notice("It is adorned with a single gem.")
 
 
 /obj/item/clothing/gloves/ring/attackby(obj/item/I, mob/user, params)

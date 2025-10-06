@@ -3,6 +3,7 @@
 	desc = "It's a flag."
 	icon = 'icons/obj/flag.dmi'
 	icon_state = "ntflag"
+	slot_flags = ITEM_SLOT_NECK
 	lefthand_file = 'icons/mob/inhands/flags_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/flags_righthand.dmi'
 	item_flags = NO_PIXEL_RANDOM_DROP
@@ -28,7 +29,7 @@
 
 /obj/item/flag/attack_self(mob/user)
 	rolled = !rolled
-	user.visible_message("<span class='notice'>[user] [rolled ? "rolls up" : "unfurls"] [src].</span>", "<span class='notice'>You [rolled ? "roll up" : "unfurl"] [src].</span>", "<span class='warning'>You hear fabric rustling.</span>")
+	user.visible_message(span_notice("[user] [rolled ? "rolls up" : "unfurls"] [src]."), span_notice("You [rolled ? "roll up" : "unfurl"] [src]."), span_warning("You hear fabric rustling."))
 	update_icon(UPDATE_ICON_STATE)
 
 /obj/item/flag/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay = FALSE)
@@ -60,7 +61,6 @@
 /obj/item/flag/nt
 	name = "Nanotrasen flag"
 	desc = "A flag proudly boasting the logo of NT."
-	icon_state = "ntflag"
 
 /obj/item/flag/clown
 	name = "Clown Planet flag"
@@ -185,7 +185,6 @@
 /obj/item/flag/command
 	name = "Command flag"
 	desc = "The flag of the independent, sovereign nation of Command."
-	icon_state = "ntflag"
 
 //Antags
 
@@ -224,7 +223,6 @@
 /obj/item/flag/chameleon
 	name = "Chameleon flag"
 	desc = "A poor recreation of the official NT flag. It seems to shimmer a little."
-	icon_state = "ntflag"
 	origin_tech = "syndicate=1;magnets=4"
 	var/updated_icon_state = null
 	var/used = FALSE
@@ -255,7 +253,7 @@
 
 	var/list/show_flag = list("EXIT" = null) + sortList(flag)
 
-	var/input_flag = input(user, "Choose a flag to disguise as.", "Choose a flag.") in show_flag
+	var/input_flag = tgui_input_list(user, "Choose a flag to disguise as.", "Choose a flag.", show_flag)
 
 	if(user && (src in user.contents))
 
@@ -302,7 +300,7 @@
 	. = TRUE
 	if(!I.use_tool(src, user, 0, volume = I.tool_volume))
 		return
-	to_chat(user, "<span class='notice'>You remove [boobytrap] from [src].</span>")
+	to_chat(user, span_notice("You remove [boobytrap] from [src]."))
 	boobytrap.forceMove(get_turf(src))
 	boobytrap = null
 	trapper = null

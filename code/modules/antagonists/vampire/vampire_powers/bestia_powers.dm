@@ -5,30 +5,30 @@
 \*======================================================================================================================================*/
 
 /// Max general organs vampire can get
-#define MAX_TROPHIES_PER_TYPE_GENERAL	10
+#define MAX_TROPHIES_PER_TYPE_GENERAL 10
 /// Max critical organs (lungs and heart) vampire can get
-#define MAX_TROPHIES_PER_TYPE_CRITICAL	6
+#define MAX_TROPHIES_PER_TYPE_CRITICAL 6
 
 /// Percent cap for different damage modifiers.
-#define TROPHIES_CAP_PROT_BRUTE			40
-#define TROPHIES_CAP_PROT_BURN			40
-#define TROPHIES_CAP_PROT_OXY			40
-#define TROPHIES_CAP_PROT_TOX			40
-#define TROPHIES_CAP_PROT_BRAIN			40
-#define TROPHIES_CAP_PROT_CLONE			40
-#define TROPHIES_CAP_PROT_STAMINA		40
+#define TROPHIES_CAP_PROT_BRUTE 40
+#define TROPHIES_CAP_PROT_BURN 40
+#define TROPHIES_CAP_PROT_OXY 40
+#define TROPHIES_CAP_PROT_TOX 40
+#define TROPHIES_CAP_PROT_BRAIN 40
+#define TROPHIES_CAP_PROT_CLONE 40
+#define TROPHIES_CAP_PROT_STAMINA 40
 
 /// Max blood cost reduce for spell.
-#define TROPHIES_CAP_BLOOD_REDUCE		50
+#define TROPHIES_CAP_BLOOD_REDUCE 20
 
 /// Amount of trophies required for certain passives.
-#define TROPHIES_EYES_FLASH				2
-#define TROPHIES_EYES_WELDING			4
-#define TROPHIES_EYES_XRAY				8
-#define TROPHIES_EARS_BANG_PROT			4
+#define TROPHIES_EYES_FLASH 2
+#define TROPHIES_EYES_WELDING 4
+#define TROPHIES_EYES_XRAY 8
+#define TROPHIES_EARS_BANG_PROT 4
 
 /// Suck rate increase per trophy.
-#define TROPHIES_SUCK_BONUS		0.2 SECONDS
+#define TROPHIES_SUCK_BONUS (0.2 SECONDS)
 
 
 /*======================================================================================================================================*\
@@ -162,6 +162,7 @@
 
 
 /obj/effect/proc_holder/spell/vampire/proc/on_trophie_update(datum/antagonist/vampire/vampire, trophie_type, force = FALSE)
+	return
 
 
 /obj/effect/proc_holder/spell/vampire/proc/do_blood_discount(datum/antagonist/vampire/vampire)
@@ -364,7 +365,7 @@
 		all_organs -= organ
 		all_organs[organ.slot] = organ
 
-	var/obj/item/organ/internal/organ_to_dissect = input("Выберите орган для извлечения:", "Извлечения органа", null, null) as null|anything in all_organs
+	var/obj/item/organ/internal/organ_to_dissect = tgui_input_list(usr, "Выберите орган для извлечения:", "Извлечения органа", all_organs, null)
 	if(!organ_to_dissect || !special_check(user, TRUE))
 		return
 
@@ -547,8 +548,7 @@
 	desc = "Призывает деформированный череп, заражающий жертву могильной лихорадкой. Чем больше трофеев вы собрали, тем сильнее будут эффекты."
 	gain_desc = "Теперь вы можете заражать жертв могильной лихорадкой. Чем больше вы собрали трофеев, тем сильнее будут эффекты."
 	action_icon_state = "infected_trophy"
-	base_cooldown = 10 SECONDS
-	required_blood = 60
+	required_blood = 30
 	deduct_blood_on_cast = FALSE
 
 
@@ -581,19 +581,10 @@
 /obj/item/gun/magic/skull_gun
 	name = "infected skull"
 	desc = "Деформированный череп, передающий могильную лихорадку."
-	ru_names = list(
-        NOMINATIVE = "заражённый череп",
-        GENITIVE = "заражённого черепа",
-        DATIVE = "заражённому черепу",
-        ACCUSATIVE = "заражённый череп",
-        INSTRUMENTAL = "заражённым черепом",
-        PREPOSITIONAL = "заражённом черепе"
-    )
 	icon = 'icons/obj/lavaland/artefacts.dmi'
 	icon_state = "ashen_skull"
 	item_state = "ashen_skull"
 	item_flags = ABSTRACT|NOBLUDGEON|DROPDEL
-	w_class = WEIGHT_CLASS_HUGE
 	fire_sound = 'sound/effects/pierce.ogg'
 	ammo_type = /obj/item/ammo_casing/magic/skull_gun_casing
 	force = 0
@@ -605,6 +596,15 @@
 	throw_speed = 0
 	var/obj/effect/proc_holder/spell/vampire/self/infected_trophy/parent_spell
 
+/obj/item/gun/magic/skull_gun/get_ru_names()
+	return list(
+		NOMINATIVE = "заражённый череп",
+		GENITIVE = "заражённого черепа",
+		DATIVE = "заражённому черепу",
+		ACCUSATIVE = "заражённый череп",
+		INSTRUMENTAL = "заражённым черепом",
+		PREPOSITIONAL = "заражённом черепе"
+	)
 
 /obj/item/gun/magic/skull_gun/Initialize(mapload, spell)
 	. = ..()
@@ -629,30 +629,23 @@
 /obj/item/ammo_casing/magic/skull_gun_casing
 	name = "skull gun casing"
 	desc = "Что это за..."
-	ru_names = list(
-    NOMINATIVE = "гильза для черепного пистолета",
-    GENITIVE = "гильзы для черепного пистолета",
-    DATIVE = "гильзе для черепного пистолета",
-    ACCUSATIVE = "гильзу для черепного пистолета",
-    INSTRUMENTAL = "гильзой для черепного пистолета",
-    PREPOSITIONAL = "гильзе для черепного пистолета"
-	)
 	icon_state = "skulls"
 	projectile_type = /obj/projectile/skull_projectile
 	muzzle_flash_effect = null
 	caliber = "skulls"
 
+/obj/item/ammo_casing/magic/skull_gun_casing/get_ru_names()
+	return list(
+		NOMINATIVE = "гильза для черепного пистолета",
+		GENITIVE = "гильзы для черепного пистолета",
+		DATIVE = "гильзе для черепного пистолета",
+		ACCUSATIVE = "гильзу для черепного пистолета",
+		INSTRUMENTAL = "гильзой для черепного пистолета",
+		PREPOSITIONAL = "гильзе для черепного пистолета"
+	)
 
 /obj/projectile/skull_projectile
 	name = "infected skull"
-	ru_names = list(
-        NOMINATIVE = "заражённый череп",
-        GENITIVE = "заражённого черепа",
-        DATIVE = "заражённому черепу",
-        ACCUSATIVE = "заражённый череп",
-        INSTRUMENTAL = "заражённым черепом",
-        PREPOSITIONAL = "заражённом черепе"
-    )
 	icon = 'icons/obj/lavaland/artefacts.dmi'
 	icon_state = "ashen_skull"
 	pass_flags = PASSTABLE | PASSGRILLE | PASSFENCE
@@ -660,11 +653,23 @@
 	range = 5
 	damage = 5
 	armour_penetration = 100
-	damage_type = BRUTE
 	hitsound = null
+
+/obj/projectile/skull_projectile/get_ru_names()
+	return list(
+		NOMINATIVE = "заражённый череп",
+		GENITIVE = "заражённого черепа",
+		DATIVE = "заражённому черепу",
+		ACCUSATIVE = "заражённый череп",
+		INSTRUMENTAL = "заражённым черепом",
+		PREPOSITIONAL = "заражённом черепе"
+	)
 
 
 /obj/projectile/skull_projectile/Destroy()
+	var/obj/item/gun/magic/skull_gun/skull_gun = locate() in firer
+	if(skull_gun)
+		qdel(skull_gun)
 	QDEL_NULL(chain)
 	return ..()
 
@@ -673,14 +678,10 @@
 	if(firer)
 		chain = firer.Beam(src, icon_state = "sendbeam", time = INFINITY, maxdistance = INFINITY)
 
-		var/obj/item/gun/magic/skull_gun/skull_gun = locate() in firer
-		if(skull_gun)
-			qdel(skull_gun)
-
 		var/datum/antagonist/vampire/vampire = firer.mind?.has_antag_datum(/datum/antagonist/vampire)
 		var/obj/effect/proc_holder/spell/vampire/self/infected_trophy/infected_trophy = locate() in firer.mind?.spell_list
 		if(vampire && infected_trophy)
-			range += vampire.get_trophies(INTERNAL_ORGAN_EYES) 	// 15 MAX
+			range += vampire.get_trophies(INTERNAL_ORGAN_EYES)	// 15 MAX
 			var/datum/spell_handler/vampire/handler = infected_trophy.custom_handler
 			var/blood_cost = handler.calculate_blood_cost(vampire)
 			vampire.bloodusable -= blood_cost
@@ -734,7 +735,7 @@
 	need_active_overlay = TRUE
 	human_req = FALSE
 	base_cooldown = 15 SECONDS
-	required_blood = 55
+	required_blood = 25
 	var/bonus_range = 0
 	var/blood_victim_lose = 0
 	var/effect_aoe = 0
@@ -893,7 +894,7 @@
 	need_active_overlay = TRUE
 	human_req = FALSE
 	base_cooldown = 15 SECONDS
-	required_blood = 55
+	required_blood = 25
 	var/range = 3
 
 
@@ -1008,7 +1009,7 @@
 		restraints += user.handcuffed
 	if(user.legcuffed)
 		restraints += user.legcuffed
-	if(user.wear_suit?.breakouttime)
+	if(user.wear_suit?.breakout_time)
 		restraints += user.wear_suit
 
 	for(var/obj/item/thing as anything in restraints)
@@ -1117,7 +1118,7 @@
 	action_icon_state = "bats_meta"
 	free_transform_back = TRUE
 	meta_path = /mob/living/simple_animal/hostile/vampire/bats
-	required_blood = 75
+	required_blood = 45
 
 
 /**
@@ -1131,7 +1132,7 @@
 	sound_on_transform = 'sound/creatures/hound_howl.ogg'
 	free_transform_back = TRUE
 	meta_path = /mob/living/simple_animal/hostile/vampire/hound
-	required_blood = 100
+	required_blood = 60
 
 
 /obj/effect/proc_holder/spell/vampire/metamorphosis/hound/can_cast(mob/living/carbon/user = usr, charge_check = TRUE, show_message = FALSE)
@@ -1155,7 +1156,7 @@
 	sound = 'sound/effects/creepyshriek.ogg'
 	human_req = FALSE
 	base_cooldown = 20 SECONDS
-	required_blood = 70
+	required_blood = 40
 
 
 /obj/effect/proc_holder/spell/vampire/self/bat_screech/cast(list/targets, mob/living/user = usr)
@@ -1223,7 +1224,7 @@
 	action_icon_state = "lunge_finale"
 	human_req = FALSE
 	base_cooldown = 1 MINUTES
-	required_blood = 110
+	required_blood = 80
 	var/obj/effect/proc_holder/spell/vampire/lunge/lunge
 	/// How many lunges will proceed.
 	var/lunge_counter = 1
@@ -1329,7 +1330,7 @@
 	action_icon_state = "vampire_coffin"
 	sound = 'sound/magic/vampire_anabiosis.ogg'
 	base_cooldown = 3 MINUTES
-	required_blood = 100
+	required_blood = 70
 	var/rejuvenation_time = 30 SECONDS
 
 
@@ -1444,7 +1445,6 @@
 	name = "Flying vampire..."
 	invisibility = 0
 	layer = LOW_LANDMARK_LAYER
-	light_system = STATIC_LIGHT
 
 
 /**
@@ -1453,14 +1453,6 @@
 /obj/structure/closet/coffin/vampire
 	name = "mysterious coffin"
 	desc = "Даже при взгляде на этот гроб волосы встают дыбом."
-	ru_names = list(
-            NOMINATIVE = "таинственный гроб",
-            GENITIVE = "таинственного гроба",
-            DATIVE = "таинственному гробу",
-            ACCUSATIVE = "таинственный гроб",
-            INSTRUMENTAL = "таинственным гробом",
-            PREPOSITIONAL = "таинственном гробе"
-    )
 	max_integrity = 500
 	color = "#7F0000"
 	anchored = TRUE
@@ -1468,12 +1460,11 @@
 	obj_flags = NODECONSTRUCT
 	material_drop = null
 	open_sound = 'sound/objects/coffin_toggle.ogg'
-	close_sound = 'sound/machines/wooden_closet_close.ogg'
 	var/datum/gas_mixture/interior_air
 	var/obj/machinery/portable_atmospherics/canister/air/interior_tank
 	var/no_manipulation = FALSE
 	/// UIDs of brave ones who ignore warnings and will loose their blood
-	var/list/lightheaded = list()
+	var/list/lightheaded
 	var/mob/living/carbon/human/human_vampire
 
 	var/heal_brute = 4
@@ -1491,6 +1482,16 @@
 
 	var/fullpower_unlocked = FALSE
 	var/fullpower_heal_done = FALSE
+
+/obj/structure/closet/coffin/vampire/get_ru_names()
+	return list(
+		NOMINATIVE = "таинственный гроб",
+		GENITIVE = "таинственного гроба",
+		DATIVE = "таинственному гробу",
+		ACCUSATIVE = "таинственный гроб",
+		INSTRUMENTAL = "таинственным гробом",
+		PREPOSITIONAL = "таинственном гробе"
+	)
 
 
 /obj/structure/closet/coffin/vampire/Initialize(mapload, mob/living/carbon/human/_human_vampire)
@@ -1515,7 +1516,7 @@
 		playsound(loc, 'sound/objects/coffin_break.ogg', 50, TRUE)
 		vampire_revenge()
 		human_vampire = null
-	lightheaded.Cut()
+	LAZYCLEARLIST(lightheaded)
 	QDEL_NULL(interior_tank)
 	QDEL_NULL(interior_air)
 	return ..()
@@ -1796,10 +1797,10 @@
 
 	var/user_UID = user.UID()
 	if(!(user_UID in lightheaded))
-		lightheaded += user_UID
+		LAZYADD(lightheaded, user_UID)
 		to_chat(user, span_warning("Вы чувствуете, что это не очень хорошая идея..."))
 	else
-		lightheaded -= user_UID
+		LAZYREMOVE(lightheaded, user_UID)
 		new /obj/effect/temp_visual/cult/sparks(get_turf(user))
 		user.Weaken(10 SECONDS)	// well, you were warned!
 		user.Jitter(20 SECONDS)
@@ -1822,16 +1823,18 @@
 	return ..()
 
 
-/**
+/*
  * Magic...
  */
-/obj/structure/closet/coffin/vampire/ex_act(severity)
-	return
+/obj/structure/closet/coffin/vampire/ex_act(severity, target)
+	return FALSE
+
 /obj/structure/closet/coffin/vampire/singularity_act()
 	return
-/obj/structure/closet/coffin/vampire/tesla_act(power)
-	return
 
+// Bruh... idk
+/obj/structure/closet/coffin/vampire/zap_act(power, zap_flags)
+	return
 
 /*======================================================================================================================================*\
  * //////////////////////////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ *
@@ -1847,7 +1850,7 @@
 	human_req = FALSE
 	stat_allowed = UNCONSCIOUS
 	base_cooldown = 30 SECONDS
-	required_blood = 80
+	required_blood = 50
 	var/num_bats = 1
 	var/bats_type = /mob/living/simple_animal/hostile/vampire/bats_summoned
 
@@ -1914,12 +1917,8 @@
 	AIStatus = AI_OFF
 	status_flags = NONE
 	sentience_type = SENTIENCE_OTHER
-	gold_core_spawnable = NO_SPAWN
 	speed = 0
-	environment_smash = ENVIRONMENT_SMASH_STRUCTURES
 	harm_intent_damage = 5	// punching transformed vampire is pretty useless
-	a_intent = INTENT_HARM
-	universal_understand = TRUE	// yeah, we can understand anything now
 	universal_speak = TRUE	// and speak to anyone too
 	mob_size = MOB_SIZE_LARGE
 	nightvision = 8	// full night vision
@@ -1990,10 +1989,11 @@
 			msgs += span_warning("У него много травм.")
 		else if(health > (maxHealth*0.25))
 			msgs += span_warning("Он весь в ранах!")
-		. += msgs.Join("<BR>")
+		. += msgs.Join("<br>")
 
 
 /mob/living/simple_animal/hostile/vampire/proc/add_spells()
+	return
 
 
 /mob/living/simple_animal/hostile/vampire/update_sight()
@@ -2048,7 +2048,7 @@
 	icon_living = "bat"
 	icon_dead = "bat_dead"
 	icon_gib = "bat_dead"
-	speak_emote = list("rattles")
+	speak_emote = list("визжит", "трещит")
 	move_resist = MOVE_FORCE_NORMAL
 	pull_force = MOVE_FORCE_NORMAL
 	health = 130
@@ -2056,7 +2056,7 @@
 	force_threshold = 3	// little protection
 	melee_damage_lower = 10
 	melee_damage_upper = 15
-	armour_penetration = 50 	// default security armor is useless
+	armour_penetration = 50	// default security armor is useless
 	pass_flags = PASSTABLE | PASSFENCE | PASSGRILLE
 
 
@@ -2069,11 +2069,11 @@
 		return
 
 	var/t_hearts = vampire.get_trophies(INTERNAL_ORGAN_HEART)
-	health += t_hearts * 20 												// 250 MAX
+	health += t_hearts * 20												// 250 MAX
 	maxHealth += t_hearts * 20
-	melee_damage_lower += round(t_hearts / 2) 								// 13 MAX
+	melee_damage_lower += round(t_hearts / 2)								// 13 MAX
 	melee_damage_upper += t_hearts											// 21 MAX
-	force_threshold += t_hearts * 2 										// 15 MAX
+	force_threshold += t_hearts * 2										// 15 MAX
 	set_varspeed(speed - vampire.get_trophies(INTERNAL_ORGAN_LUNGS) * 0.05)	// 30% MAX
 
 
@@ -2124,7 +2124,7 @@
 	icon_living = "hellhoundgreater"
 	icon_dead = "hellhound_dead"
 	icon_resting = "hellhoundgreater_sit"
-	speak_emote = list("growls", "roars")
+	speak_emote = list("рычит", "ревёт")
 	attacktext = "терзает"
 	mobility_flags = MOBILITY_FLAGS_REST_CAPABLE_DEFAULT
 	move_resist = MOVE_FORCE_EXTREMELY_STRONG	// no escape
@@ -2220,8 +2220,8 @@
 	icon_dead = "bat_dead"
 	icon_gib = "bat_dead"
 	deathmessage = "падают на землю и выглядят безжизненными!"
-	speak_emote = list("rattles")
-	emote_taunt = list("flutters")
+	speak_emote = list("визжит", "трещит")
+	emote_taunt = list("визжит")
 	taunt_chance = 30
 	move_resist = MOVE_FORCE_NORMAL
 	pull_force = MOVE_FORCE_NORMAL
@@ -2252,7 +2252,7 @@
 		return
 
 	var/t_hearts = vampire.get_trophies(INTERNAL_ORGAN_HEART)
-	health += t_hearts * 10 												// 140 MAX
+	health += t_hearts * 10												// 140 MAX
 	maxHealth += t_hearts * 10
 	melee_damage_lower += round(t_hearts / 2)								// 11 MAX
 	melee_damage_upper += t_hearts											// 16 MAX

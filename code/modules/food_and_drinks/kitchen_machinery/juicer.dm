@@ -3,10 +3,7 @@
 	name = "Juicer"
 	icon = 'icons/obj/kitchen.dmi'
 	icon_state = "juicer1"
-	layer = 2.9
 	density = TRUE
-	anchored = FALSE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 5
 	active_power_usage = 100
 	pass_flags = PASSTABLE
@@ -31,7 +28,7 @@
 		/obj/item/reagent_containers/food/snacks/grown/peaslaugh = "laughsyrup"
 	)
 
-/obj/machinery/juicer/New()
+/obj/machinery/juicer/Initialize(mapload)
 	. = ..()
 	beaker = new /obj/item/reagent_containers/glass/beaker/large(src)
 
@@ -88,7 +85,7 @@
 		for(var/obj/item/O in contents)
 			if(!istype(O,i))
 				continue
-			processing_chamber+= "some <B>[O]</B><BR>"
+			processing_chamber+= "some <b>[O]</b><br>"
 			break
 	if(!processing_chamber)
 		is_chamber_empty = 1
@@ -110,9 +107,9 @@
 [beaker_contents]<hr>
 "}
 	if(is_beaker_ready && !is_chamber_empty && !(stat & (NOPOWER|BROKEN)))
-		dat += "<a href='byond://?src=[UID()];action=juice'>Turn on!<BR>"
+		dat += "<a href='byond://?src=[UID()];action=juice'>Turn on!<br>"
 	if(beaker)
-		dat += "<a href='byond://?src=[UID()];action=detach'>Detach a beaker!<BR>"
+		dat += "<a href='byond://?src=[UID()];action=detach'>Detach a beaker!<br>"
 	var/datum/browser/popup = new(user, "juicer", name, 400, 400)
 	popup.set_content(dat)
 	popup.open(0)
@@ -134,8 +131,8 @@
 	return
 
 /obj/machinery/juicer/verb/detach()
-	set category = "Object"
-	set name = "Detach Beaker from the juicer"
+	set category = STATPANEL_OBJECT
+	set name = "Извлечь ёмкость"
 	set src in oview(1)
 	if(usr.stat != 0)
 		return
@@ -147,14 +144,14 @@
 	update_icon(UPDATE_ICON_STATE)
 
 /obj/machinery/juicer/proc/get_juice_id(obj/item/reagent_containers/food/snacks/grown/O)
-	for (var/i in allowed_items)
-		if (istype(O, i))
+	for(var/i in allowed_items)
+		if(istype(O, i))
 			return allowed_items[i]
 
 /obj/machinery/juicer/proc/get_juice_amount(obj/item/reagent_containers/food/snacks/grown/O)
 	if(!istype(O) || !O.seed)
 		return 5
-	else if (O.seed.potency == -1)
+	else if(O.seed.potency == -1)
 		return 5
 	else
 		return round(5*sqrt(O.seed.potency))
@@ -165,7 +162,7 @@
 		return
 	if(!beaker || beaker.reagents.total_volume >= beaker.reagents.maximum_volume)
 		return
-	playsound(loc, 'sound/machines/juicer.ogg', 50, 1)
+	playsound(loc, 'sound/machines/juicer.ogg', 50, TRUE)
 	for(var/obj/item/reagent_containers/food/snacks/O in contents)
 		var/r_id = get_juice_id(O)
 		beaker.reagents.add_reagent(r_id,get_juice_amount(O))

@@ -1,7 +1,3 @@
-#define LIGHT_DAM_THRESHOLD 4
-#define LIGHT_HEAL_THRESHOLD 2
-#define LIGHT_DAMAGE_TAKEN 6
-
 /*
 
 SHADOWLING: A gamemode based on previously-run events
@@ -36,34 +32,15 @@ Made by Xhuis
 
 */
 
-
-
-/*
-	GAMEMODE
-*/
-
-
-/datum/game_mode
-	var/list/datum/mind/shadows = list()
-	var/list/datum/mind/shadowling_thralls = list()
-	var/list/shadow_objectives = list()
-	var/required_thralls = 15 //How many thralls are needed (hardcoded for now)
-	var/shadowling_ascended = 0 //If at least one shadowling has ascended
-	var/shadowling_dead = 0 //is shadowling kill
-	var/objective_explanation
-	var/warning_threshold
-	var/victory_warning_announced = FALSE
-	var/thrall_ratio = 1
-
-/proc/is_thrall(var/mob/living/M)
+/proc/is_thrall(mob/living/M)
 	return istype(M) && M.mind && SSticker && SSticker.mode && (M.mind in SSticker.mode.shadowling_thralls)
 
 
-/proc/is_shadow_or_thrall(var/mob/living/M)
+/proc/is_shadow_or_thrall(mob/living/M)
 	return istype(M) && M.mind && SSticker && SSticker.mode && ((M.mind in SSticker.mode.shadowling_thralls) || (M.mind in SSticker.mode.shadows))
 
 
-/proc/is_shadow(var/mob/living/M)
+/proc/is_shadow(mob/living/M)
 	return istype(M) && M.mind && SSticker && SSticker.mode && (M.mind in SSticker.mode.shadows)
 
 
@@ -74,11 +51,11 @@ Made by Xhuis
 	required_enemies = 2
 	recommended_enemies = 2
 	restricted_jobs = list(JOB_TITLE_AI, JOB_TITLE_CYBORG)
-	protected_jobs = list(JOB_TITLE_OFFICER, JOB_TITLE_WARDEN, JOB_TITLE_DETECTIVE, JOB_TITLE_HOS, JOB_TITLE_HOP, JOB_TITLE_CAPTAIN, JOB_TITLE_BLUESHIELD, JOB_TITLE_REPRESENTATIVE, JOB_TITLE_PILOT, JOB_TITLE_JUDGE, JOB_TITLE_BRIGDOC, JOB_TITLE_LAWYER, JOB_TITLE_CCOFFICER, JOB_TITLE_CCFIELD, JOB_TITLE_CCSPECOPS, JOB_TITLE_CCSUPREME, JOB_TITLE_SYNDICATE)
+	protected_jobs = list(JOB_TITLE_OFFICER, JOB_TITLE_WARDEN, JOB_TITLE_DETECTIVE, JOB_TITLE_HOS, JOB_TITLE_HOP, JOB_TITLE_CAPTAIN, JOB_TITLE_BLUESHIELD, JOB_TITLE_REPRESENTATIVE, JOB_TITLE_PILOT, JOB_TITLE_JUDGE, JOB_TITLE_BRIGDOC, JOB_TITLE_LAWYER, JOB_TITLE_CCOFFICER, JOB_TITLE_CCFIELD, JOB_TITLE_CCSPECOPS, JOB_TITLE_CCSUPREME, JOB_TITLE_SYNDICATE, JOB_TITLE_PRISONER, JOB_TITLE_CMO, JOB_TITLE_RD, JOB_TITLE_QUARTERMASTER, JOB_TITLE_HOP, JOB_TITLE_CHIEF)
 
 /datum/game_mode/shadowling/announce()
 	to_chat(world, "<b>The current game mode is - Shadowling!</b>")
-	to_chat(world, "<b>There are alien <span class='deadsay'>shadowlings</span> on the station. Crew: Kill the shadowlings before they can eat or enthrall the crew. Shadowlings: Enthrall the crew while remaining in hiding.</b>")
+	to_chat(world, "<b>There are alien [span_deadsay("shadowlings")] on the station. Crew: Kill the shadowlings before they can eat or enthrall the crew. Shadowlings: Enthrall the crew while remaining in hiding.</b>")
 
 /datum/game_mode/shadowling/pre_setup()
 	if(CONFIG_GET(flag/protect_roles_from_antagonist))
@@ -112,7 +89,7 @@ Made by Xhuis
 		var/list/messages = list()
 		spawn(rand(10,100))
 			messages.Add("<br>")
-			messages.Add("<span class='deadsay'><b><font size=3>You are a shadowling!</font></b></span>")
+			messages.Add(span_deadsay(span_fontsize3(span_bold("You are a shadowling!"))))
 			messages.Add(greet_shadow(shadow))
 			messages.Add(process_shadow_objectives(shadow))
 			finalize_shadowling(shadow)
@@ -120,33 +97,33 @@ Made by Xhuis
 		//give_shadowling_abilities(shadow)
 	..()
 
-/datum/game_mode/proc/greet_shadow(var/datum/mind/shadow)
+/datum/game_mode/proc/greet_shadow(datum/mind/shadow)
 	var/list/messages = list()
-	messages.Add("<b>Currently, you are disguised as an employee aboard [station_name()].</b>")
-	messages.Add("<b>In your limited state, you have two abilities: Hatch and Shadowling Hivemind '[get_language_prefix(LANGUAGE_HIVE_SHADOWLING)]'.</b>")
-	messages.Add("<b>Any other shadowlings are your allies. You must assist them as they shall assist you.</b>")
+	messages.Add("<b>В настоящее время ты замаскирован под члена экипажа [station_name()].</b>")
+	messages.Add("<b>В твоём текущем состоянии у тебя есть две способности: Раскрытие и Телепатическая сеть тенелингов. '[get_language_prefix(LANGUAGE_HIVE_SHADOWLING)]'.</b>")
+	messages.Add("<b>Любые другие тенелинги — твои союзники. Ты должен помогать им, как и они будут помогать тебе..</b>")
 	messages.Add("<b>С полной информацией вы можете ознакомиться на вики: <a href=\"[CONFIG_GET(string/wikiurl)]/index.php/Shadowling\">Тенеморф</a></b><br>")
 	return messages
 
 
-/datum/game_mode/proc/process_shadow_objectives(var/datum/mind/shadow_mind)
+/datum/game_mode/proc/process_shadow_objectives(datum/mind/shadow_mind)
 	var/objective = "enthrall" //may be devour later, but for now it seems murderbone-y
 
 	if(objective == "enthrall")
-		objective_explanation = "Ascend to your true form by use of the Ascendance ability. This may only be used with [required_thralls] collective thralls, while hatched, and is unlocked with the Collective Mind ability."
+		objective_explanation = "Возвышайтесь до своей истинной формы, для этого используйте способность Ascend. Для возвышения необходимо [required_thralls] рабов, когда ты раскроешь свою форму используй Rapid Re-Hatch, чтобы разблокировать новые способности."
 		shadow_objectives += "enthrall"
-		shadow_mind.memory += "<b>Objective #1</b>: [objective_explanation]"
-		return "<b>Objective #1</b>: [objective_explanation]<br>"
+		shadow_mind.memory += "<b>Цель #1</b>: [objective_explanation]"
+		return "<b>Цель #1</b>: [objective_explanation]<br>"
 
 
-/datum/game_mode/proc/finalize_shadowling(var/datum/mind/shadow_mind)
+/datum/game_mode/proc/finalize_shadowling(datum/mind/shadow_mind)
 	var/mob/living/carbon/human/S = shadow_mind.current
 	shadow_mind.AddSpell(new /obj/effect/proc_holder/spell/shadowling_hatch(null))
 	spawn(0)
 		shadow_mind.current.add_language(LANGUAGE_HIVE_SHADOWLING)
 		update_shadow_icons_added(shadow_mind)
 		if(shadow_mind.assigned_role == JOB_TITLE_CLOWN)
-			to_chat(S, "<span class='notice'>Your alien nature has allowed you to overcome your clownishness.</span>")
+			to_chat(S, span_notice("Твоя натура позволяет тебе преодолеть твою клоунаду."))
 			S.force_gene_block(GLOB.clumsyblock, FALSE)
 
 
@@ -163,22 +140,43 @@ Made by Xhuis
 		new_thrall_mind.AddSpell(new /obj/effect/proc_holder/spell/shadowling_guise(null))
 		new_thrall_mind.AddSpell(new /obj/effect/proc_holder/spell/shadowling_vision/thrall(null))
 		var/list/messages = list()
-		messages.Add(span_shadowling("><b>You see the truth. Reality has been torn away and you realize what a fool you've been.</b>"))
-		messages.Add(span_shadowling("<b>The shadowlings are your masters.</b> Serve them above all else and ensure they complete their goals."))
-		messages.Add(span_shadowling("You may not harm other thralls or the shadowlings. However, you do not need to obey other thralls."))
-		messages.Add(span_shadowling("Your body has been irreversibly altered. The attentive can see this - you may conceal it by wearing a mask."))
-		messages.Add(span_shadowling("Though not nearly as powerful as your masters, you possess some weak powers. These can be found in the Thrall Abilities tab."))
-		messages.Add(span_shadowling("You may communicate with your allies by speaking in the Shadowling Hivemind '[get_language_prefix(LANGUAGE_HIVE_SHADOWLING)]'."))
+		messages.Add(span_shadowling("><b>Ты видишь правду. Ты понимаешь, каким дураком ты был..</b>"))
+		messages.Add(span_shadowling("<b>Тенелинги — твои хозяева.</b> Служи им превыше всего и следите за тем, чтобы они достигли своих целей."))
+		messages.Add(span_shadowling("Ты не должен причинять вред другим рабам или тенелингам. Однако ты не должен подчиняться другим рабам."))
+		messages.Add(span_shadowling("Твоё тело необратимо изменилось. Внимательный может это увидеть - ты можешь скрыть это, надев маску."))
+		messages.Add(span_shadowling("Хотя ты и не так силён, как твои хозяева, но ты обладаете некоторыми способностями."))
+		messages.Add(span_shadowling("Ты можете общаться со своими союзниками, используя Телепатическую сеть тенелингов. '[get_language_prefix(LANGUAGE_HIVE_SHADOWLING)]'."))
 		to_chat(new_thrall_mind.current, chat_box_red(messages.Join("<br>")))
 		if(jobban_isbanned(new_thrall_mind.current, ROLE_SHADOWLING) || jobban_isbanned(new_thrall_mind.current, ROLE_SYNDICATE))
 			replace_jobbanned_player(new_thrall_mind.current, ROLE_SHADOWLING)
+
+		var/thralls = get_thralls()
+		var/victory_threshold = SSticker.mode.required_thralls
+
+		if(thralls < victory_threshold)
+			for(var/mob/shadowling in GLOB.alive_mob_list)
+				if(!is_shadow(shadowling))
+					continue
+
+				to_chat(shadowling, span_shadowling("Ты чувствуешь нового раба под твоей волей. Тебе нужно [victory_threshold] рабов, но у тебя есть только [thralls] живых рабов."))
+
+		else if(thralls >= victory_threshold)
+			for(var/mob/shadowling in GLOB.alive_mob_list)
+				if(!is_shadow(shadowling))
+					continue
+				to_chat(shadowling, "<span class='shadowling'><b>Тебе хватает сил для трансформации в истинную форму.</b></span>")
+
 		if(!victory_warning_announced && (length(shadowling_thralls) >= warning_threshold))//are the slings very close to winning?
 			victory_warning_announced = TRUE	//then let's give the station a warning
-			GLOB.command_announcement.Announce("Сканерами дальнего действия обнаружена большая концентрация психической блюспейс-энергии. Событие вознесения тенеморфов неизбежно. Предотвратите его любой ценой!", "Отдел Центрального Командования по делам высших измерений.", 'sound/AI/spanomalies.ogg')
+			GLOB.major_announcement.announce(
+				message = "Сканерами дальнего действия обнаружена большая концентрация психической блюспейс-энергии. Вероятность вознесения тенеморфов высока, всему экипажу следует предотвратить вознесение любой ценой!",
+				new_title = ANNOUNCE_CCPARANORMAL_RU,
+				new_sound = 'sound/AI/commandreport.ogg'
+			)
 			log_game("Shadowling reveal. Powergame and validhunt allowed.")
 		return 1
 
-/datum/game_mode/proc/remove_thrall(datum/mind/thrall_mind, var/kill = 0)
+/datum/game_mode/proc/remove_thrall(datum/mind/thrall_mind, kill = 0)
 	if(!istype(thrall_mind) || !(thrall_mind in shadowling_thralls) || !isliving(thrall_mind.current))
 		return 0 //If there is no mind, the mind isn't a thrall, or the mind's mob isn't alive, return
 	shadowling_thralls.Remove(thrall_mind)
@@ -191,18 +189,17 @@ Made by Xhuis
 	thrall_mind.current.remove_language(LANGUAGE_HIVE_SHADOWLING)
 	if(kill && ishuman(thrall_mind.current)) //If dethrallization surgery fails, kill the mob as well as dethralling them
 		var/mob/living/carbon/human/H = thrall_mind.current
-		H.visible_message("<span class='warning'>[H] jerks violently and falls still.</span>", \
-							"<span class='userdanger'>A piercing white light floods your mind, banishing your memories as a thrall and--</span>")
+		H.visible_message(span_warning("[H] резко дергается и падает неподвижно."), \
+							span_userdanger("Пронзительный белый свет заполняет твой разум, ты забываешь, как был рабом."))
 		H.death()
 		return 1
 	var/mob/living/M = thrall_mind.current
 	if(issilicon(M))
-		M.audible_message("<span class='notice'>[M] lets out a short blip.</span>")
-		to_chat(M, "<span class='userdanger'>You have been turned into a robot! You are no longer a thrall! Though you try, you cannot remember anything about your servitude...</span>")
+		M.audible_message(span_notice("[M] издает короткий сигнал."))
+		to_chat(M, span_userdanger("Тебя превратили в робота! Ты больше не раб! Как бы ты ни старался, ты не можешь вспомнить ничего о том, как был рабом."))
 	else
-		M.visible_message("<span class='big'>[M] looks like [M.p_their()] mind is [M.p_their()] own again!</span>", \
-						"<span class='userdanger'>A piercing white light floods your eyes. Your mind is your own again! Though you try, you cannot remember anything about the shadowlings or your time \
-							under their command...</span>")
+		M.visible_message(span_big("[M] looks like [M.p_their()] mind is [M.p_their()] own again!"), \
+						span_userdanger("Пронзительный белый свет заполняет твой разум, ты забываешь, как был рабом."))
 	return 1
 
 
@@ -225,10 +222,10 @@ Made by Xhuis
 					for(var/obj/effect/proc_holder/spell/shadowling_hatch/hatch_ability in shadow.spell_list)
 						hatch_ability.cycles_unused++
 						if(prob(20) && hatch_ability.cycles_unused > CONFIG_GET(number/shadowling_max_age))
-							var/shadow_nag_messages = list("You can barely hold yourself in this lesser form!", "The urge to become something greater is overwhelming!", "You feel a burning passion to hatch free of this shell and assume godhood!")
+							var/shadow_nag_messages = list("Ты едва можешь терпеть эту низшую форму!», «Желание стать чем-то большим непреодолимо!», «Ты чувствуешь жгучую страсть освободиться от этой оболочки и обрести божественность».!")
 							H.take_overall_damage(0, 3)
-							to_chat(H, "<span class='userdanger'>[pick(shadow_nag_messages)]</span>")
-							H << 'sound/weapons/sear.ogg'
+							to_chat(H, span_userdanger("[pick(shadow_nag_messages)]"))
+							SEND_SOUND(H, sound('sound/weapons/sear.ogg'))
 
 	if(shadows_alive)
 		return ..()
@@ -246,17 +243,21 @@ Made by Xhuis
 		ling_mind.RemoveSpell(spell)
 	var/mob/living/M = ling_mind.current
 	if(issilicon(M))
-		M.audible_message("<span class='notice'>[M] lets out a short blip.</span>")
-		to_chat(M, "<span class='userdanger'>You have been turned into a robot! You are no longer a shadowling! Though you try, you cannot remember anything about your time as one...</span>")
+		M.audible_message(span_notice("[M] lets out a short blip."))
+		to_chat(M, span_userdanger("Тебя превратили в робота! Ты больше не теньлинг! Как бы ты ни старался, ты не можешь вспомнить ничего о том времени, когда ты был им..."))
 	else
-		M.visible_message("<span class='big'>[M] screams and contorts!</span>", \
-						  "<span class='userdanger'>THE LIGHT-- YOUR MIND-- <i>BURNS--</i></span>")
+		M.visible_message(
+			span_big("[M] кричит и корчится!"), \
+			"<span class='userdanger'>СВЕТ-- ТВОЙ РАЗУМ-- <i>ГОРИТ--</i></span>"
+		)
 		spawn(30)
 			if(!M || QDELETED(M))
 				return
-			M.visible_message("<span class='warning'>[M] suddenly bloats and explodes!</span>", \
-							  "<span class='warning'><b>AAAAAAAAA<font size=3>AAAAAAAAAAAAA</font><font size=4>AAAAAAAAAAAA----</font></span>")
-			playsound(M, 'sound/magic/disintegrate.ogg', 100, 1)
+			M.visible_message(
+				span_warning("[M] внезапно раздувается и взрывается!"), \
+				span_warning(span_bold("AAAAAAAAA[span_fontsize3("AAAAAAAAAAAAA")][span_fontsize4("AAAAAAAAAAAA.....")]"))
+			)
+			playsound(M, 'sound/magic/disintegrate.ogg', 100, TRUE)
 			M.gib()
 
 /datum/game_mode/shadowling/proc/check_shadow_victory()
@@ -268,58 +269,58 @@ Made by Xhuis
 
 /datum/game_mode/shadowling/declare_completion()
 	if(check_shadow_victory() && EMERGENCY_ESCAPED_OR_ENDGAMED) //Doesn't end instantly - this is hacky and I don't know of a better way ~X
-		SSticker.mode_result = "shadowling win - shadowling ascension"
-		to_chat(world, "<FONT size = 3><B>Shadowling Victory</B></FONT>")
-		to_chat(world, "<span class='greentext'><b>The shadowlings have ascended and taken over the station!</b></span>")
+		SSticker.mode_result = "Победа тенелингов - тенелинги возвысились"
+		to_chat(world, span_fontsize3("<b>Победа тенелингов</b>"))
+		to_chat(world, "<span class='greentext'><b>Тенелинги возвысились и полностью захватили станцию!</b></span>")
 	else if(shadowling_dead && !check_shadow_victory()) //If the shadowlings have ascended, they can not lose the round
-		SSticker.mode_result = "shadowling loss - shadowling killed"
-		to_chat(world, "<FONT size = 3><B>Crew Major Victory</B></FONT>")
-		to_chat(world, "<span class='redtext'><b>The shadowlings have been killed by the crew!</b></span>")
+		SSticker.mode_result = "Тенелинги проиграли - тенелинги погибли"
+		to_chat(world, span_fontsize3("<b>Крупная победа экипажа</b>"))
+		to_chat(world, "<span class='redtext'><b>Тенелинги были убиты экипажем!</b></span>")
 	else if(!check_shadow_victory() && EMERGENCY_ESCAPED_OR_ENDGAMED)
-		SSticker.mode_result = "shadowling loss - crew escaped"
-		to_chat(world, "<FONT size = 3><B>Crew Minor Victory</B></FONT>")
-		to_chat(world, "<span class='redtext'><b>The crew escaped the station before the shadowlings could ascend!</b></span>")
+		SSticker.mode_result = "Тенелинги проиграли - экипаж сбежал"
+		to_chat(world, span_fontsize3("<b>Мелкая победа экипажа</b>"))
+		to_chat(world, "<span class='redtext'><b>Экипаж сбежал со станции до того, как тенелинги возвысились!</b></span>")
 	else
-		SSticker.mode_result = "shadowling loss - generic failure"
-		to_chat(world, "<FONT size = 3><B>Crew Major Victory</B></FONT>")
-		to_chat(world, "<span class='redtext'><b>The shadowlings have failed!</b></span>")
+		SSticker.mode_result = "Тенелинги проиграли - тенелинги не справились"
+		to_chat(world, span_fontsize3("<b>Крупная победа экипажа</b>"))
+		to_chat(world, "<span class='redtext'><b>Тенелинги не смогли возвыситься!</b></span>")
 	..()
 	return 1
 
 
 /datum/game_mode/proc/auto_declare_completion_shadowling()
-	var/text = ""
+	var/list/text = list("")
 	if(shadows.len)
-		text += "<br><span class='big'><b>The shadowlings were:</b></span>"
+		text += "<br><span class='big'><b>Тенелингами были:</b></span>"
 		for(var/datum/mind/shadow in shadows)
 			text += "<br>[shadow.get_display_key()] was [shadow.name] ("
 			if(shadow.current)
 				if(shadow.current.stat == DEAD)
-					text += "died"
+					text += "мертвы"
 				else
-					text += "survived"
+					text += "живы"
 				if(shadow.current.real_name != shadow.name)
 					text += " as <b>[shadow.current.real_name]</b>"
 			else
-				text += "body destroyed"
+				text += "тело уничтожено"
 			text += ")"
 		text += "<br>"
 		if(shadowling_thralls.len)
-			text += "<br><span class='big'><b>The thralls were:</b></span>"
+			text += "<br><span class='big'><b>Рабами были:</b></span>"
 			for(var/datum/mind/thrall in shadowling_thralls)
 				text += "<br>[thrall.get_display_key()] was [thrall.name] ("
 				if(thrall.current)
 					if(thrall.current.stat == DEAD)
-						text += "died"
+						text += "мертвы"
 					else
-						text += "survived"
+						text += "живы"
 					if(thrall.current.real_name != thrall.name)
 						text += " as <b>[thrall.current.real_name]</b>"
 				else
-					text += "body destroyed"
+					text += "тело уничтожено"
 				text += ")"
 	text += "<br>"
-	to_chat(world, text)
+	return text.Join("")
 
 
 /*

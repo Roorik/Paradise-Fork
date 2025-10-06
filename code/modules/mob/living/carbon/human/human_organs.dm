@@ -1,10 +1,3 @@
-/mob/living/carbon/human
-	/// All external organs in src.
-	var/list/bodyparts = list()
-	/// Map organ zones to external organs.
-	var/list/bodyparts_by_name = list()
-
-
 /mob/living/carbon/human/proc/update_eyes(update_body = TRUE)
 	var/obj/item/organ/internal/eyes/eyes = get_int_organ(/obj/item/organ/internal/eyes)
 	if(eyes)
@@ -77,7 +70,7 @@
 				if(!drop_item_ground(r_hand))
 					continue
 
-			custom_emote(EMOTE_VISIBLE, "броса[pluralize_ru(gender,"ет","ют")] предмет, который держал[genderize_ru(gender,"","а","о","и")] держали, [genderize_ru(gender,"его","её","его","их")] [bodypart.declent_ru(NOMINATIVE)] выход[pluralize_ru(bodypart.gender,"ит","ят")] из строя!")
+			custom_emote(EMOTE_VISIBLE, "броса[pluralize_ru(gender,"ет","ют")] предмет, который держал[genderize_ru(gender,"","а","о","и")], [genderize_ru(gender,"его","её","его","их")] [bodypart.declent_ru(NOMINATIVE)] выход[pluralize_ru(bodypart.gender,"ит","ят")] из строя!")
 
 			do_sparks(5, FALSE, src)
 

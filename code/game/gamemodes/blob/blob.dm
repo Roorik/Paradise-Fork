@@ -1,28 +1,3 @@
-/datum/game_mode
-	/// List of of blobs, their offsprings and blobburnouts spawned by them
-	var/list/blobs = list("infected"=list(), "offsprings"=list(), "minions"=list())
-	/// Count of blob tiles to blob win
-	var/blob_win_count = BLOB_BASE_TARGET_POINT
-	/// Number of resource produced by the core
-	var/blob_point_rate = 3
-	/// Number of bursted blob infected
-	var/bursted_blobs_count = 0
-	/// Total blob submode stage
-	var/blob_stage = BLOB_STAGE_NONE
-	/// The need to delay the end of the game when the blob wins
-	var/delay_blob_end = FALSE
-	/// Disables automatic GAMMA code
-	var/off_auto_gamma = FALSE
-	/// Disables automatic nuke codes
-	var/off_auto_nuke_codes = FALSE
-	/// Is all blobs have infinity points
-	var/is_blob_infinity_points = FALSE
-	/// Is all blobs have infinity points
-	var/list/legit_blobs = list()
-	/// Total blobs objective
-	var/datum/objective/blob_critical_mass/blob_objective
-
-
 /datum/game_mode/blob
 	name = "blob"
 	config_tag = "blob"
@@ -80,8 +55,8 @@
 
 
 /datum/game_mode/blob/announce()
-	to_chat(world, "<B>Текущий режим игры - <font color='green'>Блоб</font>!</B>")
-	to_chat(world, "<B>Опасный инопланетный организм стремительно распространяется по всей станции!</B>")
+	to_chat(world, "<b>Текущий режим игры - <font color='green'>Блоб</font>!</b>")
+	to_chat(world, "<b>Опасный инопланетный организм стремительно распространяется по всей станции!</b>")
 	to_chat(world, "Вы должны уничтожить его, сведя к минимуму ущерб, нанесенный станции.")
 
 
@@ -138,12 +113,12 @@
 
 /datum/game_mode/proc/report_blob_death(report_number)
 	switch(report_number)
-		if (BLOB_DEATH_REPORT_FIRST)
+		if(BLOB_DEATH_REPORT_FIRST)
 			send_intercept(BLOB_THIRD_REPORT)
-		if (BLOB_DEATH_REPORT_THIRD)
-			if(!off_auto_gamma && GLOB.security_level == SEC_LEVEL_GAMMA)
-				set_security_level(SEC_LEVEL_RED)
-		if (BLOB_DEATH_REPORT_FOURTH)
+		if(BLOB_DEATH_REPORT_THIRD)
+			if(!off_auto_gamma && SSsecurity_level.get_current_level_as_number() == SEC_LEVEL_GAMMA)
+				SSsecurity_level.set_level(SEC_LEVEL_RED)
+		if(BLOB_DEATH_REPORT_FOURTH)
 			blob_stage = BLOB_STAGE_ZERO
 			SSvote.start_vote(new /datum/vote/crew_transfer)
 			return
@@ -177,20 +152,21 @@
 		return FALSE
 
 	for(var/i in 1 to count)
-		if (length(candidates))
+		if(length(candidates))
 			var/obj/vent = pick(vents)
-			var/mob/living/simple_animal/mouse/B = new(vent.loc)
-			var/mob/M = pick(candidates)
-			candidates.Remove(M)
-			B.key = M.key
-			var/datum_type = B.mind.get_blob_infected_type()
+			var/mob/living/simple_animal/mouse/blob = new(vent.loc)
+			blob.move_into_vent(vent, FALSE)
+			var/mob/ghost = pick_n_take(candidates)
+			blob.set_key(ghost.key)
+			var/datum_type = blob.mind.get_blob_infected_type()
 			var/datum/antagonist/blob_infected/blob_datum = new datum_type()
 			blob_datum.time_to_burst_hight = TIME_TO_BURST_MOUSE_HIGHT
 			blob_datum.time_to_burst_low = TIME_TO_BURST_MOUSE_LOW
-			B.mind.add_antag_datum(blob_datum)
-			to_chat(B, span_userdanger("Теперь вы мышь, заражённая спорами Блоба. Найдите какое-нибудь укромное место до того, как вы взорветесь и станете Блобом! Вы можете перемещаться по вентиляции, нажав Alt+ЛКМ на вентиляционном отверстии."))
-			log_game("[B.key] has become blob infested mouse.")
-			notify_ghosts("Заражённая мышь появилась в [get_area(B)].", source = B, action = NOTIFY_FOLLOW)
+			blob.mind.add_antag_datum(blob_datum)
+			to_chat(blob, span_userdanger("Теперь вы мышь, заражённая спорами Блоба. Найдите какое-нибудь укромное место до того, как вы взорветесь и станете Блобом! Вы можете перемещаться по вентиляции, нажав Alt+ЛКМ на вентиляционном отверстии."))
+			log_game("[blob.key] has become blob infested mouse.")
+			notify_ghosts("Заражённая мышь появилась в [get_area(blob)].", source = blob, action = NOTIFY_FOLLOW)
+
 	return TRUE
 
 
@@ -207,10 +183,13 @@
 
 	if(blob_stage == BLOB_STAGE_FIRST && legit_blobs.len >= min(SECOND_STAGE_COEF * blob_win_count, SECOND_STAGE_THRESHOLD))
 		blob_stage = BLOB_STAGE_SECOND
-		GLOB.event_announcement.Announce("Подтверждена вспышка биологической угрозы пятого уровня на борту [station_name()]. Весь персонал обязан локализовать угрозу.",
-										"ВНИМАНИЕ: БИОЛОГИЧЕСКАЯ УГРОЗА.", 'sound/AI/outbreak5.ogg')
+		GLOB.major_announcement.announce(
+			message = "Подтверждена вспышка биологической угрозы 5-го уровня на борту [station_name()]. Весь персонал обязан локализовать угрозу.",
+			new_title = ANNOUNCE_BIOHAZARD_RU,
+			new_sound = 'sound/AI/outbreak5.ogg'
+		)
 		if(!off_auto_gamma)
-			addtimer(CALLBACK(GLOBAL_PROC, /proc/set_security_level, SEC_LEVEL_GAMMA), TIME_TO_SWITCH_CODE)
+			addtimer(CALLBACK(SSsecurity_level, TYPE_PROC_REF(/datum/controller/subsystem/security_level, set_level), SEC_LEVEL_GAMMA), TIME_TO_SWITCH_CODE)
 
 	if(blob_stage == BLOB_STAGE_SECOND && legit_blobs.len >= THIRD_STAGE_COEF * blob_win_count && (blob_win_count - legit_blobs.len) <= THIRD_STAGE_DELTA_THRESHOLD)
 		blob_stage = BLOB_STAGE_THIRD

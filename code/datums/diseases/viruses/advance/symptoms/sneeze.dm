@@ -18,11 +18,10 @@ Bonus
 
 /datum/symptom/sneeze
 
-	name = "Sneezing"
+	name = "Чихание"
 	id = "sneeze"
 	stealth = -2
 	resistance = 3
-	stage_speed = 0
 	transmittable = 4
 	level = 1
 	severity = 1

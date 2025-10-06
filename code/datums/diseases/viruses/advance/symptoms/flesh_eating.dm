@@ -17,11 +17,10 @@ Bonus
 
 /datum/symptom/flesh_eating
 
-	name = "Necrotizing Fasciitis"
+	name = "Некротический фасциит"
 	id = "flesh_eating"
 	stealth = -3
 	resistance = -4
-	stage_speed = 0
 	transmittable = -4
 	level = 6
 	severity = 5
@@ -32,9 +31,9 @@ Bonus
 		var/mob/living/M = A.affected_mob
 		switch(A.stage)
 			if(2,3)
-				to_chat(M, span_warning(pick("You feel a sudden pain across your body.", "Drops of blood appear suddenly on your skin.")))
+				to_chat(M, span_warning(pick("Вы чувствуете резкую боль во всём теле.", "На вашей коже внезапно появляются капли крови.")))
 			if(4,5)
-				to_chat(M, span_userdanger(pick("You cringe as a violent pain takes over your body.", "It feels like your body is eating itself inside out.", "IT HURTS.")))
+				to_chat(M, span_userdanger(pick("Вы содрогаетесь от невыносимой боли, охватившей ваше тело.", "Такое ощущение, будто ваше тело пожирает само себя изнутри.", "ЭТО БОЛЬНО!")))
 				Flesheat(M, A)
 	return
 

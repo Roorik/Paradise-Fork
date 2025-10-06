@@ -6,6 +6,7 @@
 	//Job access. The use of minimal_access or access is determined by a config setting: CONFIG_GET(flag/jobs_have_minimal_access)
 	var/list/minimal_access = list()		//Useful for servers which prefer to only have access given to the places a job absolutely needs (Larger server population)
 	var/list/access = list()				//Useful for servers which either have fewer players, so each person needs to fill more than one role, or servers which like to give more access, so players can't hide forever in their super secure departments (I'm looking at you, chemistry!)
+	var/law_level = LAW_LEVEL_BASE
 
 	//Bitflags for the job
 	var/flag = 0
@@ -81,11 +82,20 @@
 
 	var/insurance = INSURANCE_STANDART
 	var/insurance_type = INSURANCE_TYPE_STANDART
+	var/announce_job = TRUE
+
+	/// The department the job belongs to.
+	var/department = null
+
+	/// Whether this is a head position
+	var/head_position = 0
 
 //Only override this proc
 /datum/job/proc/after_spawn(mob/living/carbon/human/H)
+	return
 
 /datum/job/proc/announce(mob/living/carbon/human/H)
+	return
 
 /datum/job/proc/equip(mob/living/carbon/human/H, visualsOnly = FALSE, announce = TRUE)
 	if(!H)
@@ -248,7 +258,7 @@
 
 	imprint_idcard(H)
 
-	H.sec_hud_set_ID()
+	H.update_hud_set()
 
 	imprint_pda(H)
 
@@ -280,6 +290,7 @@
 	var/obj/item/card/id/C = H.wear_id
 	if(istype(C))
 		C.access = J.get_access()
+		C.law_level = J.law_level
 		C.registered_name = H.real_name
 		C.rank = J.title
 		C.assignment = alt_title ? alt_title : J.title

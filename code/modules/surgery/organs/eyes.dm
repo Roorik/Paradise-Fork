@@ -32,7 +32,7 @@
 /obj/item/organ/internal/eyes/proc/update_colour()
 	dna.write_eyes_attributes(src)
 
-/obj/item/organ/internal/eyes/proc/generate_icon(var/mob/living/carbon/human/HA)
+/obj/item/organ/internal/eyes/proc/generate_icon(mob/living/carbon/human/HA)
 	var/mob/living/carbon/human/H = HA
 	if(!istype(H))
 		H = owner
@@ -113,12 +113,12 @@
 	icon_state = "eyes-c"
 	origin_tech = "biotech=4"
 	status = ORGAN_ROBOT
-	pickup_sound = 'sound/items/handling/component_pickup.ogg'
-	drop_sound = 'sound/items/handling/component_drop.ogg'
+	pickup_sound = 'sound/items/handling/pickup/component_pickup.ogg'
+	drop_sound = 'sound/items/handling/drop/component_drop.ogg'
 
 /obj/item/organ/internal/eyes/on_life()
 	var/update_flags = STATUS_UPDATE_NONE
-	if(owner.glasses)
+	if(ishuman(owner) && owner.glasses)
 		var/obj/item/clothing/glasses/G = owner.glasses
 		if(G.heal_bodypart == INTERNAL_ORGAN_EYES && iscarbon(owner))
 			var/mob/living/carbon/C = owner

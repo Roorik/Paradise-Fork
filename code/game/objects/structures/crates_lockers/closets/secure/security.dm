@@ -63,12 +63,13 @@
 	new /obj/item/gun/energy/gun/hos(src)
 	new /obj/item/door_remote/head_of_security(src)
 	new /obj/item/reagent_containers/food/drinks/mug/hos(src)
-	new /obj/item/organ/internal/cyberimp/eyes/hud/security(src)
+	new /obj/item/autoimplanter/oneuse/sec_hud(src)
 	new /obj/item/clothing/accessory/medal/security(src)
 	new /obj/item/clothing/glasses/hud/security/sunglasses/aviators(src)
 	new /obj/item/megaphone(src)	//added here deleted on maps
 	new /obj/item/reagent_containers/food/drinks/flask(src)
 	new /obj/item/storage/garmentbag/hos(src)
+	new /obj/item/camera_bug/security(src)
 
 /obj/structure/closet/secure_closet/warden
 	name = "warden's locker"
@@ -99,6 +100,8 @@
 	new /obj/item/security_voucher(src)
 	new /obj/item/security_voucher(src)
 	new /obj/item/security_voucher(src)
+	new /obj/item/storage/box/sec_cameras(src)
+	new /obj/item/camera_bug/security(src)
 
 /obj/structure/closet/secure_closet/pilot_sniper
 	name = "sniper gun cabinet"
@@ -107,6 +110,34 @@
 
 /obj/structure/closet/secure_closet/pilot_sniper/populate_contents()
 	new /obj/item/gun/energy/sniperrifle/pod_pilot(src)
+
+/obj/structure/closet/secure_closet/security_grenade_launcher
+	name = "security grenade launcher cabinet"
+	desc = "Защищённый шкаф для хранения гранатомета GL-06 и боеприпасов к нему. Шкаф прикручен к полу."
+	req_access = list(ACCESS_ARMORY)
+	icon = 'icons/obj/guncabinet.dmi'
+	icon_state = "guncabinet"
+
+/obj/structure/closet/secure_closet/security_grenade_launcher/get_ru_names()
+	return list(
+		NOMINATIVE = "шкаф гранатомета GL-06",
+		GENITIVE = "шкафа гранатомета GL-06",
+		DATIVE = "шкафу гранатомета GL-06",
+		ACCUSATIVE = "шкаф гранатомета GL-06",
+		INSTRUMENTAL = "шкафом гранатомета GL-06",
+		PREPOSITIONAL = "шкафе гранатомета GL-06"
+	)
+
+/obj/structure/closet/secure_closet/security_grenade_launcher/populate_contents()
+	new /obj/item/gun/projectile/bombarda/secgl(src)
+	new /obj/item/ammo_box/secgl/solid(src)
+	new /obj/item/ammo_box/secgl/solid(src)
+	new /obj/item/ammo_box/secgl/flash(src)
+	new /obj/item/ammo_box/secgl/flash(src)
+	new /obj/item/ammo_box/secgl/gas(src)
+	new /obj/item/ammo_box/secgl/barricade(src)
+	new /obj/item/ammo_box/secgl/paint(src)
+
 
 /obj/structure/closet/secure_closet/security
 	name = "security officer's locker"
@@ -128,6 +159,94 @@
 	new /obj/item/clothing/head/helmet(src)
 	new /obj/item/flashlight/seclite(src)
 	new /obj/item/clothing/suit/armor/secjacket(src)
+
+/obj/structure/closet/secure_closet/guncabinet/wt550
+	name = "security WT-550 PDW gun cabinet"
+	desc = "Защищённый шкаф для хранения пистолетов пулемётов WT-550. Шкаф прикручен к полу."
+	req_access = list(ACCESS_ARMORY)
+
+/obj/structure/closet/secure_closet/guncabinet/wt550/get_ru_names()
+	return list(
+		NOMINATIVE = "шкаф пистолет пулемётов WT-550",
+		GENITIVE = "шкафа пистолет пулемётов WT-550",
+		DATIVE = "шкафу пистолет пулемётов WT-550",
+		ACCUSATIVE = "шкаф пистолет пулемётов WT-550",
+		INSTRUMENTAL = "шкафом пистолет пулемётов WT-550",
+		PREPOSITIONAL = "шкафе пистолет пулемётов WT-550"
+	)
+
+/obj/structure/closet/secure_closet/guncabinet/wt550/populate_contents()
+	new /obj/item/gun/projectile/automatic/wt550(src)
+	new /obj/item/gun/projectile/automatic/wt550(src)
+	new /obj/item/gun/projectile/automatic/wt550(src)
+	new /obj/item/gun/projectile/automatic/wt550(src)
+	new /obj/item/gun/projectile/automatic/wt550(src)
+
+/obj/structure/closet/secure_closet/guncabinet/sp91
+	name = "security SP-91-RC gun cabinet"
+	desc = "Защищённый шкаф для хранения пистолетов пулемётов SP-91-RC. Шкаф прикручен к полу."
+	req_access = list(ACCESS_ARMORY)
+
+/obj/structure/closet/secure_closet/guncabinet/sp91/get_ru_names()
+	return list(
+		NOMINATIVE = "шкаф пистолет пулемётов SP-91-RC",
+		GENITIVE = "шкафа пистолет пулемётов SP-91-RC",
+		DATIVE = "шкафу пистолет пулемётов SP-91-RC",
+		ACCUSATIVE = "шкаф пистолет пулемётов SP-91-RC",
+		INSTRUMENTAL = "шкафом пистолет пулемётов SP-91-RC",
+		PREPOSITIONAL = "шкафе пистолет пулемётов SP-91-RC"
+	)
+
+/obj/structure/closet/secure_closet/guncabinet/sp91/populate_contents()
+	new /obj/item/gun/projectile/automatic/sp91rc(src)
+	new /obj/item/gun/projectile/automatic/sp91rc(src)
+	new /obj/item/gun/projectile/automatic/sp91rc(src)
+	new /obj/item/gun/projectile/automatic/sp91rc(src)
+	new /obj/item/gun/projectile/automatic/sp91rc(src)
+
+/obj/structure/closet/secure_closet/guncabinet/lasergun
+	name = "security laser gun cabinet"
+	desc = "Защищённый шкаф для хранения лазерных винтовок. Шкаф прикручен к полу."
+	req_access = list(ACCESS_ARMORY)
+
+/obj/structure/closet/secure_closet/guncabinet/lasergun/get_ru_names()
+	return list(
+		NOMINATIVE = "шкаф лазерных винтовок",
+		GENITIVE = "шкафа лазерных винтовок",
+		DATIVE = "шкафу лазерных винтовок",
+		ACCUSATIVE = "шкаф лазерных винтовок",
+		INSTRUMENTAL = "шкафом лазерных винтовок",
+		PREPOSITIONAL = "шкафе лазерных винтовок"
+	)
+
+/obj/structure/closet/secure_closet/guncabinet/lasergun/populate_contents()
+	new /obj/item/gun/energy/laser(src)
+	new /obj/item/gun/energy/laser(src)
+	new /obj/item/gun/energy/laser(src)
+	new /obj/item/gun/energy/laser(src)
+	new /obj/item/gun/energy/laser(src)
+
+/obj/structure/closet/secure_closet/guncabinet/lr30
+	name = "security LR-30 gun cabinet"
+	desc = "Защищённый шкаф для хранения лазерных винтовок LR-30. Шкаф прикручен к полу."
+	req_access = list(ACCESS_ARMORY)
+
+/obj/structure/closet/secure_closet/guncabinet/lr30/get_ru_names()
+	return list(
+		NOMINATIVE = "шкаф лазерных винтовок LR-30",
+		GENITIVE = "шкафа лазерных винтовок LR-30",
+		DATIVE = "шкафу лазерных винтовок LR-30",
+		ACCUSATIVE = "шкаф лазерных винтовок LR-30",
+		INSTRUMENTAL = "шкафом лазерных винтовок LR-30",
+		PREPOSITIONAL = "шкафе лазерных винтовок LR-30"
+	)
+
+/obj/structure/closet/secure_closet/guncabinet/lr30/populate_contents()
+	new /obj/item/gun/projectile/automatic/lr30(src)
+	new /obj/item/gun/projectile/automatic/lr30(src)
+	new /obj/item/gun/projectile/automatic/lr30(src)
+	new /obj/item/gun/projectile/automatic/lr30(src)
+	new /obj/item/gun/projectile/automatic/lr30(src)
 
 /obj/structure/closet/secure_closet/brigdoc
 	name = "brig physician's locker"
@@ -174,7 +293,7 @@
 	new /obj/item/reagent_containers/spray/cleaner/tactical(src)
 
 /obj/structure/closet/secure_closet/ntrep
-	name = "\improper Nanotrasen Representative's locker"
+	name = "Nanotrasen Representative's locker"
 	req_access = list(ACCESS_NTREP)
 	icon_state = "nt"
 
@@ -253,10 +372,11 @@
 	var/id = null
 
 /obj/structure/closet/secure_closet/brig/populate_contents()
-	new /obj/item/clothing/under/color/orange/prison(src)
-	new /obj/item/clothing/shoes/orange(src)
+	new /obj/item/clothing/under/prison(src)
+	new /obj/item/clothing/head/prison(src)
+	new /obj/item/clothing/shoes/prison(src)
 	new /obj/item/card/id/prisoner/random(src)
-	new /obj/item/radio/headset(src)
+	new /obj/item/radio/headset/prisoner(src)
 
 /obj/structure/closet/secure_closet/brig/evidence
 	name = "evidence locker"
@@ -284,13 +404,12 @@
 	name = "wall locker"
 	req_access = list(ACCESS_SECURITY)
 	icon_state = "wall-locker"
-	density = TRUE
 
 	//too small to put a man in
 	large = FALSE
 
 /obj/structure/closet/secure_closet/magistrate
-	name = "\improper Magistrate's locker"
+	name = "Magistrate's locker"
 	req_access = list(ACCESS_MAGISTRATE)
 	icon_state = "magistrate"
 

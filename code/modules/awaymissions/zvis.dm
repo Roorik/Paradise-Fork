@@ -16,8 +16,8 @@
 	..()
 	levels += src
 
-/obj/effect/levelref/Initialize()
-	..()
+/obj/effect/levelref/Initialize(mapload)
+	. = ..()
 	for(var/obj/effect/levelref/O in levels)
 		if(id == O.id && O != src)
 			other = O
@@ -129,18 +129,21 @@
 	QDEL_NULL(sensor)
 	return ..()
 
-/turf/simulated/floor/indestructible/upperlevel/proc/init(var/obj/effect/levelref/R)
+/turf/simulated/floor/indestructible/upperlevel/proc/init(obj/effect/levelref/R)
 	lower_turf = locate(x + R.offset_x, y + R.offset_y, z + R.offset_z)
 	if(lower_turf)
 		sensor = new(lower_turf, src)
 
 /turf/simulated/floor/indestructible/upperlevel/Entered(atom/movable/arrived, atom/old_loc, list/atom/old_locs)
-	if(ismovable(arrived))
-		if(isliving(arrived))
-			var/mob/living/mob = arrived
-			mob.emote("scream")
-			mob.SpinAnimation(5, 1)
-		arrived.forceMove(lower_turf)
+	. = ..()
+	if(!ismovable(arrived))
+		return
+
+	if(isliving(arrived))
+		var/mob/living/mob = arrived
+		mob.emote("scream")
+		mob.SpinAnimation(5, 1)
+	arrived.forceMove(lower_turf)
 
 /turf/simulated/floor/indestructible/upperlevel/attack_ghost(mob/user)
 	user.forceMove(lower_turf)
@@ -166,7 +169,6 @@
 	icon_state = "arrow"
 	opacity = TRUE
 	density = TRUE
-	anchored = TRUE
 	appearance_flags = TILE_BOUND|KEEP_TOGETHER|LONG_GLIDE
 	plane = ABOVE_GAME_PLANE
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
@@ -242,17 +244,17 @@
 	var/width = radius + (distance * frustrum)
 	switch(dir)
 		if(NORTH)
-			pixel_x = -width * world.icon_size
-			pixel_y = world.icon_size
+			pixel_x = -width * ICON_SIZE_X
+			pixel_y = ICON_SIZE_Y
 		if(SOUTH)
-			pixel_x = -width * world.icon_size
-			pixel_y = -distance * world.icon_size - world.icon_size
+			pixel_x = -width * ICON_SIZE_X
+			pixel_y = -distance * ICON_SIZE_Y - ICON_SIZE_Y
 		if(WEST)
-			pixel_x = -distance * world.icon_size - world.icon_size
-			pixel_y = -width * world.icon_size
+			pixel_x = -distance * ICON_SIZE_X - ICON_SIZE_X
+			pixel_y = -width * ICON_SIZE_Y
 		if(EAST)
-			pixel_x = world.icon_size
-			pixel_y = -width * world.icon_size
+			pixel_x = ICON_SIZE_X
+			pixel_y = -width * ICON_SIZE_Y
 
 /obj/effect/visual_portal/Bumped(atom/movable/moving_atom)
 	. = ..()

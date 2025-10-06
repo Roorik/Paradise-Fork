@@ -3,9 +3,9 @@
 	desc = "Used to hold things when you don't have enough hands."
 	icon_state = "webbing"
 	slot = ACCESSORY_SLOT_UTILITY
-	pickup_sound = 'sound/items/handling/backpack_pickup.ogg'
-	equip_sound = 'sound/items/handling/backpack_equip.ogg'
-	drop_sound = 'sound/items/handling/backpack_drop.ogg'
+	pickup_sound = 'sound/items/handling/pickup/toolbelt_pickup.ogg'
+	equip_sound = 'sound/items/handling/equip/toolbelt_equip.ogg'
+	drop_sound = 'sound/items/handling/drop/toolbelt_drop.ogg'
 	var/slots = 3
 	var/obj/item/storage/internal/hold
 	actions_types = list(/datum/action/item_action/accessory/storage)
@@ -59,7 +59,7 @@
 
 /obj/item/clothing/accessory/storage/proc/return_inv()
 
-	var/list/L = list(  )
+	var/list/L = list()
 
 	L += src.contents
 
@@ -75,7 +75,7 @@
 	if(has_suit)	//if we are part of a suit
 		hold.open(user)
 	else
-		to_chat(user, "<span class='notice'>You empty [src].</span>")
+		to_chat(user, span_notice("You empty [src]."))
 		var/turf/T = get_turf(src)
 		hold.hide_from(user)
 		for(var/obj/item/I in hold.contents)
@@ -85,7 +85,6 @@
 /obj/item/clothing/accessory/storage/webbing
 	name = "webbing"
 	desc = "Sturdy mess of synthcotton belts and buckles, ready to share your burden."
-	icon_state = "webbing"
 
 	sprite_sheets = list(
 		SPECIES_VOX = 'icons/mob/clothing/species/vox/suit.dmi',

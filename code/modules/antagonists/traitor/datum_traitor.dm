@@ -1,4 +1,4 @@
-#define EXCHANGE_OBJECTIVE_TRAITORS_REQUIRED	8
+#define EXCHANGE_OBJECTIVE_TRAITORS_REQUIRED 8
 
 // For "Actual traitors"
 /datum/antagonist/traitor
@@ -7,6 +7,8 @@
 	job_rank = ROLE_TRAITOR
 	special_role = SPECIAL_ROLE_TRAITOR
 	antag_hud_name = "hudsyndicate"
+	var/syndicate_antag_hud_name = "hudsyndicate"
+	var/hijack_antag_hud_name = "hudhijack"
 	antag_hud_type = ANTAG_HUD_TRAITOR
 	wiki_page_name = "Traitor"
 	russian_wiki_name = "Предатель"
@@ -17,12 +19,12 @@
 	var/give_codewords = TRUE
 	/// Whether the traitor should get his uplink.
 	var/give_uplink = TRUE
-	/// Whether the traitor can specialize into a contractor.
-	var/is_contractor = FALSE
 	/// Whether the traitor will receive only hijack objective.
 	var/is_hijacker = FALSE
+	var/datum/contractor_pending/contractor_pending
 	/// The associated traitor's uplink. Only present if `give_uplink` is set to `TRUE`.
 	var/obj/item/uplink/hidden/hidden_uplink = null
+	var/antag_sound = "sound/ambience/antag/tatoralert.ogg"
 
 
 /datum/antagonist/traitor/on_gain()
@@ -58,6 +60,7 @@
 		component.delete_if_from_source(src)
 
 /datum/antagonist/traitor/Destroy(force)
+	QDEL_NULL(contractor_pending)
 	// Remove contractor if present
 	var/datum/antagonist/contractor/contractor_datum = owner?.has_antag_datum(/datum/antagonist/contractor)
 	if(contractor_datum)
@@ -98,9 +101,9 @@
 
 /datum/antagonist/traitor/add_antag_hud(mob/living/antag_mob)
 	if(locate(/datum/objective/hijack) in owner.get_all_objectives())
-		antag_hud_name = "hudhijack"
+		antag_hud_name = hijack_antag_hud_name
 	else
-		antag_hud_name = "hudsyndicate"
+		antag_hud_name = syndicate_antag_hud_name
 	return ..()
 
 
@@ -113,8 +116,8 @@
 	// delete these end
 
 
-	var/objective_count = hijacker_antag 			//Hijacking counts towards number of objectives
-	if(!SSticker.mode.exchange_blue && SSticker.mode.traitors.len >= EXCHANGE_OBJECTIVE_TRAITORS_REQUIRED) 	//Set up an exchange if there are enough traitors
+	var/objective_count = hijacker_antag			//Hijacking counts towards number of objectives
+	if(!SSticker.mode.exchange_blue && SSticker.mode.traitors.len >= EXCHANGE_OBJECTIVE_TRAITORS_REQUIRED)	//Set up an exchange if there are enough traitors
 		if(!SSticker.mode.exchange_red)
 			SSticker.mode.exchange_red = owner
 		else
@@ -193,7 +196,7 @@
 	var/equipped_slot = mob.equip_in_one_of_slots(folder, slots, qdel_on_fail = TRUE)
 	if(equipped_slot)
 		where = "In your [equipped_slot]"
-	to_chat(mob, "<BR><BR><span class='info'>[where] is a folder containing <b>secret documents</b> that another Syndicate group wants. We have set up a meeting with one of their agents on station to make an exchange. Exercise extreme caution as they cannot be trusted and may be hostile.</span><BR>")
+	to_chat(mob, span_notice("<br><br>[where] is a folder containing <b>secret documents</b> that another Syndicate group wants. We have set up a meeting with one of their agents on station to make an exchange. Exercise extreme caution as they cannot be trusted and may be hostile.<br>"))
 	mob.update_icons()
 
 
@@ -209,11 +212,7 @@
 		give_uplink()
 
 	announce_uplink_info()
-
-	owner.current.playsound_local(get_turf(owner.current), 'sound/ambience/antag/tatoralert.ogg', 100, FALSE, pressure_affected = FALSE, use_reverb = FALSE)
-
-	if(is_contractor)
-		addtimer(CALLBACK(owner, TYPE_PROC_REF(/datum/mind, add_antag_datum), /datum/antagonist/contractor), 1)
+	owner.current.playsound_local(get_turf(owner.current), antag_sound, 100, FALSE, pressure_affected = FALSE, use_reverb = FALSE)
 
 	return messages
 
@@ -227,16 +226,25 @@
 	var/phrases = jointext(GLOB.syndicate_code_phrase, ", ")
 	var/responses = jointext(GLOB.syndicate_code_response, ", ")
 
-	antag_memory += "<b>Code Phrase</b>: <span class='red'>[phrases]</span><br>"
-	antag_memory += "<b>Code Response</b>: <span class='red'>[responses]</span><br>"
+	antag_memory += "<b>Code Phrase</b>: [span_red("[phrases]")]<br>"
+	antag_memory += "<b>Code Response</b>: [span_red("[responses]")]<br>"
 
 	var/list/messages = list()
-	if(!silent)
-		messages.Add("<U><B>The Syndicate have provided you with the following codewords to identify fellow agents:</B></U>")
-		messages.Add("<span class='bold body'>Code Phrase: <span class='codephrases'>[phrases]</span></span>")
-		messages.Add("<span class='bold body'>Code Response: <span class='coderesponses'>[responses]</span></span>")
-		messages.Add("Use the codewords during regular conversation to identify other agents. Proceed with caution, however, as everyone is a potential foe.")
-		messages.Add("<b><font color=red>You memorize the codewords, allowing you to recognize them when heard.</font></b>")
+	if(silent)
+		return messages
+
+	messages.Add("<u><b>The Syndicate have provided you with the following codewords to identify fellow agents:</b></u>")
+	messages.Add("<b>Code Phrase:</b> [span_codephrases("[phrases]")]")
+	messages.Add("<b>Code Response:</b> [span_coderesponses("[responses]")]")
+	messages.Add("Use the codewords during regular conversation to identify other agents. Proceed with caution, however, as everyone is a potential foe.")
+	messages.Add("<b><font color=red>You memorize the codewords, allowing you to recognize them when heard.</font></b>")
+
+	if(!contractor_pending)
+		return messages
+
+	messages.Add("<br><hr color ='red'>")
+	var/list/contractor_messages = contractor_pending.greet()
+	messages.Add(contractor_messages)
 
 	return messages
 
@@ -250,11 +258,11 @@
 	var/mob/living/carbon/human/traitor_mob = owner.current
 	var/uplink_pref = traitor_mob.client?.prefs?.uplink_pref
 	if(!uplink_pref)
-		uplink_pref = "pda"
+		uplink_pref = PREF_UPLINK_PDA
 
 	var/obj/item/uplink_holder = null
 	// find a radio! toolbox(es), backpack, belt, headset
-	if(uplink_pref == "pda")
+	if(uplink_pref == PREF_UPLINK_PDA)
 		uplink_holder = locate(/obj/item/pda) in traitor_mob.contents //Hide the uplink in a PDA if available, otherwise radio
 		if(!uplink_holder)
 			uplink_holder = locate(/obj/item/radio) in traitor_mob.contents
@@ -281,10 +289,11 @@
 
 		var/obj/item/uplink/hidden/new_uplink = new(target_radio)
 		hidden_uplink = new_uplink
+		hidden_uplink.traitor = src
 		target_radio.hidden_uplink = new_uplink
 		new_uplink.uplink_owner = "[traitor_mob.key]"
 		target_radio.traitor_frequency = freq
-		antag_memory += ("<B>Radio Freq:</B> [format_frequency(freq)] ([target_radio.name]).")
+		antag_memory += ("<b>Radio Freq:</b> [format_frequency(freq)] ([target_radio.name]).")
 		return TRUE
 
 	if(is_pda(uplink_holder))
@@ -292,12 +301,13 @@
 		var/obj/item/pda/target_pda = uplink_holder
 		var/obj/item/uplink/hidden/new_uplink = new(target_pda)
 		hidden_uplink = new_uplink
+		hidden_uplink.traitor = src
 		target_pda.hidden_uplink = new_uplink
 		new_uplink.uplink_owner = "[traitor_mob.key]"
 
 		target_pda.lock_code = "[rand(100,999)] [pick("Alpha","Bravo","Delta","Omega")]"
 
-		antag_memory += ("<B>Uplink Passcode:</B> [target_pda.lock_code] ([uplink_holder.name].")
+		antag_memory += ("<b>Uplink Passcode:</b> [target_pda.lock_code] ([uplink_holder.name].")
 		return TRUE
 
 	return FALSE
@@ -307,8 +317,8 @@
 	var/phrases = jointext(GLOB.syndicate_code_phrase, ", ")
 	var/responses = jointext(GLOB.syndicate_code_response, ", ")
 
-	var/message = "<br><b>The code phrases were:</b> <span class='bluetext'>[phrases]</span><br>\
-					<b>The code responses were:</b> <span class='redtext'>[responses]</span><br>"
+	var/message = "<br><b>The code phrases were:</b> [span_blue(span_big(phrases))]<br>\
+					<b>The code responses were:</b> [span_redtext("[responses]")]<br>"
 
 	return message
 

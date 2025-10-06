@@ -1,12 +1,12 @@
-#define PULL_STAMINADAM_WALK	4
-#define PULL_STAMINADAM_RUN		6
-#define PUSH_STAMINADAM_WALK	3
-#define PUSH_STAMINADAM_RUN		4
+#define PULL_STAMINADAM_WALK 4
+#define PULL_STAMINADAM_RUN 6
+#define PUSH_STAMINADAM_WALK 3
+#define PUSH_STAMINADAM_RUN 4
 
 
 /mob/living/carbon/human/Moved(atom/old_loc, movement_dir, forced, list/old_locs, momentum_change = TRUE)
 	. = ..()
-	if(!forced && (!old_loc || !old_loc.has_gravity()) && has_gravity())
+	if(!forced && (!old_loc || old_loc.no_gravity()) && get_gravity())
 		thunk()
 
 
@@ -47,7 +47,7 @@
 						leg.fracture()
 						break
 			else if(prob(30))
-				playsound(src, "bonebreak", 10, TRUE)
+				playsound(src, SFX_BONEBREAK, 10, TRUE)
 
 		// If we sooo weak to pull or push something, except items or tiny mobs, get stamina damage
 		var/weak_mob = FALSE
@@ -82,8 +82,19 @@
 						stamina_damage += PUSH_STAMINADAM_RUN
 
 			apply_damage(stamina_damage, STAMINA)
+		// if our speed is connected to enviroment temperature
+		var/datum/gas_mixture/environment
+		if(HAS_TRAIT(src,TRAIT_TEMPERATURE_MOVEMENT))
+			environment = loc.return_air()
+			if(environment.temperature < 283.15)
+				remove_movespeed_modifier(/datum/movespeed_modifier/temperature/hot)
+				add_movespeed_modifier(/datum/movespeed_modifier/temperature/cold)
+				return
 
-	if(!has_gravity())
+			remove_movespeed_modifier(/datum/movespeed_modifier/temperature/cold)
+			add_movespeed_modifier(/datum/movespeed_modifier/temperature/hot)
+
+	if(no_gravity())
 		return .
 
 	if(nutrition && stat != DEAD && !isvampire(src))
@@ -110,7 +121,7 @@
 			S.bloody_shoes[S.blood_state] = max(0, S.bloody_shoes[S.blood_state] - BLOOD_LOSS_PER_STEP)
 			if(S.bloody_shoes[S.blood_state] > BLOOD_LOSS_IN_SPREAD)
 				createFootprintsFrom(shoes, dir, T)
-			update_inv_shoes()
+			update_worn_shoes()
 	else if(hasfeet)
 		if(bloody_feet && bloody_feet[blood_state])
 			for(var/obj/effect/decal/cleanable/blood/footprints/oldFP in T)
@@ -119,7 +130,7 @@
 			bloody_feet[blood_state] = max(0, bloody_feet[blood_state] - BLOOD_LOSS_PER_STEP)
 			if(bloody_feet[blood_state] > BLOOD_LOSS_IN_SPREAD)
 				createFootprintsFrom(src, dir, T)
-			update_inv_shoes()
+			update_worn_shoes()
 	//End bloody footprints
 
 
@@ -193,7 +204,7 @@
 			remove_movespeed_modifier(/datum/movespeed_modifier/limbless)
 
 		update_fractures_slowdown()
-		update_hunger_slowdown()
+		update_nutrition_slowdown()
 		update_fat_slowdown()
 
 
@@ -244,6 +255,15 @@
 
 	return ..()
 
+/mob/living/carbon/human/update_pull_movespeed()
+	if(!pulling || !HAS_TRAIT(src, TRAIT_STRONG_PULLING))
+		return ..()
+	remove_movespeed_modifier(/datum/movespeed_modifier/bulky_drag)
+
+/mob/living/carbon/human/update_push_movespeed()
+	if(!now_pushing || !HAS_TRAIT(src, TRAIT_STRONG_PULLING))
+		return ..()
+	remove_movespeed_modifier(/datum/movespeed_modifier/bulky_push)
 
 #undef PULL_STAMINADAM_WALK
 #undef PULL_STAMINADAM_RUN

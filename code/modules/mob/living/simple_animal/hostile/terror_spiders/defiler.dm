@@ -10,14 +10,6 @@
 /mob/living/simple_animal/hostile/poison/terror_spider/defiler
 	name = "Defiler of Terror"
 	desc = "Зловещий на вид белый паук, с призрачными глазами и злобными кошмарными клыками."
-	ru_names = list(
-		NOMINATIVE = "Осквернитель Ужаса",
-		GENITIVE = "Осквернителя Ужаса",
-		DATIVE = "Осквернителю Ужаса",
-		ACCUSATIVE = "Осквернителя Ужаса",
-		INSTRUMENTAL = "Осквернителем Ужаса",
-		PREPOSITIONAL = "Осквернителе Ужаса",
-	)
 	gender = MALE
 	ai_target_method = TS_DAMAGE_POISON
 	icon_state = "terror_white"
@@ -39,8 +31,17 @@
 	spider_intro_text = "Будучи Осквернителем Ужаса, ваша цель - атаковать ничего не подозревающих гуманоидов, чтобы заразить их яйцами. Вы наносите мало урона, но можете парализовать цель за три укуса, а ваш яд заставит её замолчать. Вы также можете генерировать различные дымы вредящие противникам. И помните, не нужно убивать заражённых, они послужат носителями для новых пауков!"
 	datum_type = /datum/antagonist/terror_spider/main_spider/defiler
 
+/mob/living/simple_animal/hostile/poison/terror_spider/defiler/get_ru_names()
+	return list(
+		NOMINATIVE = "Осквернитель Ужаса",
+		GENITIVE = "Осквернителя Ужаса",
+		DATIVE = "Осквернителю Ужаса",
+		ACCUSATIVE = "Осквернителя Ужаса",
+		INSTRUMENTAL = "Осквернителем Ужаса",
+		PREPOSITIONAL = "Осквернителе Ужаса",
+	)
 
-/mob/living/simple_animal/hostile/poison/terror_spider/defiler/LoseTarget()
+/mob/living/simple_animal/hostile/poison/terror_spider/defiler/lose_target()
 	stop_automated_movement = 0
 	attackstep = 0
 	attackcycles = 0
@@ -72,7 +73,7 @@
 	if(!ckey && !IsTSInfected(L))
 		step_away(src, L)
 		step_away(src, L)
-		LoseTarget()
+		lose_target()
 		step_away(src, L)
 		visible_message(span_notice("[capitalize(declent_ru(NOMINATIVE))] отскакивает от [L.declent_ru(ACCUSATIVE)]!"))
 
@@ -84,7 +85,9 @@
 /obj/structure/spider/terrorweb/white
 	name = "infested web"
 	desc = "Эта паутина покрыта сотнями крошечных кусающих пауков и их яицами."
-	ru_names = list(
+
+/obj/structure/spider/terrorweb/white/get_ru_names()
+	return list(
 		NOMINATIVE = "зараженная паутина",
 		GENITIVE = "зараженной паутины",
 		DATIVE = "зараженной паутине",

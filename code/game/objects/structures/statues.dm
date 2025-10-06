@@ -4,7 +4,6 @@
 	icon = 'icons/obj/statue.dmi'
 	icon_state = ""
 	density = TRUE
-	anchored = FALSE
 	max_integrity = 100
 	var/oreAmount = 5
 	var/material_drop_type = /obj/item/stack/sheet/metal
@@ -57,8 +56,10 @@
 /obj/structure/statue/attack_hand(mob/living/user)
 	. = ..()
 	user.changeNext_move(CLICK_CD_MELEE)
-	user.visible_message("[user] rubs some dust off from the [name]'s surface.", \
-						 "<span class='notice'>You rub some dust off from the [name]'s surface.</span>")
+	user.visible_message(
+		"[user] rubs some dust off from the [name]'s surface.",
+		span_notice("You rub some dust off from the [name]'s surface.")
+	)
 
 /obj/structure/statue/CanAtmosPass(turf/T, vertical)
 	return !density
@@ -122,7 +123,7 @@
 		if(!P.nodamage && ((P.damage_type == BURN) || (P.damage_type == BRUTE)))
 			if(P.firer)
 				add_attack_logs(P.firer, src, "Ignited by firing with [P.name]", ATKLOG_FEW)
-				investigate_log("was <span class='warning'>ignited</span> by [key_name_log(P.firer)] with [P.name]",INVESTIGATE_ATMOS)
+				investigate_log("was [span_warning("ignited")] by [key_name_log(P.firer)] with [P.name]",INVESTIGATE_ATMOS)
 			else
 				message_admins("A plasma statue was ignited with [P.name] at [ADMIN_COORDJMP(loc)]. No known firer.")
 				add_game_logs("A plasma statue was ignited with [P.name] at [COORD(loc)]. No known firer.")
@@ -133,7 +134,7 @@
 /obj/structure/statue/plasma/attackby(obj/item/I, mob/user, params)
 	if(I.get_heat() > 300)//If the temperature of the object is over 300, then ignite
 		add_attack_logs(user, src, "Ignited using [I]", ATKLOG_FEW)
-		investigate_log("was <span class='warning'>ignited</span> by [key_name_log(user)]",INVESTIGATE_ATMOS)
+		investigate_log("was [span_warning("ignited")] by [key_name_log(user)]",INVESTIGATE_ATMOS)
 		ignite(I.get_heat())
 		return ATTACK_CHAIN_BLOCKED_ALL
 	return ..()
@@ -143,11 +144,13 @@
 	. = TRUE
 	if(!I.use_tool(src, user, volume = I.tool_volume))
 		return
-	user.visible_message("<span class='danger'>[user] sets [src] on fire!</span>",\
-						"<span class='danger'>[src] disintegrates into a cloud of plasma!</span>",\
-						"<span class='warning'>You hear a 'whoompf' and a roar.</span>")
+	user.visible_message(
+		span_danger("[user] sets [src] on fire!"),
+		span_danger("[src] disintegrates into a cloud of plasma!"),
+		span_warning("You hear a 'whoompf' and a roar.")
+	)
 	add_attack_logs(user, src, "ignited using [I]", ATKLOG_FEW)
-	investigate_log("was <span class='warning'>ignited</span> by [key_name_log(user)]",INVESTIGATE_ATMOS)
+	investigate_log("was [span_warning("ignited")] by [key_name_log(user)]",INVESTIGATE_ATMOS)
 	ignite(2500)
 
 /obj/structure/statue/plasma/proc/PlasmaBurn()
@@ -261,7 +264,7 @@
 /obj/structure/statue/bananium/proc/honk()
 	if(!spam_flag)
 		spam_flag = 1
-		playsound(loc, 'sound/items/bikehorn.ogg', 50, 1)
+		playsound(loc, 'sound/items/bikehorn.ogg', 50, TRUE)
 		spawn(20)
 			spam_flag = 0
 
@@ -364,7 +367,7 @@
 
 /obj/structure/statue/artchair
 	name = "Unknown Hero"
-	desc = "ещё один герой корп. NanoTrasen. Вы замечаете интересную деталь, что спинка стула похожа на тюремное окошко. Так же на нем почему-то присутствует кровь, которая уже налегает слоями и хранится около года. По всей видимости этот стул символизирует какую то личность, которая внесла большой вклад в развитие и поддержание нашей галактической системы. \n Надпись на табличке - Спасибо тебе за все, мы всегда были и будем рады тебе."
+	desc = "ещё один герой корп. Nanotrasen. Вы замечаете интересную деталь, что спинка стула похожа на тюремное окошко. Так же на нем почему-то присутствует кровь, которая уже налегает слоями и хранится около года. По всей видимости этот стул символизирует какую то личность, которая внесла большой вклад в развитие и поддержание нашей галактической системы. \n Надпись на табличке - Спасибо тебе за все, мы всегда были и будем рады тебе."
 	icon_state = "artchair"
 	anchored = TRUE
 	oreAmount = 0
@@ -372,7 +375,7 @@
 /obj/structure/statue/furukai
 	name = "София Вайт"
 	desc = "Загадочная девушка, ныне одна из множества офицеров синдиката. Получившая столь высокую позицию не за связи, а за свои способности. \
-			Движимая местью за потерю родной сестры из-за коррупционных верхушек НаноТрейзен, она вступила в Синдикат,  \
+			Движимая местью за потерю родной сестры из-за коррупционных верхушек Нанотрейзен, она вступила в Синдикат,  \
 			где стала известна и как способный агент и как отличный инженер. Хоть ее позывной и отсылал на пушистых, в душе она их ненавидела..."
 	icon = 'icons/obj/statuelarge.dmi'
 	icon_state = "furukai"
@@ -523,7 +526,7 @@
 			to_chat(user, span_warning("The [name] is completely intact."))
 			return ATTACK_CHAIN_PROCEED
 		to_chat(user, span_notice("You patch some of the damage on [src] with [I]."))
-		obj_integrity = max_integrity
+		update_integrity(max_integrity)
 		qdel(I)
 		return ATTACK_CHAIN_BLOCKED_ALL
 
@@ -546,7 +549,6 @@
 
 ///////// Cheese
 /obj/structure/statue/cheese
-	max_integrity = 100
 	material_drop_type = /obj/item/stack/sheet/cheese
 
 

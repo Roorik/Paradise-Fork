@@ -6,7 +6,6 @@
 	school = "transmutation"
 
 	base_cooldown = 1 MINUTES
-	clothes_req = TRUE
 	cooldown_min = 20 SECONDS //100 deciseconds reduction per rank
 
 	action_icon_state = "cluwne"
@@ -16,7 +15,7 @@
 	if(!get_int_organ(/obj/item/organ/internal/brain/cluwne))
 		var/obj/item/organ/internal/brain/cluwne/idiot_brain = new
 		internal_organs |= idiot_brain	//Well, everything's for recursion prevention.
-		idiot_brain.insert(src, make_cluwne = FALSE)
+		idiot_brain.insert(src, special = ORGAN_MANIPULATION_NOEFFECT, make_cluwne = FALSE)
 		idiot_brain.dna = dna.Clone()
 	else
 		return
@@ -45,7 +44,7 @@
 	grant_mimicking()
 
 /mob/living/carbon/human/proc/makeAntiCluwne()
-	to_chat(src, "<span class='danger'>You don't feel very funny.</span>")
+	to_chat(src, span_danger("You don't feel very funny."))
 	adjustBrainLoss(-120)
 	set_nutrition(NUTRITION_LEVEL_STARVING)
 	overeatduration = 0

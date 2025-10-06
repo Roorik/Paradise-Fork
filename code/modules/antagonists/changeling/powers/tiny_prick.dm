@@ -1,7 +1,6 @@
 /datum/action/changeling/sting
 	name = "Tiny Prick"
 	desc = "Stabby stabby"
-	power_type = CHANGELING_UNOBTAINABLE_POWER
 	req_human = TRUE
 	var/sting_icon = null
 	/// A middle click override used to intercept changeling stings performed on a target.
@@ -35,7 +34,7 @@
 
 /datum/action/changeling/sting/proc/set_sting()
 	var/mob/living/user = owner
-	to_chat(user, span_notice("We prepare our sting, use <B>Alt+Click</B> or middle mouse button on a target to sting them."))
+	to_chat(user, span_notice("We prepare our sting, use <b>Alt+Click</b> or middle mouse button on a target to sting them."))
 	user.middleClickOverride = click_override
 	cling.chosen_sting = src
 	user.hud_used.lingstingdisplay.icon_state = sting_icon
@@ -246,7 +245,7 @@
 
 /datum/action/changeling/sting/blind/sting_action(mob/living/user, mob/living/target)
 	add_attack_logs(user, target, "Blind sting (changeling)")
-	to_chat(target, "<span class='danger'>Your eyes burn horrifically!</span>")
+	to_chat(target, span_danger("Your eyes burn horrifically!"))
 	if(!HAS_TRAIT_NOT_FROM(target, TRAIT_NEARSIGHTED, CHANGELING_TRAIT))
 		ADD_TRAIT(target, TRAIT_NEARSIGHTED, CHANGELING_TRAIT)
 		if(!HAS_TRAIT_NOT_FROM(target, TRAIT_NEARSIGHTED, CHANGELING_TRAIT))

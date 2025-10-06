@@ -1,13 +1,13 @@
-#define COMM_SCREEN_MAIN		1
-#define COMM_SCREEN_STAT		2
-#define COMM_SCREEN_MESSAGES	3
-#define COMM_SCREEN_ANNOUNCER 	4
+#define COMM_SCREEN_MAIN 1
+#define COMM_SCREEN_STAT 2
+#define COMM_SCREEN_MESSAGES 3
+#define COMM_SCREEN_ANNOUNCER 4
 
-#define COMM_AUTHENTICATION_NONE	0
-#define COMM_AUTHENTICATION_HEAD	1
-#define COMM_AUTHENTICATION_CAPT	2
-#define COMM_AUTHENTICATION_CENTCOM	3 // Admin-only access
-#define COMM_AUTHENTICATION_AGHOST	4
+#define COMM_AUTHENTICATION_NONE 0
+#define COMM_AUTHENTICATION_HEAD 1
+#define COMM_AUTHENTICATION_CAPT 2
+#define COMM_AUTHENTICATION_CENTCOM 3 // Admin-only access
+#define COMM_AUTHENTICATION_AGHOST 4
 
 #define COMM_MSGLEN_MINIMUM 6
 #define COMM_CCMSGLEN_MINIMUM 20
@@ -15,18 +15,12 @@
 #define ADMIN_CHECK(user) ((check_rights(R_ADMIN, FALSE, user) && authenticated >= COMM_AUTHENTICATION_CENTCOM) || user.can_admin_interact())
 #define FULL_ADMIN_CHECK(user) (check_rights_all(R_ADMIN|R_EVENT, FALSE, user) && (authenticated >= COMM_AUTHENTICATION_CENTCOM || user.can_admin_interact()))
 
+GLOBAL_VAR_INIT(captain_auth_access, ACCESS_CAPTAIN)
+
 // The communications computer
 /obj/machinery/computer/communications
 	name = "communications console"
-	desc = "Консоль, с помощью которой капитан может связаться с Центральным Командованием или изменить уровень угрозы. Она так-же позволяет командному составу вызвать эвакуационный шаттл."
-	ru_names = list(
-		NOMINATIVE = "консоль связи",
-		GENITIVE = "консоли связи",
-		DATIVE = "консоли связи",
-		ACCUSATIVE = "консоль связи",
-		INSTRUMENTAL = "консолью связи",
-		PREPOSITIONAL = "консоли связи",
-	)
+	desc = "Консоль, с помощью которой капитан может связаться с Центральным командованием или изменить уровень угрозы. Она так-же позволяет командному составу вызвать эвакуационный шаттл."
 	icon_keyboard = "tech_key"
 	icon_screen = "comm"
 	req_access = list(ACCESS_HEADS)
@@ -49,15 +43,26 @@
 	var/display_type = "blank"
 	var/display_icon
 
-	var/datum/announcement/priority/crew_announcement = new
+	var/datum/announcer/announcer = new(config_type = /datum/announcement_configuration/comms_console)
 
-	light_color = LIGHT_COLOR_LIGHTBLUE
+	light_color = LIGHT_COLOR_BLUE
 
+/obj/machinery/computer/communications/get_ru_names()
+	return list(
+		NOMINATIVE = "консоль связи",
+		GENITIVE = "консоли связи",
+		DATIVE = "консоли связи",
+		ACCUSATIVE = "консоль связи",
+		INSTRUMENTAL = "консолью связи",
+		PREPOSITIONAL = "консоли связи",
+	)
 
 /obj/machinery/computer/communications/New()
 	GLOB.shuttle_caller_list += src
 	..()
-	crew_announcement.newscast = FALSE
+
+/obj/machinery/computer/communications/Initialize(mapload)
+	. = ..()
 
 /obj/machinery/computer/communications/proc/is_authenticated(mob/user, message = TRUE)
 	if(user.can_admin_interact())
@@ -75,15 +80,14 @@
 		return COMM_AUTHENTICATION_NONE
 
 /obj/machinery/computer/communications/proc/change_security_level(new_level, force)
-	tmp_alertlevel = new_level
-	var/old_level = GLOB.security_level
+	var/old_level = SSsecurity_level.get_current_level_as_number()
 	if(!force)
 		new_level = clamp(new_level, SEC_LEVEL_GREEN, SEC_LEVEL_BLUE)
-	set_security_level(new_level)
-	if(GLOB.security_level != old_level)
+	SSsecurity_level.set_level(new_level)
+	if(SSsecurity_level.get_current_level_as_number() != old_level)
 		//Only notify the admins if an actual change happened
-		add_game_logs("has changed the security level to [get_security_level()].", usr)
-		message_admins("[key_name_admin(usr)] has changed the security level to [get_security_level()].")
+		add_game_logs("has changed the security level to [SSsecurity_level.get_current_level_as_text()].", usr)
+		message_admins("[key_name_admin(usr)] has changed the security level to [SSsecurity_level.get_current_level_as_text()].")
 	if(new_level == SEC_LEVEL_EPSILON)
 		// episilon is delayed... but we still want to log it
 		log_and_message_admins("has changed the security level to epsilon.")
@@ -105,23 +109,23 @@
 		// Logout function.
 		if(authenticated != COMM_AUTHENTICATION_NONE)
 			authenticated = COMM_AUTHENTICATION_NONE
-			crew_announcement.announcer = null
+			announcer.author = null
 			setMenuState(ui.user, COMM_SCREEN_MAIN)
 			return
 		// Login function.
 		var/list/access = ui.user.get_access()
 		if(allowed(ui.user))
 			authenticated = COMM_AUTHENTICATION_HEAD
-		if(ACCESS_CAPTAIN in access)
+		if(GLOB.captain_auth_access in access)
 			authenticated = COMM_AUTHENTICATION_CAPT
 			var/mob/living/carbon/human/H = ui.user
 			var/obj/item/card/id = H.get_id_card()
 			if(istype(id))
-				crew_announcement.announcer = GetNameAndAssignmentFromId(id)
+				announcer.author = get_name_and_assignment_from_id(id)
 
 		if(ACCESS_CENT_COMMANDER in access)
 			if(!check_rights(R_ADMIN, FALSE, ui.user))
-				to_chat(ui.user, span_warning("[capitalize(declent_ru(NOMINATIVE))] гудит, разрешение Центрального Командования не действительно."))
+				to_chat(ui.user, span_warning("[capitalize(declent_ru(NOMINATIVE))] гудит, разрешение Центрального командования не действительно."))
 				return
 			authenticated = COMM_AUTHENTICATION_CENTCOM
 
@@ -160,8 +164,8 @@
 			var/mob/living/carbon/human/H = ui.user
 			var/obj/item/card/id/I = H.get_id_card()
 			if(istype(I))
-				if((GLOB.security_level > SEC_LEVEL_RED) && !(ACCESS_CENT_GENERAL in I.access)) //if gamma, epsilon or delta and no centcom access. Decline it
-					to_chat(ui.user, span_warning("Протоколы безопасности Центрального Командования не позволяют вам изменить уровень угрозы."))
+				if((SSsecurity_level.get_current_level_as_number() > SEC_LEVEL_RED) && !(ACCESS_CENT_GENERAL in I.access)) //if gamma, epsilon or delta and no centcom access. Decline it
+					to_chat(ui.user, span_warning("Протоколы безопасности Центрального командования не позволяют вам изменить уровень угрозы."))
 					return
 				if(ACCESS_HEADS in I.access)
 					change_security_level(text2num(params["level"]))
@@ -176,13 +180,13 @@
 				if(message_cooldown > world.time)
 					to_chat(ui.user, span_warning("Пожалуйста, подождите, прежде чем сделать новое объявление."))
 					return
-				var/input = tgui_input_text(ui.user, "Пожалуйста, напишите своё сообщение экипажу станции.", "Приоритетное оповещение", multiline = TRUE, encode = FALSE)
+				var/input = tgui_input_text(ui.user, "Пожалуйста, напишите своё сообщение экипажу станции.", "Приоритетное объявление", multiline = TRUE, encode = FALSE)
 				if(!input || message_cooldown > world.time || ..() || !(is_authenticated(ui.user) >= COMM_AUTHENTICATION_CAPT))
 					return
 				if(length(input) < COMM_MSGLEN_MINIMUM)
 					to_chat(ui.user, span_warning("Сообщение '[input]' слишком короткое. Минимальное число символов - [COMM_MSGLEN_MINIMUM]."))
 					return
-				crew_announcement.Announce(input)
+				announcer.announce(input)
 				message_cooldown = world.time + 600 //One minute
 
 		if("callshuttle")
@@ -269,7 +273,11 @@
 				Nuke_request(input, ui.user)
 				to_chat(ui.user, span_notice("Запрос отправлен."))
 				add_game_logs("has requested the nuclear codes from Centcomm: [input]", usr)
-				GLOB.priority_announcement.Announce("Коды активации ядерной боеголовки на станции были запрошены [usr]. Решение о подтверждении или отклонении данного запроса будет отправлено в ближайшее время.", "Запрошены коды активации ядерной боеголовки.",'sound/AI/commandreport.ogg')
+				GLOB.major_announcement.announce(
+					message = "Коды активации ядерной боеголовки на станции были запрошены [usr]. Решение о подтверждении или отклонении данного запроса будет отправлено в ближайшее время.",
+					new_title = ANNOUNCE_NUCLEARCODES_RU,
+					new_sound = 'sound/AI/nuke_codes.ogg'
+				)
 				centcomm_message_cooldown = world.time + 6000 // 10 minutes
 			setMenuState(ui.user, COMM_SCREEN_MAIN)
 
@@ -378,20 +386,20 @@
 				to_chat(ui.user, span_warning("Вашего уровня доступа не хватает для отправки данного типа оповещений."))
 				return
 			if(!params["classified"])
-				GLOB.command_announcement.Announce(
-					params["text"],\
-					from = "Сообщение Центрального Командования",\
-					new_title = params["subtitle"],\
-					new_sound = 'sound/AI/commandreport.ogg'
+				GLOB.major_announcement.announce(
+					message = params["text"],
+					new_title = ANNOUNCE_CCMSG_RU,
+					new_sound = 'sound/AI/commandreport.ogg',
+					new_subtitle = params["subtitle"]
 				)
 				print_command_report(params["text"], params["subtitle"])
 			else
-				GLOB.event_announcement.Announce("Отчёт был загружен и распечатан на всех консолях связи.", "Входящее засекреченное сообщение.", 'sound/AI/commandreport.ogg', from = "[command_name()] обновление")
+				GLOB.command_announcer.autosay("Отчёт был загружен и распечатан на всех консолях связи.", HEADSET_FREQ_NAME)
 				print_command_report(params["text"], "Секретно: [params["subtitle"]]")
 
 			log_and_message_admins("has created a communications report: [params["text"]]")
 			// Okay but this is just an IC way of accessing the same verb
-			SSblackbox.record_feedback("tally", "admin_comms_console", 1, "Create CC Report") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
+			SSblackbox.record_feedback("tally", "admin_comms_console", 1, "Create CC Report")
 
 /obj/machinery/computer/communications/proc/print_nuke_codes()
 	playsound(loc, 'sound/goonstation/machines/printer_dotmatrix.ogg', 50, TRUE)
@@ -406,24 +414,20 @@
 		if(NUKE_CORE_MISSING)
 			P.info += "Сканеры дальнего действия не обнаруживают радиоактивных сигнатур внутри устройства."
 
-	P.info += "<br><hr><font size=\"1\">Несоблюдение нормативных требований компании по конфиденциальности может привести к немедленному увольнению по приказу сотрудников Центрального Командования.</font>"
+	P.info += span_fontsize1("<br><hr>Несоблюдение нормативных требований компании по конфиденциальности может привести к немедленному увольнению по приказу сотрудников Центрального командования.")
 
 /proc/directive_7_12()
-	var/nukecode = rand(10000, 99999)
-	for(var/obj/machinery/nuclearbomb/bomb in GLOB.machines)
-		if(bomb && bomb.r_code)
-			if(is_station_level(bomb.z))
-				bomb.r_code = nukecode
+	var/nukecode = GLOB.nuke_codes[/obj/machinery/nuclearbomb]
 	var/intercepttext
 	var/interceptname
 	interceptname = "Секретное постановление [command_name()]"
-	intercepttext += "<FONT size = 3><B>Постановление Nanotrasen</B>: Предупреждение о биологической угрозе.</FONT><HR>"
-	intercepttext += "Для [station_name()] была издана директива 7-12.<BR>"
-	intercepttext += "Биологическая угроза вышла из-под контроля.<BR>"
-	intercepttext += "Вам приказано следующее:<BR>"
-	intercepttext += " 1. Защищать диск ядерной аутентификации.<BR>"
-	intercepttext += " 2. Взорвать ядерную боеголовку, находящуюся в хранилище станции.<BR>"
-	intercepttext += "Код ядерной аутентификации: [nukecode]<BR>"
+	intercepttext += span_fontsize3("<b>Постановление Nanotrasen</b>: Биологическая угроза.<hr>")
+	intercepttext += "Для [station_name()] была издана директива 7-12.<br>"
+	intercepttext += "Биологическая угроза вышла из-под контроля.<br>"
+	intercepttext += "Вам приказано следующее:<br>"
+	intercepttext += " 1. Защищать диск ядерной аутентификации.<br>"
+	intercepttext += " 2. Взорвать ядерную боеголовку, находящуюся в хранилище станции.<br>"
+	intercepttext += "Код ядерной аутентификации: [nukecode]<br>"
 	intercepttext += "Конец сообщения."
 
 	for(var/mob/living/silicon/ai/aiPlayer in GLOB.player_list)
@@ -435,7 +439,11 @@
 			SSticker?.score?.save_silicon_laws(aiPlayer, additional_info = "вспышка биоугрозы, добавлен новый нулевой закон'[law]'")
 			to_chat(aiPlayer, span_warning("Законы обновлены: [law]"))
 	print_command_report(intercepttext, interceptname, FALSE)
-	GLOB.event_announcement.Announce("Отчёт был загружен и распечатан на всех консолях связи.", "Входящее засекреченное сообщение.", 'sound/AI/commandreport.ogg', from = "[command_name()] обновление")
+	GLOB.minor_announcement.announce(
+		message = "Отчёт был загружен и распечатан на всех консолях связи.",
+		new_title = ANNOUNCE_SECRETMSG_RU,
+		new_sound = 'sound/AI/commandreport.ogg'
+	)
 
 /obj/machinery/computer/communications/emag_act(user as mob)
 	if(!emagged)
@@ -501,8 +509,8 @@
 		)
 	)
 
-	data["security_level"] = GLOB.security_level
-	switch(GLOB.security_level)
+	data["security_level"] = SSsecurity_level.get_current_level_as_number()
+	switch(SSsecurity_level.get_current_level_as_number())
 		if(SEC_LEVEL_GREEN)
 			data["security_level_color"] = "green";
 		if(SEC_LEVEL_BLUE)
@@ -511,7 +519,7 @@
 			data["security_level_color"] = "red";
 		else
 			data["security_level_color"] = "purple";
-	data["str_security_level"] = capitalize(get_security_level())
+	data["str_security_level"] = capitalize(SSsecurity_level.get_current_level_as_text())
 
 	var/list/msg_data = list()
 	for(var/i = 1; i <= messagetext.len; i++)
@@ -588,7 +596,7 @@
 	return
 
 /proc/check_shuttle_ability(mob/user)
-	if(GLOB.sent_strike_team == TRUE || GLOB.security_level == SEC_LEVEL_EPSILON)
+	if(GLOB.sent_strike_team == TRUE || SSsecurity_level.get_current_level_as_number() == SEC_LEVEL_EPSILON)
 		to_chat(user, "Вызов шаттла эвакуации невозможен. Все контракты считаются расторгнутыми.")
 		return FALSE
 
@@ -597,15 +605,15 @@
 		return FALSE
 
 	if(SSshuttle.emergencyNoEscape)
-		to_chat(user, "Вызов шаттла заблокирован. Свяжитесь с Центральным Командованием для уточнения причин и снятия блокировки.")
+		to_chat(user, "Вызов шаттла заблокирован. Свяжитесь с Центральным командованием для уточнения причин и снятия блокировки.")
 		return FALSE
 
 	if(EMERGENCY_ESCAPED_OR_ENDGAMED)
-		to_chat(user, span_warning("Эвакуационный шаттл не может быть вызван при возвращении на станцию Центрального Командования."))
+		to_chat(user, span_warning("Эвакуационный шаттл не может быть вызван при возвращении на станцию Центрального командования."))
 		return FALSE
 
-	if(world.time < 30 MINUTES) // 30 minute grace period to let the game get going
-		to_chat(user, "Шаттл на дозаправке. Пожалуйста, подождите ещё [round((30 MINUTES-world.time)/600)] минут, прежде чем повторить попытку.")
+	if(world.time - SSticker.time_game_started < SSshuttle.emergency_refill_time) // 30 minute grace period to let the game get going
+		to_chat(user, "Шаттл на дозаправке. Пожалуйста, подождите ещё [round((SSshuttle.emergency_refill_time - (world.time - SSticker.time_game_started)) / 600)] минут, прежде чем повторить попытку.")
 		return FALSE
 
 	return TRUE
@@ -616,12 +624,12 @@
 	if(!force && !check_shuttle_ability(user))
 		return
 
-	if(seclevel2num(get_security_level()) >= SEC_LEVEL_RED) // There is a serious threat we gotta move no time to give them five minutes.
-		SSshuttle.emergency.request(null, 0.5, null, " Автоматический Трансфер Экипажа", 1)
+	if(SSsecurity_level.get_current_level_as_number() >= SEC_LEVEL_RED) // There is a serious threat we gotta move no time to give them five minutes.
 		SSshuttle.emergency.canRecall = FALSE
+		SSshuttle.emergency.request(null, 0.5, null, " Автоматический трансфер экипажа", 1)
 	else
-		SSshuttle.emergency.request(null, 1, null, " Автоматический Трансфер Экипажа", 0)
 		SSshuttle.emergency.canRecall = FALSE
+		SSshuttle.emergency.request(null, 1, null, " Автоматический трансфер экипажа", 0)
 	if(user)
 		add_game_logs("has called the shuttle.", user)
 		message_admins("[key_name_admin(user)] has called the shuttle - [formatJumpTo(user)].")
@@ -636,7 +644,7 @@
 		add_game_logs("has recalled the shuttle.", user)
 		message_admins("[ADMIN_LOOKUPFLW(user)] has recalled the shuttle .")
 	else
-		to_chat(user, span_warning("Центральное Командование отклонило запрос об отзыве эвакуационного шаттла!"))
+		to_chat(user, span_warning("Центральное командование отклонило запрос об отзыве эвакуационного шаттла!"))
 		add_game_logs("has tried and failed to recall the shuttle.", user)
 		message_admins("[ADMIN_LOOKUPFLW(user)] has tried and failed to recall the shuttle.")
 
@@ -673,7 +681,7 @@
 	SSshuttle.autoEvac()
 	return ..()
 
-/proc/print_command_report(text = "", title = "Уведомление Центрального Командования", add_to_records = TRUE, var/datum/station_goal/goal = null)
+/proc/print_command_report(text = "", title = "Уведомление Центрального командования", add_to_records = TRUE, datum/station_goal/goal = null)
 	for(var/obj/machinery/computer/communications/C in GLOB.shuttle_caller_list)
 		if(!(C.stat & (BROKEN|NOPOWER)) && is_station_contact(C.z))
 			var/obj/item/paper/P = new (C.loc)
@@ -697,3 +705,19 @@
 			C.messagetext.Add(text)
 
 
+/obj/machinery/computer/communications/indestrusctable
+	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF
+
+#undef COMM_SCREEN_MAIN
+#undef COMM_SCREEN_STAT
+#undef COMM_SCREEN_MESSAGES
+#undef COMM_SCREEN_ANNOUNCER
+#undef COMM_AUTHENTICATION_NONE
+#undef COMM_AUTHENTICATION_HEAD
+#undef COMM_AUTHENTICATION_CAPT
+#undef COMM_AUTHENTICATION_CENTCOM
+#undef COMM_AUTHENTICATION_AGHOST
+#undef COMM_MSGLEN_MINIMUM
+#undef COMM_CCMSGLEN_MINIMUM
+#undef ADMIN_CHECK
+#undef FULL_ADMIN_CHECK

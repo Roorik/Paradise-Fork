@@ -50,8 +50,11 @@
 	description = "Легковоспламеняющееся желеобразное топливо."
 	reagent_state = LIQUID
 	process_flags = ORGANIC | SYNTHETIC
-	color = "#C86432"
 	taste_description = "горения"
+	color = "#ffb300"
+	chemfiresupp = TRUE
+	burncolor = "#d05006"
+	burn_sprite = "red"
 
 /datum/reagent/napalm/reaction_temperature(exposed_temperature, exposed_volume)
 	if(exposed_temperature > T0C + 100)
@@ -102,10 +105,22 @@
 	var/volume_explosion_radius_modifier = 0
 	var/combustion_temp = T0C + 200
 
+/datum/reagent/proc/toxic_fuel_proof_species(mob/living/carbon/human/H)
+	if(!istype(H))
+		return FALSE // skip check
+
+	if(HAS_TRAIT(H, TRAIT_TOXIC_FUEL_PROTECTED))
+		return TRUE
+
+	return FALSE
+
 /datum/reagent/fuel/on_mob_life(mob/living/M)
+	var/update_flags = STATUS_UPDATE_NONE
+	if(!toxic_fuel_proof_species(M))
+		update_flags |= M.adjustToxLoss(1, FALSE)
 	if(M.on_fire)
 		M.adjust_fire_stacks(0.4)
-	return ..()
+	return ..() | update_flags
 
 /datum/reagent/fuel/reaction_temperature(exposed_temperature, exposed_volume)
 	if(exposed_temperature > combustion_temp)
@@ -130,7 +145,7 @@
 		fireflash_sm(T, radius, 2200 + radius * 250, radius * 50)
 		if(will_explode)
 			var/boomrange = min(max(min_explosion_radius, round(volume * volume_explosion_radius_multiplier + volume_explosion_radius_modifier)), max_explosion_radius)
-			explosion(T, -1, -1, boomrange, 1, cause = "Fuel Reaction Temp.")
+			explosion(T, devastation_range = -1, heavy_impact_range = -1, light_impact_range = boomrange, flash_range = 1, cause = "Fuel Reaction Temp.")
 
 /datum/reagent/fuel/reaction_turf(turf/T, volume) //Don't spill the fuel, or you'll regret it
 	if(isspaceturf(T))
@@ -176,12 +191,18 @@
 		if(M.on_fire)
 			M.adjust_fire_stacks(6)
 
+/datum/reagent/plasma/reaction_turf(turf/simulated/T, volume)
+	if(isspaceturf(T))
+		return
+	if(!T.reagents)
+		T.create_reagents(volume)
+	T.reagents.add_reagent("plasma", volume)
+
 
 /datum/reagent/thermite
 	name = "Термит"
 	id = "thermite"
 	description = "Термит вызывает алюминотермическую реакцию, известную как термитная реакция. Может использоваться для плавления замков. Или стен."
-	reagent_state = SOLID
 	color = "#673910" // rgb: 103, 57, 16
 	process_flags = ORGANIC | SYNTHETIC
 	taste_description = "ржавчины"
@@ -270,6 +291,8 @@
 	taste_description = "горького воздуха"
 
 /datum/reagent/sorium/reaction_turf(turf/T, volume) // oh no
+	if(volume < 1)
+		return
 	if(prob(75))
 		return
 	if(isspaceturf(T))
@@ -287,6 +310,8 @@
 	taste_description = "горького вакуума"
 
 /datum/reagent/liquid_dark_matter/reaction_turf(turf/T, volume) //Oh gosh, why
+	if(volume < 4)
+		return
 	if(prob(75))
 		return
 	if(isspaceturf(T))
@@ -300,7 +325,6 @@
 	id = "blackpowder"
 	description = "Взрывается. Сильно взрывается."
 	reagent_state = LIQUID
-	color = "#000000"
 	metabolization_rate = 0.125 * REAGENTS_METABOLISM
 	penetrates_skin = TRUE
 	taste_description = "взрывов"
@@ -319,6 +343,13 @@
 	penetrates_skin = TRUE
 	taste_description = "соли"
 
+/datum/reagent/flash_powder/reaction_turf(turf/simulated/T, volume)
+	if(isspaceturf(T))
+		return
+	if(!T.reagents)
+		T.create_reagents(volume)
+	T.reagents.add_reagent("flash_powder", volume)
+
 /datum/reagent/smoke_powder
 	name = "Дымный порошок"
 	id = "smoke_powder"
@@ -326,6 +357,13 @@
 	reagent_state = LIQUID
 	color = "#808080"
 	taste_description = "дыма"
+
+/datum/reagent/smoke_powder/reaction_turf(turf/simulated/T, volume)
+	if(isspaceturf(T))
+		return
+	if(!T.reagents)
+		T.create_reagents(volume)
+	T.reagents.add_reagent("smoke_powder", 10)
 
 /datum/reagent/sonic_powder
 	name = "Звуковой порошок"
@@ -335,6 +373,13 @@
 	color = "#0000FF"
 	penetrates_skin = TRUE
 	taste_description = "шума"
+
+/datum/reagent/sonic_powder/reaction_turf(turf/simulated/T, volume)
+	if(isspaceturf(T))
+		return
+	if(!T.reagents)
+		T.create_reagents(volume)
+	T.reagents.add_reagent("sonic_powder", volume)
 
 /datum/reagent/cryostylane
 	name = "Криостилан"
@@ -453,3 +498,10 @@
 		M.adjust_fire_stacks(volume / 5)
 		return
 	..()
+
+/datum/reagent/plasma_dust/reaction_turf(turf/simulated/T, volume)
+	if(isspaceturf(T))
+		return
+	if(!T.reagents)
+		T.create_reagents(volume)
+	T.reagents.add_reagent("plasma_dust", volume)

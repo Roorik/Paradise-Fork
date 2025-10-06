@@ -1,16 +1,14 @@
-#define RESONATOR_MODE_AUTO   1
+#define RESONATOR_MODE_AUTO 1
 #define RESONATOR_MODE_MANUAL 2
 #define RESONATOR_MODE_MATRIX 3
 
 /**********************Resonator**********************/
 /obj/item/resonator
 	name = "resonator"
-	icon = 'icons/obj/items.dmi'
 	icon_state = "resonator"
 	item_state = "resonator"
 	origin_tech = "magnets=3;engineering=3"
-	desc = "A handheld device that creates small fields of energy that resonate until they detonate, crushing rock. It does increased damage in low pressure. It has two modes: Automatic and manual detonation."
-	w_class = WEIGHT_CLASS_NORMAL
+	desc = "Портативное устройство, создающее энергетические поля, которые резонируют до детонации, разрушая породу. Наносит повышенный урон в условиях низкого давления. Имеет два режима: автоматический и ручной подрыв."
 	force = 15
 	throwforce = 10
 	/// the mode of the resonator; has three modes: auto (1), manual (2), and matrix (3)
@@ -24,12 +22,22 @@
 	/// the number that is added to the failure_prob, which is the probability of whether it will spread or not
 	var/adding_failure = 50
 
+/obj/item/resonator/get_ru_names()
+	return list(
+		NOMINATIVE = "резонатор",
+		GENITIVE = "резонатора",
+		DATIVE = "резонатору",
+		ACCUSATIVE = "резонатор",
+		INSTRUMENTAL = "резонатором",
+		PREPOSITIONAL = "резонаторе"
+	)
+
 /obj/item/resonator/attack_self(mob/user)
 	if(mode == RESONATOR_MODE_AUTO)
-		to_chat(user, span_info("You set the resonator's fields to detonate only after you hit one with it."))
+		to_chat(user, span_notice("Вы настроили поля резонатора на детонацию только после удара."))
 		mode = RESONATOR_MODE_MANUAL
 	else
-		to_chat(user, span_info("You set the resonator's fields to automatically detonate after 2 seconds."))
+		to_chat(user, span_notice("Вы настроили автоматический подрыв полей через 2 секунды."))
 		mode = RESONATOR_MODE_AUTO
 
 /obj/item/resonator/proc/create_resonance(target, mob/user)
@@ -55,8 +63,7 @@
 //resonance field, crushes rock, damages mobs
 /obj/effect/temp_visual/resonance
 	name = "resonance field"
-	desc = "A resonating field that significantly damages anything inside of it when the field eventually ruptures. More damaging in low pressure environments."
-	icon = 'icons/effects/effects.dmi'
+	desc = "Энергетическое поле, наносящее значительный урон всему внутри при разрыве. Эффективнее в условиях низкого давления."
 	icon_state = "shield1"
 	layer = ABOVE_ALL_MOB_LAYER
 	duration = 5 SECONDS
@@ -75,6 +82,17 @@
 	/// the number that is added to the failure_prob. Will default to 40
 	var/adding_failure
 
+/obj/effect/temp_visual/resonance/get_ru_names()
+	return list(
+		NOMINATIVE = "резонансное поле",
+		GENITIVE = "резонансного поля",
+		DATIVE = "резонансному полю",
+		ACCUSATIVE = "резонансное поле",
+		INSTRUMENTAL = "резонансным полем",
+		PREPOSITIONAL = "резонансном поле"
+	)
+
+
 /obj/effect/temp_visual/resonance/Initialize(mapload, set_creator, set_resonator, mode, set_failure = 40)
 	if(mode == RESONATOR_MODE_AUTO)
 		duration = 2 SECONDS
@@ -91,7 +109,7 @@
 	if(parent_resonator)
 		parent_resonator.fields += src
 	adding_failure = set_failure
-	playsound(src,'sound/weapons/resonator_fire.ogg',50,1)
+	playsound(src,'sound/weapons/resonator_fire.ogg',50, TRUE)
 	if(mode == RESONATOR_MODE_AUTO)
 		transform = matrix()*0.75
 		animate(src, transform = matrix()*1.5, time = duration)
@@ -122,16 +140,16 @@
 	new /obj/effect/temp_visual/resonance_crush(src_turf)
 	if(ismineralturf(src_turf))
 		if(isancientturf(src_turf))
-			visible_message(span_notice("This rock appears to be resistant to all mining tools except pickaxes!"))
+			visible_message(span_notice("Эта порода устойчива ко всем инструментам, кроме кирок!"))
 		else
 			var/turf/simulated/mineral/M = src_turf
 			M.attempt_drill(creator)
 	check_pressure(src_turf)
-	playsound(src_turf,'sound/weapons/resonator_blast.ogg',50,1)
+	playsound(src_turf,'sound/weapons/resonator_blast.ogg',50, TRUE)
 	for(var/mob/living/L in src_turf)
 		if(creator)
 			add_attack_logs(creator, L, "Resonance field'ed")
-		to_chat(L, span_userdanger("[src] ruptured with you in it!"))
+		to_chat(L, span_userdanger("[capitalize(declent_ru(NOMINATIVE))] разрывается с вами внутри!"))
 		L.apply_damage(resonance_damage, BRUTE)
 	for(var/obj/effect/temp_visual/resonance/field in orange(1, src))
 		if(field.rupturing)
@@ -157,22 +175,32 @@
 
 /obj/item/resonator/upgraded
 	name = "upgraded resonator"
-	desc = "An upgraded version of the resonator that can produce more fields at once, as well as having no damage penalty for bursting a resonance field early. It also allows you to set 'Resonance matrixes', that detonate after someone(or something) walks over it."
+	desc = "Усовершенствованная версия резонатора, способная создавать больше полей одновременно без потери урона при раннем подрыве. Позволяет устанавливать \"резонансные матрицы\", срабатывающие рядом с целью."
 	icon_state = "resonator_u"
 	fieldlimit = 6
 	quick_burst_mod = 1
 	adding_failure = 20
 	origin_tech = "materials=4;powerstorage=3;engineering=3;magnets=3"
 
+/obj/item/resonator/upgraded/get_ru_names()
+	return list(
+		NOMINATIVE = "улучшенный резонатор",
+		GENITIVE = "улучшенного резонатора",
+		DATIVE = "улучшенному резонатору",
+		ACCUSATIVE = "улучшенный резонатор",
+		INSTRUMENTAL = "улучшенным резонатором",
+		PREPOSITIONAL = "улучшенном резонаторе"
+	)
+
 /obj/item/resonator/upgraded/attack_self(mob/user)
 	if(mode == RESONATOR_MODE_AUTO)
-		to_chat(user, span_info("You set the resonator's fields to detonate only after you hit one with it."))
+		to_chat(user, span_notice("Вы настроили поля на детонацию только после удара."))
 		mode = RESONATOR_MODE_MANUAL
 	else if(mode == RESONATOR_MODE_MANUAL)
-		to_chat(user, span_info("You set the resonator's fields to work as matrix traps."))
+		to_chat(user, span_notice("Вы активировали режим матричных ловушек."))
 		mode = RESONATOR_MODE_MATRIX
 	else
-		to_chat(user,  span_info("You set the resonator's fields to automatically detonate after 2 seconds."))
+		to_chat(user, span_notice("Вы настроили автоматический подрыв через 2 секунды."))
 		mode = RESONATOR_MODE_AUTO
 
 #undef RESONATOR_MODE_AUTO

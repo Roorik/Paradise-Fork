@@ -1,19 +1,19 @@
-#define GUILLOTINE_BLADE_MAX_SHARP  10 // This is maxiumum sharpness that will decapitate without failure
-#define GUILLOTINE_DECAP_MIN_SHARP  7  // Minimum amount of sharpness for decapitation. Any less and it will just deal brute damage
+#define GUILLOTINE_BLADE_MAX_SHARP 10 // This is maxiumum sharpness that will decapitate without failure
+#define GUILLOTINE_DECAP_MIN_SHARP 7 // Minimum amount of sharpness for decapitation. Any less and it will just deal brute damage
 #define GUILLOTINE_ANIMATION_LENGTH 9 // How many deciseconds the animation is
-#define GUILLOTINE_BLADE_RAISED     1
-#define GUILLOTINE_BLADE_RAISING    2
-#define GUILLOTINE_BLADE_DROPPING   3
-#define GUILLOTINE_BLADE_DROPPED    4
+#define GUILLOTINE_BLADE_RAISED 1
+#define GUILLOTINE_BLADE_RAISING 2
+#define GUILLOTINE_BLADE_DROPPING 3
+#define GUILLOTINE_BLADE_DROPPED 4
 #define GUILLOTINE_BLADE_SHARPENING 5
 
-#define GUILLOTINE_HEAD_OFFSET      16 // How much we need to move the player to center their head
-#define GUILLOTINE_LAYER_DIFF       1.2 // How much to increase/decrease a head when it's buckled/unbuckled
-#define GUILLOTINE_ACTIVATE_DELAY   30 // Delay for executing someone
-#define GUILLOTINE_WRENCH_DELAY     10
+#define GUILLOTINE_HEAD_OFFSET 16 // How much we need to move the player to center their head
+#define GUILLOTINE_LAYER_DIFF 1.2 // How much to increase/decrease a head when it's buckled/unbuckled
+#define GUILLOTINE_ACTIVATE_DELAY 30 // Delay for executing someone
+#define GUILLOTINE_WRENCH_DELAY 10
 
-#define GUILLOTINE_ACTION_INUSE      1
-#define GUILLOTINE_ACTION_WRENCH     2
+#define GUILLOTINE_ACTION_INUSE 1
+#define GUILLOTINE_ACTION_WRENCH 2
 
 /obj/structure/guillotine
 	name = "guillotine"
@@ -22,7 +22,6 @@
 	icon_state = "guillotine_raised"
 	can_buckle = TRUE
 	anchored = TRUE
-	density = FALSE
 	buckle_lying = 0
 	buckle_prevents_pull = TRUE
 	layer = ABOVE_MOB_LAYER
@@ -42,7 +41,7 @@
 		msg += "The blade is raised, ready to fall, and"
 
 		if(blade_sharpness >= GUILLOTINE_DECAP_MIN_SHARP)
-			msg += "<span class='danger'> looks sharp enough to decapitate without any resistance.</span>"
+			msg += span_danger(" looks sharp enough to decapitate without any resistance.")
 		else
 			msg += " doesn't look particularly sharp. Perhaps a whetstone can be used to sharpen it."
 	else
@@ -51,7 +50,7 @@
 	if(has_buckled_mobs())
 		msg += "<br/>"
 		msg += "Someone appears to be strapped in. You can help them out, or you can harm them by activating the guillotine."
-	. += "<span class='notice'>[msg]</span>"
+	. += span_notice("[msg]")
 
 
 /obj/structure/guillotine/update_icon_state()
@@ -95,8 +94,10 @@
 		if(GUILLOTINE_BLADE_RAISED)
 			if(has_buckled_mobs())
 				if(user.a_intent == INTENT_HARM)
-					user.visible_message("<span class='warning'>[user] begins to pull the lever!</span>",
-						                 "<span class='warning'>You begin to the pull the lever.</span>")
+					user.visible_message(
+						span_warning("[user] begins to pull the lever!"),
+						span_warning("You begin to the pull the lever.")
+					)
 					current_action = GUILLOTINE_ACTION_INUSE
 
 					if(do_after(user, GUILLOTINE_ACTIVATE_DELAY, src) && blade_status == GUILLOTINE_BLADE_RAISED)
@@ -104,7 +105,7 @@
 						current_action = NONE
 						blade_status = GUILLOTINE_BLADE_DROPPING
 						update_icon(UPDATE_ICON_STATE)
-						playsound(src, 'sound/items/unsheath.ogg', 100, 1)
+						playsound(src, 'sound/items/unsheath.ogg', 100, TRUE)
 						addtimer(CALLBACK(src, PROC_REF(drop_blade), user), GUILLOTINE_ANIMATION_LENGTH - 2) // Minus two so we play the sound and decap faster
 					else
 						current_action = NONE
@@ -115,7 +116,7 @@
 				add_fingerprint(user)
 				blade_status = GUILLOTINE_BLADE_DROPPING
 				update_icon(UPDATE_ICON_STATE)
-				playsound(src, 'sound/items/unsheath.ogg', 100, 1)
+				playsound(src, 'sound/items/unsheath.ogg', 100, TRUE)
 				addtimer(CALLBACK(src, PROC_REF(drop_blade)), GUILLOTINE_ANIMATION_LENGTH)
 
 
@@ -140,7 +141,7 @@
 			update_icon(UPDATE_ICON_STATE)
 			return
 
-		playsound(src, 'sound/weapons/bladeslice.ogg', 100, 1)
+		playsound(src, 'sound/weapons/bladeslice.ogg', 100, TRUE)
 		if(blade_sharpness >= GUILLOTINE_DECAP_MIN_SHARP || head.brute_dam >= 100)
 			head.droplimb()
 			add_attack_logs(user, H, "beheaded with [src]")
@@ -207,13 +208,13 @@
 		current_action = NONE
 		return
 	if(has_buckled_mobs())
-		to_chat(user, "<span class='warning'>Can't unfasten, someone's strapped in!</span>")
+		to_chat(user, span_warning("Can't unfasten, someone's strapped in!"))
 		return
 
 	current_action = NONE
-	to_chat(user, "<span class='notice'>You [anchored ? "un" : ""]secure [src].</span>")
+	to_chat(user, span_notice("You [anchored ? "un" : ""]secure [src]."))
 	set_anchored(!anchored)
-	playsound(src, 'sound/items/deconstruct.ogg', 50, 1)
+	playsound(src, 'sound/items/deconstruct.ogg', 50, TRUE)
 	dir = SOUTH
 
 /obj/structure/guillotine/welder_act(mob/user, obj/item/I)

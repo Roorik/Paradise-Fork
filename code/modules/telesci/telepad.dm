@@ -5,13 +5,12 @@
 	icon = 'icons/obj/telescience.dmi'
 	icon_state = "pad"
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 200
 	active_power_usage = 5000
 	var/efficiency
 
-/obj/machinery/telepad/New()
-	..()
+/obj/machinery/telepad/Initialize(mapload)
+	. = ..()
 	component_parts = list()
 	component_parts += new /obj/item/circuitboard/telesci_pad(null)
 	component_parts += new /obj/item/stack/ore/bluespace_crystal/artificial(null, 2)
@@ -20,8 +19,8 @@
 	component_parts += new /obj/item/stack/cable_coil(null, 1)
 	RefreshParts()
 
-/obj/machinery/telepad/upgraded/New()
-	..()
+/obj/machinery/telepad/upgraded/Initialize(mapload)
+	. = ..()
 	component_parts = list()
 	component_parts += new /obj/item/circuitboard/telesci_pad(null)
 	component_parts += new /obj/item/stack/ore/bluespace_crystal/artificial(null, 2)
@@ -73,7 +72,6 @@
 	icon = 'icons/obj/telescience.dmi'
 	icon_state = "pad"
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 20
 	active_power_usage = 500
 	var/stage = 0
@@ -88,7 +86,7 @@
 	. = TRUE
 	if(!I.use_tool(src, user, 0, volume = I.tool_volume))
 		return
-	to_chat(user, "<span class = 'caution'> You [stage ? "screw in" : "unscrew"] the telepad's tracking beacon.</span>")
+	to_chat(user, span_caution("Вы [stage ? "прикручиваете" : "откручиваете"] маячок отслеживания телепада."))
 	stage = !stage
 
 /obj/machinery/telepad_cargo/wrench_act(mob/user, obj/item/I)
@@ -114,8 +112,8 @@
 
 /obj/item/telepad_beacon/attack_self(mob/user as mob)
 	if(user)
-		to_chat(user, "<span class = 'caution'> Locked In</span>")
+		to_chat(user, span_caution("Фиксация завершена"))
 		new /obj/machinery/telepad_cargo(user.loc)
-		playsound(src, 'sound/effects/pop.ogg', 100, 1, 1)
+		playsound(src, 'sound/effects/pop.ogg', 100, TRUE, 1)
 		qdel(src)
 	return

@@ -84,7 +84,6 @@
 	requires_power = FALSE
 	static_lighting = FALSE
 	base_lighting_alpha = 255
-	base_lighting_color = COLOR_WHITE
 
 /area/vision_change_area/awaymission/evil_santa/end/hall
 	name = "Evil santa hall"
@@ -183,9 +182,9 @@
 
 /mob/living/simple_animal/hostile/monkey_shaftminer
 	name = "Monkey shaftminer"
-	speak = list("RAWR!","Rawr!","GRR!","Growl!")
+	speak = list("РЫЫЫ!","Рррр...","ГРРР!!!","РААА!!")
 	speak_chance = 10
-	speak_emote = list("growls","roars")
+	speak_emote = list("рычит", "ревёт")
 	faction = list("hostile", "syndicate", "winter")
 	icon = 'icons/mob/simple_human.dmi'
 	icon_state = "monkey_shaftminer"
@@ -199,7 +198,6 @@
 
 /obj/effect/mob_spawn/human/corpse/monkey_shaftminer
 	mob_type = /mob/living/carbon/human/lesser/monkey
-	death = TRUE
 	name = "Dead monkey shaftminer"
 	icon = 'icons/obj/items.dmi'
 	icon_state = "sheet-monkey"

@@ -2,11 +2,10 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 
 /obj/item/extraction_pack
 	name = "fulton extraction pack"
-	desc = "A balloon that can be used to extract equipment or personnel to a Fulton Recovery Beacon. Anything not bolted down can be moved. Link the pack to a beacon by using the pack in hand."
+	desc = "Cистема подъема и доставки людей и предметов воздушным путем. Можно переместить всё, что не прикручено намертво. Свяжите комплект с маяком, активировав его в руке."
 	gender = MALE
 	icon = 'icons/obj/fulton.dmi'
 	icon_state = "extraction_pack"
-	w_class = WEIGHT_CLASS_NORMAL
 	var/obj/structure/extraction_point/beacon
 	var/list/beacon_networks = list("station")
 	var/uses_left = 3
@@ -14,9 +13,19 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 	var/safe_for_living_creatures = TRUE
 	var/max_force_fulton = MOVE_FORCE_STRONG
 
+/obj/item/extraction_pack/get_ru_names()
+	return list(
+		NOMINATIVE = "фултон",
+		GENITIVE = "фултона",
+		DATIVE = "фултону",
+		ACCUSATIVE = "фултон",
+		INSTRUMENTAL = "фултоном",
+		PREPOSITIONAL = "фултоне"
+	)
+
 /obj/item/extraction_pack/examine(mob/user)
 	. = ..()
-	. += "<span class='notice'>It has [uses_left] use\s remaining.</span>"
+	. += span_notice("Осталось использований: [uses_left].")
 
 /obj/item/extraction_pack/attack_self(mob/user)
 	var/list/possible_beacons = list()
@@ -32,7 +41,7 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 	else
 		var/A
 
-		A = tgui_input_list(user, "Select a beacon to connect to", "Balloon Extraction Pack", possible_beacons)
+		A = tgui_input_list(user, "Выберите маяк для подключения", "Фултон", possible_beacons)
 
 		if(!A)
 			return
@@ -66,7 +75,7 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 		return
 	else
 		if(!safe_for_living_creatures && check_for_living_mobs(A))
-			to_chat(user, "<span class='warning'>[src] is not safe for use with living creatures, they wouldn't survive the trip back!</span>")
+			to_chat(user, span_warning("[capitalize(declent_ru(NOMINATIVE))] небезопасен для живых существ – они не переживут транспортировку!"))
 			return
 		if(!isturf(A.loc)) // no extracting stuff inside other stuff
 			return
@@ -106,7 +115,7 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 			balloon.appearance_flags = RESET_COLOR | RESET_ALPHA | RESET_TRANSFORM
 			holder_obj.cut_overlay(balloon2)
 			holder_obj.add_overlay(balloon)
-			playsound(holder_obj.loc, 'sound/items/fultext_deploy.ogg', 50, 1, -3)
+			playsound(holder_obj.loc, 'sound/items/fultext_deploy.ogg', 50, TRUE, -3)
 			animate(holder_obj, pixel_z = 10, time = 20)
 			sleep(20)
 			animate(holder_obj, pixel_z = 15, time = 10)
@@ -117,7 +126,7 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 			sleep(10)
 			animate(holder_obj, pixel_z = 10, time = 10)
 			sleep(10)
-			playsound(holder_obj.loc, 'sound/items/fultext_launch.ogg', 50, 1, -3)
+			playsound(holder_obj.loc, 'sound/items/fultext_launch.ogg', 50, TRUE, -3)
 			animate(holder_obj, pixel_z = 1000, time = 30)
 			if(ishuman(A))
 				var/mob/living/carbon/human/L = A
@@ -131,7 +140,7 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 					continue
 				flooring_near_beacon += floor
 			if(!length(flooring_near_beacon))
-				to_chat(user, "<span class='notice'>It is impossible to find a connected beacon. Your fulton pack brings you back.</span>")
+				to_chat(user, span_notice("Не удаётся найти подключённый маяк. Фултон возвращается к вам."))
 				flooring_near_beacon = get_turf(user)
 			holder_obj.forceMove(pick(flooring_near_beacon))
 			animate(holder_obj, pixel_z = 10, time = 50)
@@ -159,9 +168,19 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 
 /obj/item/fulton_core
 	name = "extraction beacon signaller"
-	desc = "Emits a signal which fulton recovery devices can lock onto. Activate in hand to create a beacon."
+	desc = "Излучает сигнал, на который могут ориентироваться устройства фултон. Активируйте в руке, чтобы создать маяк."
 	icon = 'icons/obj/stock_parts.dmi'
 	icon_state = "subspace_amplifier"
+
+/obj/item/fulton_core/get_ru_names()
+	return list(
+		NOMINATIVE = "маяк фултона",
+		GENITIVE = "маяка фултона",
+		DATIVE = "маяку фултона",
+		ACCUSATIVE = "маяк фултона",
+		INSTRUMENTAL = "маяком фултона",
+		PREPOSITIONAL = "маяке фултона"
+	)
 
 /obj/item/fulton_core/attack_self(mob/user)
 	if(do_after(user, 1.5 SECONDS, user) && !QDELETED(src))
@@ -171,16 +190,35 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 
 /obj/structure/extraction_point
 	name = "fulton recovery beacon"
-	desc = "A beacon for the fulton recovery system. Activate a pack in your hand to link it to a beacon."
+	desc = "Излучает сигнал, на который могут ориентироваться устройства фултон."
 	icon = 'icons/obj/fulton.dmi'
 	icon_state = "extraction_point"
 	anchored = TRUE
-	density = FALSE
 	var/beacon_network = "station"
+
+/obj/structure/extraction_point/get_ru_names()
+	return list(
+		NOMINATIVE = "маяк фултона",
+		GENITIVE = "маяка фултона",
+		DATIVE = "маяку фултона",
+		ACCUSATIVE = "маяк фултона",
+		INSTRUMENTAL = "маяком фултона",
+		PREPOSITIONAL = "маяке фултона"
+	)
+
 
 /obj/structure/extraction_point/Initialize(mapload)
 	. = ..()
-	name += " ([rand(100,999)]) ([get_location_name(src)])"
+	var/random_value = "([rand(100, 999)]) ([get_location_name(src)])"
+	name += " [random_value]"
+	ru_names = list(
+		NOMINATIVE = "маяк фултона [random_value]",
+		GENITIVE = "маяка фултона [random_value]",
+		DATIVE = "маяку фултона [random_value]",
+		ACCUSATIVE = "маяк фултона [random_value]",
+		INSTRUMENTAL = "маяком фултона [random_value]",
+		PREPOSITIONAL = "маяке фултона [random_value]"
+	)
 	GLOB.total_extraction_beacons += src
 
 /obj/structure/extraction_point/Destroy()

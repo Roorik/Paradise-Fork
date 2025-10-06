@@ -1,7 +1,7 @@
 /datum/gear/suit
 	subtype_path = /datum/gear/suit
 	slot = ITEM_SLOT_CLOTH_OUTER
-	sort_category = "External Wear"
+	sort_category = "Верхняя одежда"
 
 //WINTER COATS
 /datum/gear/suit/coat
@@ -33,7 +33,7 @@
 /datum/gear/suit/coat/job/med
 	index_name = "winter coat, medical"
 	path = /obj/item/clothing/suit/hooded/wintercoat/medical
-	allowed_roles = list(JOB_TITLE_CMO, JOB_TITLE_DOCTOR, JOB_TITLE_INTERN, JOB_TITLE_CHEMIST, JOB_TITLE_PSYCHIATRIST, JOB_TITLE_PARAMEDIC, JOB_TITLE_VIROLOGIST, JOB_TITLE_BRIGDOC , JOB_TITLE_CORONER)
+	allowed_roles = list(JOB_TITLE_CMO, JOB_TITLE_DOCTOR, JOB_TITLE_MINING_MEDIC, JOB_TITLE_INTERN, JOB_TITLE_CHEMIST, JOB_TITLE_PSYCHIATRIST, JOB_TITLE_PARAMEDIC, JOB_TITLE_VIROLOGIST, JOB_TITLE_BRIGDOC , JOB_TITLE_CORONER)
 
 /datum/gear/suit/coat/job/cmo
 	index_name = "winter coat, chief medical officer"
@@ -83,7 +83,7 @@
 /datum/gear/suit/coat/job/miner
 	index_name = "winter coat, miner"
 	path = /obj/item/clothing/suit/hooded/wintercoat/miner
-	allowed_roles = list(JOB_TITLE_MINER)
+	allowed_roles = list(JOB_TITLE_MINER, JOB_TITLE_MINING_MEDIC)
 
 /datum/gear/suit/coat/job/hop
 	index_name = "winter coat, head of personnel"
@@ -91,6 +91,10 @@
 	allowed_roles = list(JOB_TITLE_HOP)
 
 //LABCOATS
+/datum/gear/suit/labcoat
+	index_name = "labcoat"
+	path = /obj/item/clothing/suit/storage/labcoat
+
 /datum/gear/suit/labcoat_emt
 	index_name = "labcoat, paramedic"
 	path = /obj/item/clothing/suit/storage/labcoat/emt
@@ -119,7 +123,7 @@
 
 /datum/gear/suit/miljacket
 	index_name = "military jacket, select"
-	display_name = "military jacket"
+	display_name = "Армейская куртка"
 	path = /obj/item/clothing/suit/jacket/miljacket
 
 /datum/gear/suit/miljacket/New()
@@ -192,7 +196,7 @@
 /datum/gear/suit/suragi_jacket/medic
 	index_name = "Suragi Jacket - Medical"
 	path = /obj/item/clothing/suit/storage/suragi_jacket/medic
-	allowed_roles = list(JOB_TITLE_DOCTOR, JOB_TITLE_INTERN, JOB_TITLE_PSYCHIATRIST, JOB_TITLE_PARAMEDIC, JOB_TITLE_CORONER)
+	allowed_roles = list(JOB_TITLE_DOCTOR, JOB_TITLE_MINING_MEDIC, JOB_TITLE_INTERN, JOB_TITLE_PSYCHIATRIST, JOB_TITLE_PARAMEDIC, JOB_TITLE_CORONER)
 
 
 /datum/gear/suit/suragi_jacket/medsec
@@ -243,33 +247,36 @@
 
 /datum/gear/suit/hoodie
 	index_name = "hoodie, select"
-	display_name = "hoodie"
+	display_name = "Худи"
 	path = /obj/item/clothing/suit/hooded/hoodie
 
 /datum/gear/suit/hoodie/New()
 	..()
-	var/list/hoods = list(/obj/item/clothing/suit/hooded/hoodie,
-						  /obj/item/clothing/suit/hooded/hoodie/tp,
-						  /obj/item/clothing/suit/hooded/hoodie/nt,
-						  /obj/item/clothing/suit/hooded/hoodie/lam,
-						  /obj/item/clothing/suit/hooded/hoodie/cut,
-						  /obj/item/clothing/suit/hooded/hoodie/mit,
-						  /obj/item/clothing/suit/hooded/hoodie/blue,
-						  )
+	var/list/hoods = list(
+		/obj/item/clothing/suit/hooded/hoodie,
+		/obj/item/clothing/suit/hooded/hoodie/tp,
+		/obj/item/clothing/suit/hooded/hoodie/nt,
+		/obj/item/clothing/suit/hooded/hoodie/lam,
+		/obj/item/clothing/suit/hooded/hoodie/cut,
+		/obj/item/clothing/suit/hooded/hoodie/mit,
+		/obj/item/clothing/suit/hooded/hoodie/blue,
+	)
 	gear_tweaks += new /datum/gear_tweak/path(hoods, src, TRUE)
 
 //SUITS!
 
 /datum/gear/suit/blacksuit
 	index_name = "suit jacket, select"
-	display_name = "suit jacket"
+	display_name = "Пиджак"
 	path = /obj/item/clothing/suit/storage/lawyer/blackjacket
 
 /datum/gear/suit/blacksuit/New()
 	..()
-	var/list/suits = list("black" = /obj/item/clothing/suit/storage/lawyer/blackjacket,
-						  "blue" = /obj/item/clothing/suit/storage/lawyer/bluejacket,
-						  "purple" = /obj/item/clothing/suit/storage/lawyer/purpjacket,)
+	var/list/suits = list(
+		"black" = /obj/item/clothing/suit/storage/lawyer/blackjacket,
+		"blue" = /obj/item/clothing/suit/storage/lawyer/bluejacket,
+		"purple" = /obj/item/clothing/suit/storage/lawyer/purpjacket
+	)
 	gear_tweaks += new /datum/gear_tweak/path(suits, src)
 
 //Robes!
@@ -286,5 +293,13 @@
 	path = /obj/item/clothing/suit/suspenders
 
 /datum/gear/suit/suspenders/New()
+	..()
+	gear_tweaks += new /datum/gear_tweak/color(parent = src)
+
+/datum/gear/suit/bomber
+	index_name = "bomber"
+	path = /obj/item/clothing/suit/storage/bomber
+
+/datum/gear/suit/bomber/New()
 	..()
 	gear_tweaks += new /datum/gear_tweak/color(parent = src)

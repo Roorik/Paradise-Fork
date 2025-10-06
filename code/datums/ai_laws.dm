@@ -1,5 +1,3 @@
-#define BASE_LAW_TYPE /datum/ai_laws/nanotrasen
-
 /datum/ai_law
 	var/law = ""
 	var/index = 0
@@ -18,7 +16,7 @@
 	return 0
 
 /datum/ai_law/sixsixsix/get_index()
-	return 	666
+	return	666
 
 
 /datum/ai_laws
@@ -88,6 +86,8 @@
 
 	if(full_sync || ion_laws.len)
 		S.laws.clear_ion_laws()
+	if(full_sync || devil_laws.len)
+		S.laws.clear_sixsixsix_laws()
 	if(full_sync || inherent_laws.len)
 		S.laws.clear_inherent_laws()
 	if(full_sync || supplied_laws.len)
@@ -95,6 +95,8 @@
 
 	for(var/datum/ai_law/law in ion_laws)
 		S.laws.add_ion_law(law.law)
+	for(var/datum/ai_law/law in devil_laws)
+		S.laws.set_sixsixsix_law(law.law)
 	for(var/datum/ai_law/law in inherent_laws)
 		S.laws.add_inherent_law(law.law)
 	for(var/datum/ai_law/law in supplied_laws)
@@ -102,7 +104,7 @@
 			S.laws.add_supplied_law(law.index, law.law)
 
 
-/mob/living/silicon/proc/sync_zeroth(var/datum/ai_law/zeroth_law, var/datum/ai_law/zeroth_law_borg)
+/mob/living/silicon/proc/sync_zeroth(datum/ai_law/zeroth_law, datum/ai_law/zeroth_law_borg)
 	if(!is_special_character(src) || !mind.is_original_mob(src))
 		if(zeroth_law_borg)
 			laws.set_zeroth_law(zeroth_law_borg.law)
@@ -111,14 +113,14 @@
 		else
 			laws.clear_zeroth_laws()
 
-/mob/living/silicon/ai/sync_zeroth(var/datum/ai_law/zeroth_law, var/datum/ai_law/zeroth_law_borg)
+/mob/living/silicon/ai/sync_zeroth(datum/ai_law/zeroth_law, datum/ai_law/zeroth_law_borg)
 	if(zeroth_law)
 		laws.set_zeroth_law(zeroth_law.law, zeroth_law_borg ? zeroth_law_borg.law : null)
 
 /****************
 *	Add Laws	*
 ****************/
-/datum/ai_laws/proc/set_zeroth_law(var/law, var/law_borg = null)
+/datum/ai_laws/proc/set_zeroth_law(law, law_borg = null)
 	if(!law)
 		return
 
@@ -129,7 +131,7 @@
 		zeroth_law_borg = null
 	sorted_laws.Cut()
 
-/datum/ai_laws/proc/set_sixsixsix_law(var/law)
+/datum/ai_laws/proc/set_sixsixsix_law(law)
 	if(!law)
 		return
 
@@ -144,7 +146,7 @@
 
 	sorted_laws.Cut()
 
-/datum/ai_laws/proc/add_ion_law(var/law)
+/datum/ai_laws/proc/add_ion_law(law)
 	if(!law)
 		return
 
@@ -159,7 +161,7 @@
 
 	sorted_laws.Cut()
 
-/datum/ai_laws/proc/add_inherent_law(var/law)
+/datum/ai_laws/proc/add_inherent_law(law)
 	if(!law)
 		return
 
@@ -174,7 +176,7 @@
 
 	sorted_laws.Cut()
 
-/datum/ai_laws/proc/add_supplied_law(var/number, var/law)
+/datum/ai_laws/proc/add_supplied_law(number, law)
 	if(!law)
 		return
 
@@ -201,31 +203,32 @@
 /****************
 *	Remove Laws	*
 *****************/
-/datum/ai_laws/proc/delete_law(var/datum/ai_law/law)
+/datum/ai_laws/proc/delete_law(datum/ai_law/law)
 	if(istype(law))
 		law.delete_law(src)
 
-/datum/ai_law/proc/delete_law(var/datum/ai_laws/laws)
+/datum/ai_law/proc/delete_law(datum/ai_laws/laws)
+	return
 
-/datum/ai_law/zero/delete_law(var/datum/ai_laws/laws)
+/datum/ai_law/zero/delete_law(datum/ai_laws/laws)
 	laws.clear_zeroth_laws()
 
-/datum/ai_law/ion/delete_law(var/datum/ai_laws/laws)
+/datum/ai_law/ion/delete_law(datum/ai_laws/laws)
 	laws.internal_delete_law(laws.ion_laws, laws.state_ion, src)
 
-/datum/ai_law/sixsixsix/delete_law(var/datum/ai_laws/laws)
+/datum/ai_law/sixsixsix/delete_law(datum/ai_laws/laws)
 	laws.internal_delete_law(laws.devil_laws, laws.state_devil, src)
 
-/datum/ai_law/inherent/delete_law(var/datum/ai_laws/laws)
+/datum/ai_law/inherent/delete_law(datum/ai_laws/laws)
 	laws.internal_delete_law(laws.inherent_laws, laws.state_inherent, src)
 
-/datum/ai_law/supplied/delete_law(var/datum/ai_laws/laws)
+/datum/ai_law/supplied/delete_law(datum/ai_laws/laws)
 	var/index = laws.supplied_laws.Find(src)
 	if(index)
 		laws.supplied_laws[index] = ""
 		laws.state_supplied[index] = 1
 
-/datum/ai_laws/proc/internal_delete_law(var/list/datum/ai_law/laws, var/list/state, var/list/datum/ai_law/law)
+/datum/ai_laws/proc/internal_delete_law(list/datum/ai_law/laws, list/state, list/datum/ai_law/law)
 	var/index = laws.Find(law)
 	if(index)
 		laws -= law
@@ -256,15 +259,26 @@
 	supplied_laws.Cut()
 	sorted_laws.Cut()
 
-/datum/ai_laws/proc/show_laws(var/who)
+/datum/ai_laws/proc/show_laws(who)
 	sort_laws()
 	for(var/datum/ai_law/law in sorted_laws)
 		if(law == zeroth_law_borg)
 			continue
 		if(law == zeroth_law)
-			to_chat(who, "<span class='danger'>[law.get_index()]. [law.law]</span>")
+			to_chat(who, span_danger("[law.get_index()]. [law.law]"))
 		else
 			to_chat(who, "[law.get_index()]. [law.law]")
+
+/datum/ai_laws/proc/return_laws_text()
+	. = list()
+	sort_laws()
+	for(var/datum/ai_law/law in sorted_laws)
+		if(law == zeroth_law_borg)
+			continue
+		if(law == zeroth_law)
+			. += span_danger("[law.get_index()]. [law.law]")
+		else
+			. += "[law.get_index()]. [law.law]"
 
 /********************
 *	Stating Laws	*
@@ -272,52 +286,60 @@
 /********
 *	Get	*
 ********/
-/datum/ai_laws/proc/get_state_law(var/datum/ai_law/law)
+/datum/ai_laws/proc/get_state_law(datum/ai_law/law)
 	return law.get_state_law(src)
 
-/datum/ai_law/proc/get_state_law(var/datum/ai_laws/laws)
+/datum/ai_law/proc/get_state_law(datum/ai_laws/laws)
+	return
 
-/datum/ai_law/zero/get_state_law(var/datum/ai_laws/laws)
+/datum/ai_law/zero/get_state_law(datum/ai_laws/laws)
 	if(src == laws.zeroth_law)
 		return laws.state_zeroth
 
-/datum/ai_law/ion/get_state_law(var/datum/ai_laws/laws)
+/datum/ai_law/sixsixsix/get_state_law(datum/ai_laws/laws)
+	return laws.get_state_internal(laws.devil_laws, laws.state_devil, src)
+
+/datum/ai_law/ion/get_state_law(datum/ai_laws/laws)
 	return laws.get_state_internal(laws.ion_laws, laws.state_ion, src)
 
-/datum/ai_law/inherent/get_state_law(var/datum/ai_laws/laws)
+/datum/ai_law/inherent/get_state_law(datum/ai_laws/laws)
 	return laws.get_state_internal(laws.inherent_laws, laws.state_inherent, src)
 
-/datum/ai_law/supplied/get_state_law(var/datum/ai_laws/laws)
+/datum/ai_law/supplied/get_state_law(datum/ai_laws/laws)
 	return laws.get_state_internal(laws.supplied_laws, laws.state_supplied, src)
 
-/datum/ai_laws/proc/get_state_internal(var/list/datum/ai_law/laws, var/list/state, var/list/datum/ai_law/law)
+/datum/ai_laws/proc/get_state_internal(list/datum/ai_law/laws, list/state, list/datum/ai_law/law)
 	var/index = laws.Find(law)
 	if(index)
 		return state[index]
-	return 0
+	return FALSE
 
 /********
 *	Set	*
 ********/
-/datum/ai_laws/proc/set_state_law(var/datum/ai_law/law, var/state)
+/datum/ai_laws/proc/set_state_law(datum/ai_law/law, state)
 	law.set_state_law(src, state)
 
-/datum/ai_law/proc/set_state_law(var/datum/ai_law/law, var/state)
+/datum/ai_law/proc/set_state_law(datum/ai_law/law, state)
+	return
 
-/datum/ai_law/zero/set_state_law(var/datum/ai_laws/laws, var/state)
+/datum/ai_law/zero/set_state_law(datum/ai_laws/laws, state)
 	if(src == laws.zeroth_law)
 		laws.state_zeroth = state
 
-/datum/ai_law/ion/set_state_law(var/datum/ai_laws/laws, var/state)
+/datum/ai_law/ion/set_state_law(datum/ai_laws/laws, state)
 	laws.set_state_law_internal(laws.ion_laws, laws.state_ion, src, state)
 
-/datum/ai_law/inherent/set_state_law(var/datum/ai_laws/laws, var/state)
+/datum/ai_law/sixsixsix/set_state_law(datum/ai_laws/laws, state)
+	laws.set_state_law_internal(laws.devil_laws, laws.state_devil, src, state)
+
+/datum/ai_law/inherent/set_state_law(datum/ai_laws/laws, state)
 	laws.set_state_law_internal(laws.inherent_laws, laws.state_inherent, src, state)
 
-/datum/ai_law/supplied/set_state_law(var/datum/ai_laws/laws, var/state)
+/datum/ai_law/supplied/set_state_law(datum/ai_laws/laws, state)
 	laws.set_state_law_internal(laws.supplied_laws, laws.state_supplied, src, state)
 
-/datum/ai_laws/proc/set_state_law_internal(var/list/datum/ai_law/laws, var/list/state, var/list/datum/ai_law/law, var/do_state)
+/datum/ai_laws/proc/set_state_law_internal(list/datum/ai_law/laws, list/state, list/datum/ai_law/law, do_state)
 	var/index = laws.Find(law)
 	if(index)
 		state[index] = do_state

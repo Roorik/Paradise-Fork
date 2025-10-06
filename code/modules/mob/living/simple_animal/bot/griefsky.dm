@@ -1,14 +1,6 @@
 /mob/living/simple_animal/bot/secbot/griefsky //This bot is powerful. If you managed to get 4 eswords somehow, you deserve this horror. Emag him for best results.
-	name = "\improper General Griefsky"
+	name = "General Griefsky"
 	desc = "Это охранный робот с четырьмя лазерными мечами в руках..?"
-	ru_names = list(
-		NOMINATIVE = "Генерал Грифски",
-		GENITIVE = "Генерала Грифски",
-		DATIVE = "Генералу Грифски",
-		ACCUSATIVE = "Генерала Грифски",
-		INSTRUMENTAL = "Генералом Грифски",
-		PREPOSITIONAL = "Генерале Грифски",
-	)
 	icon_state = "griefsky0"
 	health = 100
 	maxHealth = 100
@@ -27,22 +19,23 @@
 	var/frustration_number = 15
 	var/syndie = FALSE	// taipan griefsky
 
+/mob/living/simple_animal/bot/secbot/griefsky/get_ru_names()
+	return list(
+		NOMINATIVE = "Генерал Грифски",
+		GENITIVE = "Генерала Грифски",
+		DATIVE = "Генералу Грифски",
+		ACCUSATIVE = "Генерала Грифски",
+		INSTRUMENTAL = "Генералом Грифски",
+		PREPOSITIONAL = "Генерале Грифски",
+	)
 
 /mob/living/simple_animal/bot/secbot/griefsky/toy  //A toy version of general griefsky!
 	name = "Genewul Giftskee"
 	desc = "Очаровательный охранный робот с четырьмя игрушечными мечами в руках. Прелесть!"
-	ru_names = list(
-		NOMINATIVE = "Гиневал Гифтски",
-		GENITIVE = "Гиневала Гифтски",
-		DATIVE = "Гиневалу Гифтски",
-		ACCUSATIVE = "Гиневала Гифтски",
-		INSTRUMENTAL = "Гиневалом Гифтски",
-		PREPOSITIONAL = "Гиневале Гифтски",
-	)
 	spin_icon = "griefskyj-c"
 	health = 50
 	maxHealth = 50
-	radio_channel = "Service" //we dont report sec anymore!
+	radio_channel = SRV_FREQ_NAME //we dont report sec anymore!
 	dmg = 0
 	block_chance_melee = 1
 	block_chance_ranged = 1
@@ -52,6 +45,15 @@
 	frustration_number = 5
 	locked = FALSE
 
+/mob/living/simple_animal/bot/secbot/griefsky/toy/get_ru_names()
+	return list(
+		NOMINATIVE = "Гиневал Гифтски",
+		GENITIVE = "Гиневала Гифтски",
+		DATIVE = "Гиневалу Гифтски",
+		ACCUSATIVE = "Гиневала Гифтски",
+		INSTRUMENTAL = "Гиневалом Гифтски",
+		PREPOSITIONAL = "Гиневале Гифтски",
+	)
 
 /obj/machinery/bot_core/toy
 	req_access = list(ACCESS_MAINT_TUNNELS, ACCESS_THEATRE, ACCESS_ROBOTICS)
@@ -60,18 +62,10 @@
 /mob/living/simple_animal/bot/secbot/griefsky/syndicate
 	name = "General Syndie"
 	desc = "В процессе его создания пострадало как минимум 24 агента. 22 из них не выжили..."
-	ru_names = list(
-		NOMINATIVE = "Генерал Синди",
-		GENITIVE = "Генерала Синди",
-		DATIVE = "Генералу Синди",
-		ACCUSATIVE = "Генерала Синди",
-		INSTRUMENTAL = "Генералом Синди",
-		PREPOSITIONAL = "Генерале Синди",
-	)
 	icon_state = "general_syndie0"
 	base_icon = "general_syndie"
 	spin_icon = "general_syndie-c"
-	radio_channel = "SyndTaipan"
+	radio_channel = SYND_TAIPAN_FREQ_NAME
 	faction = list("syndicate")
 	allow_pai = TRUE
 	auto_patrol = TRUE
@@ -82,6 +76,15 @@
 	bot_core_type = /obj/machinery/bot_core/syndicate
 	syndie = TRUE
 
+/mob/living/simple_animal/bot/secbot/griefsky/syndicate/get_ru_names()
+	return list(
+		NOMINATIVE = "Генерал Синди",
+		GENITIVE = "Генерала Синди",
+		DATIVE = "Генералу Синди",
+		ACCUSATIVE = "Генерала Синди",
+		INSTRUMENTAL = "Генералом Синди",
+		PREPOSITIONAL = "Генерале Синди",
+	)
 
 /obj/machinery/bot_core/syndicate
 	req_access = list(ACCESS_SYNDICATE)
@@ -107,7 +110,7 @@
 
 /mob/living/simple_animal/bot/secbot/griefsky/emag_act(mob/user)
 	..()
-	light_color = LIGHT_COLOR_PURE_RED //if you see a red one. RUN!!
+	light_color = LIGHT_COLOR_INTENSE_RED //if you see a red one. RUN!!
 
 
 /mob/living/simple_animal/bot/secbot/griefsky/secbot_crossed(mob/living/carbon/arrived)
@@ -130,7 +133,7 @@
 	retaliate(P.firer)
 	if((icon_state == spin_icon) && (prob(block_chance_ranged))) //only when the eswords are on
 		visible_message("[capitalize(declent_ru(NOMINATIVE))] отражает [P] своим мечом!", projectile_message = TRUE)
-		playsound(loc, 'sound/weapons/blade1.ogg', 50, 1, 0)
+		playsound(loc, 'sound/weapons/blade1.ogg', 50, TRUE, 0)
 	else
 		..()
 
@@ -182,7 +185,7 @@
 				mode = BOT_START_PATROL	// switch to patrol mode
 		if(BOT_HUNT)		// hunting for perp
 			icon_state = spin_icon
-			playsound(loc,'sound/effects/spinsabre.ogg',50,1,-1)
+			playsound(loc,'sound/effects/spinsabre.ogg',50, TRUE,-1)
 			if(frustration >= frustration_number) // general beepsky doesn't give up so easily, jedi scum
 				SSmove_manager.stop_looping(src)
 				set_path(null)
@@ -221,7 +224,7 @@
 
 /mob/living/simple_animal/bot/secbot/griefsky/look_for_perp()
 	set_anchored(FALSE)
-	for (var/mob/living/carbon/C in view(7,src)) //Let's find us a criminal
+	for(var/mob/living/carbon/C in view(7,src)) //Let's find us a criminal
 		if((C.stat) || (C.handcuffed))
 			continue
 
@@ -285,7 +288,7 @@
 		new weapon(Tsec)
 	if(prob(5))
 		new weapon(Tsec)
-	do_sparks(3, 1, src)
+	do_sparks(3, TRUE, src)
 	new /obj/effect/decal/cleanable/blood/oil(loc)
 	qdel(src)
 
@@ -297,7 +300,7 @@
 	retaliate(P.firer)
 	if((icon_state == spin_icon) && (prob(block_chance_ranged))) //only when the eswords are on
 		visible_message("[capitalize(declent_ru(NOMINATIVE))] отражает [P] своим мечом!", projectile_message = TRUE)
-		playsound(loc, 'sound/weapons/blade1.ogg', 50, 1, 0)
+		playsound(loc, 'sound/weapons/blade1.ogg', 50, TRUE, 0)
 	else
 		..()
 

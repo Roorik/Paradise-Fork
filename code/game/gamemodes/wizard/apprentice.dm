@@ -30,11 +30,11 @@
 		teacher.set_machine(src)
 		if(href_list["school"])
 			if(used)
-				to_chat(teacher, "<span class='notice'>You already used this contract!</span>")
+				to_chat(teacher, span_notice("You already used this contract!"))
 				return
-			if (!infinity_uses)
+			if(!infinity_uses)
 				used = 1
-			to_chat(teacher, "<span class='notice'>Apprentice waiting...</span>")
+			to_chat(teacher, span_notice("Apprentice waiting..."))
 			var/image/source = image('icons/obj/cardboard_cutout.dmi', "cutout_wizard")
 			var/list/candidates = SSghost_spawns.poll_candidates("Do you want to play as the wizard apprentice of [teacher.real_name]?", ROLE_WIZARD, TRUE, source = source)
 			if(length(candidates))
@@ -42,7 +42,7 @@
 				new /obj/effect/particle_effect/fluid/smoke(teacher.loc)
 				var/mob/living/carbon/human/apprentice = new/mob/living/carbon/human(teacher.loc)
 				apprentice.key = C.key
-				to_chat(apprentice, "<span class='notice'>You are the [teacher.real_name]'s apprentice! You are bound by magic contract to follow [teacher.p_their()] orders and help [teacher.p_them()] in accomplishing their goals.</span>")
+				to_chat(apprentice, span_notice("You are the [teacher.real_name]'s apprentice! You are bound by magic contract to follow [teacher.p_their()] orders and help [teacher.p_them()] in accomplishing their goals."))
 
 				school_href_choose(href_list, teacher, apprentice)
 
@@ -57,7 +57,7 @@
 				var/wizard_name_first = pick(GLOB.wizard_first)
 				var/wizard_name_second = pick(GLOB.wizard_second)
 				var/randomname = "[wizard_name_first] [wizard_name_second]"
-				var/newname = sanitize(copytext_char(input(apprentice, "You are the wizard's apprentice. Would you like to change your name to something else?", "Name change", randomname) as null|text,1,MAX_NAME_LEN))
+				var/newname = tgui_input_text(apprentice, "You are the wizard's apprentice. Would you like to change your name to something else?", "Name change", randomname, max_length = MAX_NAME_LEN)
 
 				if(!newname)
 					newname = randomname
@@ -77,7 +77,7 @@
 			else
 				used = 0
 				log_game("[teacher] (ckey: [teacher.key]) has failed to spawn aprrentice.")
-				to_chat(teacher, "<span class='warning'>Unable to reach your apprentice! You can either attack the spellbook with the contract to refund your points, or wait and try again later.</span>")
+				to_chat(teacher, span_warning("Unable to reach your apprentice! You can either attack the spellbook with the contract to refund your points, or wait and try again later."))
 	return
 
 /////////Apprentice Choose Book//////////
@@ -110,9 +110,9 @@
 		apprentice.set_machine(src)
 		if(href_list["school"])
 			if(used)
-				to_chat(apprentice, "<span class='notice'>Учебник уже был изучен!</span>")
+				to_chat(apprentice, span_notice("Учебник уже был изучен!"))
 				return
-			if (!infinity_uses)
+			if(!infinity_uses)
 				used = 1
 
 			school_href_choose(href_list, null, apprentice)
@@ -123,59 +123,61 @@
 /obj/item/contract/proc/school_href_choose(href_list, mob/living/carbon/human/teacher, mob/living/carbon/human/apprentice)
 	var/school_id = href_list["school"]
 	var/datum/possible_schools/schools = new
-	for (var/datum/magick_school/school in schools.schools_list)
-		if (school_id != school.id)
+	for(var/datum/magick_school/school in schools.schools_list)
+		if(school_id != school.id)
 			continue
 		school.owner = apprentice
 		school.kit()
-		if (teacher)
-			to_chat(teacher, "<B>Ваш подопечный прибыл по первому вашему зову. Прилежно и усердно обучаясь у вас, он смог выучить одну из школ магии. [school.desc]")
-			to_chat(apprentice, "<B>Ваше служение не осталось незамеченный. Обучаясь у [teacher.real_name], вы смогли научиться одной из школ магии. [school.desc]")
+		if(teacher)
+			to_chat(teacher, "<b>Ваш подопечный прибыл по первому вашему зову. Прилежно и усердно обучаясь у вас, он смог выучить одну из школ магии. [school.desc]</b>")
+			to_chat(apprentice, "<b>Ваше служение не осталось незамеченный. Обучаясь у [teacher.real_name], вы смогли научиться одной из школ магии. [school.desc]</b>")
 		else
-			to_chat(apprentice, "<B>Выбрана [school.name]. [school.desc]")
+			to_chat(apprentice, "<b>Выбрана [school.name]. [school.desc]</b>")
 		break
 
 /obj/item/contract/attack_self(mob/user as mob)
 	user.set_machine(src)
-	var/dat = {"<!DOCTYPE html><meta charset="UTF-8">"}
+	var/dat = ""
 	if(used)
 		dat += used_contract()
 	else
 		dat += tittle()
 
 		var/datum/possible_schools/schools = new
-		for (var/datum/magick_school/school in schools.schools_list)
-			dat += "<A href='byond://?src=[UID()];school=[school.id]'>[school.name]</A><BR>"
-			dat += "<I>[school.desc]</I><BR>"
+		for(var/datum/magick_school/school in schools.schools_list)
+			dat += "<a href='byond://?src=[UID()];school=[school.id]'>[school.name]</a><br>"
+			dat += "<i>[school.desc]</i><br>"
 
-	user << browse(dat, "window=radio")
-	onclose(user, "radio")
+	var/datum/browser/popup = new(user, "magick_school", "Выбор школы")
+	popup.set_content(dat)
+	popup.open(TRUE)
+	onclose(user, "magick_school")
 	return
 
 ///Титульник в контракте
 /obj/item/contract/proc/tittle()
-	var/dat = "<B>Contract of apprenticeship:</B><BR>"
-	dat += "<I>Using this contract, you may summon an apprentice to aid you on your mission.</I><BR>"
-	dat += "<I>If you are unable to establish contact with your apprentice, you can feed the contract back to the spellbook to refund your points.</I><BR>"
+	var/dat = "<b>Contract of apprenticeship:</b><br>"
+	dat += "<i>Using this contract, you may summon an apprentice to aid you on your mission.</i><br>"
+	dat += "<i>If you are unable to establish contact with your apprentice, you can feed the contract back to the spellbook to refund your points.</i><br>"
 
-	dat += "<B>Which school of magic is your apprentice studying?:</B><BR>"
+	dat += "<b>Which school of magic is your apprentice studying?:</b><br>"
 	return dat
 
 /obj/item/contract/apprentice_choose_book/tittle()
-	var/dat = "<B>Магический учебник:</B><BR>"
-	dat += "<I>Изучив этот учебник, вы определитесь в магии, которую будете практиковать.</I><BR>"
-	dat += "<I>Перед тем как выбрать один из путей, хорошо подумайте и поговорите со своим учителем для получении рекомендаций.</I><BR>"
-	dat += "<I>Если учитель не настроен на разговор - ничего страшного! В данном учебнике приведено краткое описание возможных путей.</I><BR>"
+	var/dat = "<b>Магический учебник:</b><br>"
+	dat += "<i>Изучив этот учебник, вы определитесь в магии, которую будете практиковать.</i><br>"
+	dat += "<i>Перед тем как выбрать один из путей, хорошо подумайте и поговорите со своим учителем для получении рекомендаций.</i><br>"
+	dat += "<i>Если учитель не настроен на разговор - ничего страшного! В данном учебнике приведено краткое описание возможных путей.</i><br>"
 
-	dat += "<BR><B>Какую школу магии вы хотели бы изучать?:</B><BR>"
+	dat += "<br><b>Какую школу магии вы хотели бы изучать?:</b><br>"
 	return dat
 
 ///Сообщение выдаваемое при использовании использованных контрактов
 /obj/item/contract/proc/used_contract()
-	return "<span class='notice'>You have already summoned your apprentice.</span><BR>"
+	return "[span_notice("You have already summoned your apprentice.")]<br>"
 
 /obj/item/contract/apprentice_choose_book/used_contract()
-	return "<span class='notice'>Письмена стерты, а все страницы пусты. Похоже учебник уже был изучен.</span><BR>"
+	return "[span_notice("Письмена стерты, а все страницы пусты. Похоже учебник уже был изучен.")]<br>"
 
 /////////Magick Schools//////////
 
@@ -242,9 +244,8 @@
 	icon_state = "psyamp"
 	name = "Роба межпространства"
 	desc = "Магическая роба прислужника школы пространства, оберегающий владельца от перемещений в агрессивных средах."
-	gas_transfer_coefficient = 0.01
 	permeability_coefficient = 0.01
-	armor = list("melee" = 30, "bullet" = 20, "laser" = 20, "energy" = 30, "bomb" = 20, "bio" = 20, "rad" = 20, "fire" = 100, "acid" = 100)
+	armor = list(MELEE = 30, BULLET = 20, LASER = 20, ENERGY = 30, BOMB = 20, BIO = 20, RAD = 20, FIRE = 100, ACID = 100)
 	strip_delay = 5 SECONDS
 	put_on_delay = 5 SECONDS
 	resistance_flags = FIRE_PROOF | ACID_PROOF
@@ -255,11 +256,8 @@
 	name = "Капюшон Межпространства"
 	desc = "Магический головной убор робы прислужника школы пространства, оберегающий от перемещений в агрессивных средах."
 	gas_transfer_coefficient = 0.01
-	permeability_coefficient = 0.01
-	armor = list("melee" = 30, "bullet" = 20, "laser" = 20, "energy" = 30, "bomb" = 20, "bio" = 20, "rad" = 20, "fire" = 100, "acid" = 100)
+	armor = list(MELEE = 30, BULLET = 20, LASER = 20, ENERGY = 30, BOMB = 20, BIO = 20, RAD = 20, FIRE = 100, ACID = 100)
 	resistance_flags = FIRE_PROOF | ACID_PROOF
-	strip_delay = 5 SECONDS
-	put_on_delay = 5 SECONDS
 
 
 /datum/magick_school/sabotage
@@ -281,7 +279,7 @@
 	desc = "Магическая роба-саботёра. Стильная и приталенная!"
 	gas_transfer_coefficient = 0.01
 	permeability_coefficient = 0.01
-	armor = list("melee" = 30, "bullet" = 20, "laser" = 20, "energy" = 30, "bomb" = 20, "bio" = 20, "rad" = 20, "fire" = 100, "acid" = 100)
+	armor = list(MELEE = 30, BULLET = 20, LASER = 20, ENERGY = 30, BOMB = 20, BIO = 20, RAD = 20, FIRE = 100, ACID = 100)
 	strip_delay = 5 SECONDS
 	put_on_delay = 5 SECONDS
 	resistance_flags = FIRE_PROOF | ACID_PROOF
@@ -293,7 +291,7 @@
 	desc = "Магическая федора-саботёра. Стильная и уважаемая!"
 	gas_transfer_coefficient = 0.01
 	permeability_coefficient = 0.01
-	armor = list("melee" = 30, "bullet" = 20, "laser" = 20, "energy" = 30, "bomb" = 20, "bio" = 20, "rad" = 20, "fire" = 100, "acid" = 100)
+	armor = list(MELEE = 30, BULLET = 20, LASER = 20, ENERGY = 30, BOMB = 20, BIO = 20, RAD = 20, FIRE = 100, ACID = 100)
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 	strip_delay = 5 SECONDS
 	put_on_delay = 5 SECONDS
@@ -332,7 +330,7 @@
 	desc = "Магическая роба последователей школы огня."
 	gas_transfer_coefficient = 0.01
 	permeability_coefficient = 0.01
-	armor = list("melee" = 30, "bullet" = 20, "laser" = 20, "energy" = 30, "bomb" = 20, "bio" = 20, "rad" = 20, "fire" = 100, "acid" = 100)
+	armor = list(MELEE = 30, BULLET = 20, LASER = 20, ENERGY = 30, BOMB = 20, BIO = 20, RAD = 20, FIRE = 100, ACID = 100)
 	strip_delay = 5 SECONDS
 	put_on_delay = 5 SECONDS
 	resistance_flags = FIRE_PROOF | ACID_PROOF
@@ -395,10 +393,9 @@
 	desc = "Магическая роба последователей школы крови."
 	gas_transfer_coefficient = 0.01
 	permeability_coefficient = 0.01
-	armor = list("melee" = 30, "bullet" = 20, "laser" = 20, "energy" = 30, "bomb" = 20, "bio" = 20, "rad" = 20, "fire" = 100, "acid" = 100)
+	armor = list(MELEE = 30, BULLET = 20, LASER = 20, ENERGY = 30, BOMB = 20, BIO = 20, RAD = 20, FIRE = 100, ACID = 100)
 	strip_delay = 5 SECONDS
 	put_on_delay = 5 SECONDS
-	magical = TRUE
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 
 /datum/magick_school/necromantic
@@ -491,7 +488,7 @@
 	owner.equip_or_collect(new /obj/item/clothing/head/wizard/magus(owner), ITEM_SLOT_HEAD)
 
 /datum/magick_school/lavaland
-	name = "Школа Лаваленда"
+	name = "Школа Лазиса"
 	id = "lavaland"
 	desc = "Школа, использующая традиции магии пеплоходцев."
 

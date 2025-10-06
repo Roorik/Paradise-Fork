@@ -1,9 +1,8 @@
 /mob/living/simple_animal/hostile/megafauna
 	name = "megafauna"
-	desc = "Attack the weak point for massive damage."
+	desc = "Атакуйте слабое место для нанесения массивного урона."
 	health = 1000
 	maxHealth = 1000
-	a_intent = INTENT_HARM
 	sentience_type = SENTIENCE_BOSS
 	environment_smash = ENVIRONMENT_SMASH_RWALLS
 	obj_damage = 400
@@ -46,6 +45,16 @@
 	var/enraged_unique_loot
 	/// Only one loot from hardmode
 
+/mob/living/simple_animal/hostile/megafauna/get_ru_names()
+	return list(
+		NOMINATIVE = "мегафауна",
+		GENITIVE = "мегафауны",
+		DATIVE = "мегафауне",
+		ACCUSATIVE = "мегафауну",
+		INSTRUMENTAL = "мегафауной",
+		PREPOSITIONAL = "мегафауне"
+	)
+
 /mob/living/simple_animal/hostile/megafauna/Initialize(mapload)
 	. = ..()
 	if(internal_type && true_spawn)
@@ -60,10 +69,6 @@
 		maxbodytemp = INFINITY, \
 		minbodytemp = 0, \
 	)
-
-/mob/living/simple_animal/hostile/megafauna/Destroy()
-	QDEL_NULL(internal_gps)
-	return ..()
 
 /mob/living/simple_animal/hostile/megafauna/Moved(atom/old_loc, movement_dir, forced, list/old_locs, momentum_change = TRUE)
 	if(target)
@@ -133,8 +138,9 @@
 	if(!L)
 		return FALSE
 	visible_message(
-		"<span class='danger'>[src] devours [L]!</span>",
-		"<span class='userdanger'>You feast on [L], restoring your health!</span>")
+		span_danger("[capitalize(declent_ru(NOMINATIVE))] пожирает [L.declent_ru(ACCUSATIVE)]!"),
+		span_userdanger("Вы пожираете [L.declent_ru(ACCUSATIVE)], восстанавливая своё здоровье!")
+	)
 	if(!is_station_level(z) || client) //NPC monsters won't heal while on station
 		adjustBruteLoss(-L.maxHealth/2)
 	if(L.mind)
@@ -144,13 +150,11 @@
 
 /mob/living/simple_animal/hostile/megafauna/ex_act(severity, target)
 	switch(severity)
-		if(1)
+		if(EXPLODE_DEVASTATE)
 			adjustBruteLoss(250)
-
-		if(2)
+		if(EXPLODE_HEAVY)
 			adjustBruteLoss(100)
-
-		if(3)
+		if(EXPLODE_LIGHT)
 			adjustBruteLoss(50)
 
 /mob/living/simple_animal/hostile/megafauna/GiveTarget(atom/new_target)
@@ -168,7 +172,7 @@
 	..()
 
 
-/mob/living/simple_animal/hostile/megafauna/LoseTarget()
+/mob/living/simple_animal/hostile/megafauna/lose_target()
 	var/mob/living/L = target
 	if(istype(L) && L.mind)
 		add_attack_logs(src, L, "Lost")
@@ -196,7 +200,7 @@
 
 /mob/living/simple_animal/hostile/megafauna/DestroySurroundings()
 	. = ..()
-	for(var/turf/simulated/floor/chasm/C in circlerangeturfs(src, 1))
+	for(var/turf/simulated/floor/chasm/C in circle_range_turfs(src, 1))
 		C.set_density(FALSE) //I hate it.
 		addtimer(CALLBACK(C, TYPE_PROC_REF(/atom, set_density), TRUE), 2 SECONDS)	// Needed to make them path. I hate it.
 

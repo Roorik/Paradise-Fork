@@ -2,30 +2,41 @@
 	name = "жучок"
 	desc = "Кажется, ты видел такого в фильмах про шпионов."
 	icon_state = "spy_spider"
-	frequency = SPY_SPIDER_FREQ
 	freqlock = SPY_SPIDER_FREQ
-	listening = FALSE
-	broadcasting = FALSE
-	canhear_range = 3
 	gender = MALE
-	ru_names = list(NOMINATIVE = "жучок", GENITIVE = "жучка", DATIVE = "жучку", ACCUSATIVE = "жучок", INSTRUMENTAL = "жучком", PREPOSITIONAL = "жучке")
+
+/obj/item/radio/spy_spider/get_ru_names()
+	return list(
+			NOMINATIVE = "жучок",
+			GENITIVE = "жучка",
+			DATIVE = "жучку",
+			ACCUSATIVE = "жучок",
+			INSTRUMENTAL = "жучком",
+			PREPOSITIONAL = "жучке"
+		)
+
+/obj/item/radio/spy_spider/Initialize(mapload)
+	. = ..()
+	set_listening(FALSE)
+	set_broadcasting(FALSE)
+	set_frequency(SPY_SPIDER_FREQ)
 
 /obj/item/radio/spy_spider/examine(mob/user)
 	. = ..()
-	. += "<span class='notice'>Сейчас он [broadcasting ? "включён" : "выключен"]</span>"
+	. += span_notice("Сейчас он [broadcasting ? "включён" : "выключен"]")
 
 /obj/item/radio/spy_spider/attack_self(mob/user)
 	broadcasting = !broadcasting
 	if(broadcasting)
-		to_chat(user, "<span class='notice'>Ты включаешь жучок.</span>")
+		to_chat(user, span_notice("Ты включаешь жучок."))
 	else
-		to_chat(user, "<span class='notice'>Ты выключил жучка.</span>")
+		to_chat(user, span_notice("Ты выключил жучка."))
 	return TRUE
 
 /obj/item/encryptionkey/spy_spider
 	name = "Spy Encryption Key"
 	icon_state = "spy_cypherkey"
-	channels = list("Spy Spider" = TRUE)
+	channels = list(SPY_SPIDER_FREQ_NAME = 1)
 
 /obj/item/storage/lockbox/spy_kit
 	name = "набор жучков"
@@ -46,9 +57,6 @@
  * CLOTHING PART
  */
 
-/obj/item/clothing
-	var/obj/item/radio/spy_spider/spy_spider_attached = null
-
 /obj/item/clothing/Destroy()
 	QDEL_NULL(spy_spider_attached)
 	return ..()
@@ -61,32 +69,9 @@
 	. = ..()
 	spy_spider_attached?.hear_talk(M, message_pieces)
 
-
-/obj/item/clothing/attackby(obj/item/I, mob/user, params)
-	if(istype(I, /obj/item/radio/spy_spider))
-		add_fingerprint(user)
-		var/obj/item/radio/spy_spider/spy_spider = I
-		if(!(slot_flags & (ITEM_SLOT_CLOTH_OUTER|ITEM_SLOT_CLOTH_INNER)))
-			to_chat(user, span_warning("Вы не находите места для жучка."))
-			return ATTACK_CHAIN_PROCEED
-		if(spy_spider_attached)
-			to_chat(user, span_warning("Жучок уже установлен."))
-			return ATTACK_CHAIN_PROCEED
-		if(!spy_spider.broadcasting)
-			to_chat(user, span_warning("Жучок выключен."))
-			return ATTACK_CHAIN_PROCEED
-		if(!user.drop_transfer_item_to_loc(spy_spider, src))
-			return ATTACK_CHAIN_PROCEED
-		spy_spider_attached = spy_spider
-		to_chat(user, span_notice("Вы незаметно прикрепляете жучок к [declent_ru(DATIVE)]."))
-		return ATTACK_CHAIN_BLOCKED_ALL
-
-	return ..()
-
-
 /obj/item/clothing/proc/remove_spy_spider()
 	set name = "Снять жучок"
-	set category = "Object"
+	set category = STATPANEL_OBJECT
 	set src in range(1, usr)
 
 	if(!ishuman(usr))
@@ -122,7 +107,7 @@
 		to_chat(user, span_warning("Жучок уже установлен!"))
 		return .
 
-	if(!spy_spider.broadcasting)
+	if(!spy_spider.get_broadcasting())
 		to_chat(user, span_warning("Жучок выключен!"))
 		return .
 
@@ -130,11 +115,11 @@
 	if(!do_after(user, 3 SECONDS, src, max_interact_count = 1, cancel_on_max = TRUE, cancel_message = attempt_cancel_message, category = DA_CAT_TOOL))
 		return .
 
-	if(QDELETED(clothing_for_attach) || !clothing_for_attach.loc != src || clothing_for_attach.spy_spider_attached || !spy_spider.broadcasting || !user.temporarily_remove_item_from_inventory(spy_spider))
+	if(QDELETED(clothing_for_attach) || !clothing_for_attach.loc != src || clothing_for_attach.spy_spider_attached || !spy_spider.get_broadcasting() || !user.temporarily_remove_item_from_inventory(spy_spider))
 		return .
 
 	. = ATTACK_CHAIN_BLOCKED_ALL
-	to_chat(user, span_info("Вы незаметно прикрепляете жучок к одежде [declent_ru(GENITIVE)]."))
+	to_chat(user, span_notice("Вы незаметно прикрепляете жучок к одежде [declent_ru(GENITIVE)]."))
 	spy_spider.forceMove(clothing_for_attach)
 	clothing_for_attach.spy_spider_attached = spy_spider
 

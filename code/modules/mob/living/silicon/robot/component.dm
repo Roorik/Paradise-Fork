@@ -157,7 +157,6 @@
 /datum/robot_component/binary_communication
 	name = "binary communication device"
 	external_type = /obj/item/robot_parts/robot_component/binary_communication_device
-	max_damage = 30
 
 /datum/robot_component/camera
 	name = "camera"
@@ -175,7 +174,6 @@
 /datum/robot_component/diagnosis_unit
 	name = "self-diagnosis unit"
 	external_type = /obj/item/robot_parts/robot_component/diagnosis_unit
-	max_damage = 30
 
 /mob/living/silicon/robot/proc/initialize_components()
 	// This only initializes the components, it doesn't set them to installed.
@@ -199,7 +197,7 @@
 		D.enable()
 
 // Returns component by it's string name
-/mob/living/silicon/robot/proc/get_component(var/component_name)
+/mob/living/silicon/robot/proc/get_component(component_name)
 	var/datum/robot_component/C = components[component_name]
 	return C
 
@@ -241,11 +239,12 @@
 	name = "radio"
 	icon_state = "radio"
 
-//
-//Robotic Component Analyzer, basically a health analyzer for robots
-//
+////////////////////////////////////////
+// MARK:	Cyborg analyzer
+////////////////////////////////////////
 /obj/item/robotanalyzer
 	name = "cyborg analyzer"
+	desc = "A hand-held scanner able to diagnose robotic injuries and the condition of machinery."
 	icon = 'icons/obj/device.dmi'
 	icon_state = "robotanalyzer"
 	item_state = "analyzer"
@@ -267,10 +266,10 @@
 			span_warning("[user] has analyzed the floor's vitals!"),
 			span_notice("You try to analyze the floor's vitals!"),
 		)
-		to_chat(user, span_info("Analyzing Results for The floor:\n\t Overall Status: Healthy"))
-		to_chat(user, span_info("\t Damage Specifics: [0]-[0]-[0]-[0]"))
-		to_chat(user, span_info("Key: Suffocation/Toxin/Burns/Brute"))
-		to_chat(user, span_info("Body Temperature: ???"))
+		to_chat(user, span_notice("Analyzing Results for The floor:\n\t Overall Status: Healthy"))
+		to_chat(user, span_notice("\t Damage Specifics: [0]-[0]-[0]-[0]"))
+		to_chat(user, span_notice("Key: Suffocation/Toxin/Burns/Brute"))
+		to_chat(user, span_notice("Body Temperature: ???"))
 		return .
 
 	user.visible_message(
@@ -283,30 +282,31 @@
 
 /proc/robot_healthscan(mob/user, mob/living/M)
 	var/scan_type
+	var/list/msgs = list()
 	if(istype(M, /mob/living/silicon/robot))
 		scan_type = "robot"
 	else if(ishuman(M))
 		scan_type = "prosthetics"
 	else
-		to_chat(user, "<span class='warning'>You can't analyze non-robotic things!</span>")
+		to_chat(user, span_warning("You can't analyze non-robotic things!"))
 		return
 
 
 	switch(scan_type)
 		if("robot")
-			var/BU = M.getFireLoss() > 50 	? 	"<b>[M.getFireLoss()]</b>" 		: M.getFireLoss()
-			var/BR = M.getBruteLoss() > 50 	? 	"<b>[M.getBruteLoss()]</b>" 	: M.getBruteLoss()
-			to_chat(user, "<span class='notice'>Analyzing Results for [M]:\n\t Overall Status: [M.stat > 1 ? "fully disabled" : "[M.health]% functional"]</span>")
-			to_chat(user, "\t Key: <font color='#FFA500'>Electronics</font>/<font color='red'>Brute</font>")
-			to_chat(user, "\t Damage Specifics: <font color='#FFA500'>[BU]</font> - <font color='red'>[BR]</font>")
+			var/BU = M.getFireLoss() > 50	?	"<b>[M.getFireLoss()]</b>"		: M.getFireLoss()
+			var/BR = M.getBruteLoss() > 50	?	"<b>[M.getBruteLoss()]</b>"	: M.getBruteLoss()
+			msgs += (span_notice("Analyzing Results for [M]:\n\t Overall Status: [M.stat > 1 ? "fully disabled" : "[M.health]% functional"]"))
+			msgs += ("\t Key: <font color='#FFA500'>Electronics</font>/<font color='red'>Brute</font>")
+			msgs += ("\t Damage Specifics: <font color='#FFA500'>[BU]</font> - <font color='red'>[BR]</font>")
 			if(M.timeofdeath && M.stat == DEAD)
-				to_chat(user, "<span class='notice'>Time of Disable: [station_time_timestamp("hh:mm:ss", M.timeofdeath)]</span>")
+				msgs += (span_notice("Time of Disable: [station_time_timestamp("hh:mm:ss", M.timeofdeath)]"))
 			var/mob/living/silicon/robot/H = M
 			var/list/damaged = H.get_damaged_components(TRUE, TRUE, TRUE) // Get all except the missing ones
 			var/list/missing = H.get_missing_components()
-			to_chat(user, "<span class='notice'>Localized Damage:</span>")
+			msgs += (span_notice("Localized Damage:"))
 			if(!LAZYLEN(damaged) && !LAZYLEN(missing))
-				to_chat(user, "<span class='notice'>\t Components are OK.</span>")
+				msgs += (span_notice("\t Components are OK."))
 			else
 				if(LAZYLEN(damaged))
 					for(var/datum/robot_component/org in damaged)
@@ -319,32 +319,34 @@
 						(org.powered)	?	"Power ON"		:	"<font color='red'>Power OFF</font>"),1)
 				if(LAZYLEN(missing))
 					for(var/datum/robot_component/org in missing)
-						user.show_message("<span class='warning'>\t [capitalize(org.name)]: MISSING</span>")
+						user.show_message(span_warning("\t [capitalize(org.name)]: MISSING"))
 
 			if(H.emagged && prob(5))
-				to_chat(user, "<span class='warning'>\t ERROR: INTERNAL SYSTEMS COMPROMISED</span>")
+				msgs += (span_warning("\t ERROR: INTERNAL SYSTEMS COMPROMISED"))
 
 		if("prosthetics")
 			var/mob/living/carbon/human/H = M
-			to_chat(user, "<span class='notice'>Analyzing Results for \the [H]:</span>")
-			to_chat(user, "Key: <font color='#FFA500'>Electronics</font>/<font color='red'>Brute</font>")
+			msgs += (span_notice("Analyzing Results for \the [H]:"))
+			msgs += ("Key: <font color='#FFA500'>Electronics</font>/<font color='red'>Brute</font>")
 
-			to_chat(user, "<span class='notice'>External prosthetics:</span>")
+			msgs += (span_notice("External prosthetics:"))
 			var/organ_found = FALSE
 			for(var/obj/item/organ/external/bodypart as anything in H.bodyparts)
 				if(!bodypart.is_robotic())
 					continue
 				organ_found = TRUE
-				to_chat(user, "[bodypart.name]: <font color='red'>[bodypart.brute_dam]</font> <font color='#FFA500'>[bodypart.burn_dam]</font>")
+				msgs += ("[bodypart.name]: <font color='red'>[bodypart.brute_dam]</font> <font color='#FFA500'>[bodypart.burn_dam]</font>")
 			if(!organ_found)
-				to_chat(user, "<span class='warning'>No prosthetics located.</span>")
-			to_chat(user, "<hr>")
-			to_chat(user, "<span class='notice'>Internal prosthetics:</span>")
+				msgs += (span_warning("No prosthetics located."))
+			msgs += ("<hr>")
+			msgs += (span_notice("Internal prosthetics:"))
 			organ_found = FALSE
 			for(var/obj/item/organ/internal/organ as anything in H.internal_organs)
 				if(!organ.is_robotic())
 					continue
 				organ_found = TRUE
-				to_chat(user, "[capitalize(organ.name)]: <font color='red'>[organ.damage]</font>")
+				msgs += ("[capitalize(organ.name)]: <font color='red'>[organ.damage]</font>")
 			if(!organ_found)
-				to_chat(user, "<span class='warning'>No prosthetics located.</span>")
+				msgs += (span_warning("No prosthetics located."))
+
+	to_chat(user, chat_box_healthscan(msgs.Join("<br>")))

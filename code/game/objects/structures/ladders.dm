@@ -2,7 +2,6 @@
 /obj/structure/ladder
 	name = "ladder"
 	desc = "A sturdy metal ladder."
-	icon = 'icons/obj/structures.dmi'
 	icon_state = "ladder11"
 	anchored = TRUE
 	var/obj/structure/ladder/down   //the ladder below this one
@@ -13,11 +12,11 @@
 
 /obj/structure/ladder/Initialize(mapload, obj/structure/ladder/up, obj/structure/ladder/down)
 	..()
-	if (up)
+	if(up)
 		src.up = up
 		up.down = src
 		up.update_icon(UPDATE_ICON_STATE)
-	if (down)
+	if(down)
 		src.down = down
 		down.up = src
 		down.update_icon(UPDATE_ICON_STATE)
@@ -73,7 +72,7 @@
 
 /obj/structure/ladder/singularity_pull()
 	if(!(resistance_flags & INDESTRUCTIBLE))
-		visible_message("<span class='danger'>[src] is torn to pieces by the gravitational pull!</span>")
+		visible_message(span_danger("[src] is torn to pieces by the gravitational pull!"))
 		qdel(src)
 
 /obj/structure/ladder/proc/travel(going_up, mob/user, is_ghost, obj/structure/ladder/ladder)
@@ -92,15 +91,15 @@
 		return
 
 	var/list/tool_list = list()
-	if (up)
+	if(up)
 		tool_list["Up"] = image(icon = 'icons/misc/Testing/turf_analysis.dmi', icon_state = "red_arrow", dir = NORTH)
-	if (down)
+	if(down)
 		tool_list["Down"] = image(icon = 'icons/misc/Testing/turf_analysis.dmi', icon_state = "red_arrow", dir = SOUTH)
-	if (!length(tool_list))
+	if(!length(tool_list))
 		to_chat(user, span_warning("[src] doesn't seem to lead anywhere!"))
 		return
 	var/result = show_radial_menu(user, src, tool_list, custom_check = CALLBACK(src, PROC_REF(check_menu), user, is_ghost), require_near = !is_ghost)
-	if (!is_ghost && !in_range(src, user))
+	if(!is_ghost && !in_range(src, user))
 		return  // nice try
 	switch(result)
 		if("Up")
@@ -159,9 +158,15 @@
 
 /obj/structure/ladder/proc/show_fluff_message(going_up, mob/user)
 	if(going_up)
-		user.visible_message("[user] climbs up [src].","<span class='notice'>You climb up [src].</span>")
+		user.visible_message(
+			"[user] climbs up [src].",
+			span_notice("You climb up [src].")
+		)
 	else
-		user.visible_message("[user] climbs down [src].","<span class='notice'>You climb down [src].</span>")
+		user.visible_message(
+			"[user] climbs down [src].",
+			span_notice("You climb down [src].")
+		)
 
 
 // Indestructible away mission ladders which link based on a mapped ID and height value rather than X/Y/Z.
@@ -200,7 +205,7 @@
 			up = unbreakable_ladder
 			unbreakable_ladder.down = src
 			unbreakable_ladder.update_icon(UPDATE_ICON_STATE)
-			if (down)
+			if(down)
 				break  // break if both our connections are filled
 
 	update_icon(UPDATE_ICON_STATE)
@@ -217,9 +222,15 @@
 
 /obj/structure/ladder/unbreakable/dive_point/buoy/show_fluff_message(going_up, mob/user)
 	if(going_up)
-		user.visible_message("[user] swims up [src].","<span class='notice'>You swim up [src].</span>")
+		user.visible_message(
+			"[user] swims up [src].",
+			span_notice("You swim up [src].")
+		)
 	else
-		user.visible_message("[user] swims down [src].","<span class='notice'>You swim down [src].</span>")
+		user.visible_message(
+			"[user] swims down [src].",
+			span_notice("You swim down [src].")
+		)
 
 /obj/structure/ladder/unbreakable/dive_point/anchor
 	name = "diving point anchor"

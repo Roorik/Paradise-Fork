@@ -41,10 +41,6 @@
 	// Optimization, not for setting outside of initialize
 	var/init_air = TRUE
 
-	var/datum/pathnode/PNode = null //associated PathNode in the A* algorithm
-
-	flags = 0
-
 	var/changing_turf = FALSE
 
 	var/list/blueprint_data //for the station blueprints, images of objects eg: pipes
@@ -78,6 +74,17 @@
 	///whether or not this turf forces movables on it to have no gravity (unless they themselves have forced gravity)
 	var/force_no_gravity = FALSE
 
+	///Icon-smoothing variable to map a diagonal wall corner with a fixed underlay.
+	var/list/fixed_underlay = null
+
+	///what /mob/oranges_ear instance is already assigned to us as there should only ever be one.
+	///used for guaranteeing there is only one oranges_ear per turf when assigned, speeds up view() iteration
+	var/mob/oranges_ear/assigned_oranges_ear
+	
+	var/pressure_difference = 0
+	var/pressure_direction = 0
+	var/list/atmos_adjacent_turfs = list()
+	var/atmos_supeconductivity = 0
 
 /turf/Initialize(mapload)
 	SHOULD_CALL_PARENT(FALSE)
@@ -108,7 +115,7 @@
 
 	levelupdate()
 	if(smooth)
-		queue_smooth(src)
+		QUEUE_SMOOTH(src)
 
 	for(var/atom/movable/content as anything in src)
 		Entered(content)
@@ -128,10 +135,6 @@
 
 	ComponentInitialize()
 	return INITIALIZE_HINT_NORMAL
-
-/turf/ComponentInitialize()
-	. = ..()
-	AddComponent(/datum/component/blob_turf_consuming, 0)
 
 /turf/Destroy(force)
 	. = QDEL_HINT_IWILLGC
@@ -183,7 +186,7 @@
 /turf/attack_robot(mob/user)
 	user.Move_Pulled(src)
 
-/turf/ex_act(severity)
+/turf/ex_act(severity, target)
 	return FALSE
 
 /turf/proc/blob_consume()
@@ -205,17 +208,36 @@
 	else if(our_rpd.mode == RPD_DELETE_MODE)
 		our_rpd.delete_all_pipes(user, src)
 
-/turf/bullet_act(obj/projectile/Proj)
-	if(istype(Proj, /obj/projectile/beam/pulse))
-		src.ex_act(2)
+/turf/bullet_act(obj/projectile/proj)
+	if(istype(proj, /obj/projectile/beam/pulse))
+		ex_act(EXPLODE_HEAVY)
 	..()
 	return FALSE
 
-/turf/bullet_act(obj/projectile/Proj)
-	if(istype(Proj, /obj/projectile/bullet/gyro))
-		explosion(src, -1, 0, 2, cause = Proj)
+/turf/bullet_act(obj/projectile/proj)
+	if(istype(proj, /obj/projectile/bullet/gyro))
+		explosion(src, devastation_range = -1, heavy_impact_range = 0, light_impact_range = 2, cause = proj)
 	..()
 	return FALSE
+
+
+// Enter, but hypothetical.
+/turf/proc/can_enter(atom/movable/mover)
+	var/atom/mover_loc = mover.loc
+	var/border_dir = get_dir(src, mover)
+	var/can_pass_self = CanPass(mover, border_dir)
+	if(!can_pass_self)
+		return FALSE
+
+	for(var/atom/movable/obstacle as anything in contents)
+		// Multi tile objects and moving out of other objects.
+		if(obstacle == mover || obstacle == mover_loc)
+			continue
+
+		if(!obstacle.CanPass(mover, border_dir))
+			return FALSE
+
+	return TRUE
 
 
 /turf/Enter(atom/movable/mover)
@@ -296,9 +318,9 @@
 			return
 		if(/turf/baseturf_bottom)
 			path = check_level_trait(z, ZTRAIT_BASETURF) || /turf/space
-			if (!ispath(path))
+			if(!ispath(path))
 				path = text2path(path)
-				if (!ispath(path))
+				if(!ispath(path))
 					warning("Z-level [z] has invalid baseturf '[check_level_trait(z, ZTRAIT_BASETURF)]'")
 					path = /turf/space
 	if(!GLOB.use_preloader && path == type) // Don't no-op if the map loader requires it to be reconstructed
@@ -363,7 +385,7 @@
 		// We are guarenteed to have these overlays because of how generation works
 		var/mutable_appearance/overlay = GLOB.fullbright_overlays[GET_TURF_PLANE_OFFSET(src) + 1]
 		W.add_overlay(overlay)
-	else if (old_always_lit)
+	else if(old_always_lit)
 		var/mutable_appearance/overlay = GLOB.fullbright_overlays[GET_TURF_PLANE_OFFSET(src) + 1]
 		W.cut_overlay(overlay)
 
@@ -537,8 +559,9 @@
 
 
 /turf/handle_fall(mob/living/carbon/faller)
-	if(has_gravity(src))
-		playsound(src, "bodyfall", 50, TRUE)
+	if(!no_gravity(src))
+		playsound(src, SFX_BODYFALL, 50, TRUE)
+
 	faller.drop_from_hands()
 
 
@@ -692,12 +715,20 @@
 
 /// Precipitates a movable (plus whatever buckled to it) to lower z levels if possible and then calls zImpact()
 /turf/proc/zFall(atom/movable/falling, levels = 1, force = FALSE, falling_from_move = FALSE)
-	var/turf/target = get_step_multiz(src, DOWN)
+	if(no_gravity())
+		return FALSE
+
+	// Yes, you can fall up.
+	var/fall_dir = get_gravity() > 0 ? DOWN : UP
+
+	var/turf/target = get_step_multiz(src, fall_dir)
 	if(!target)
 		return FALSE
+
 	var/isliving = isliving(falling)
 	if(!isliving && !isobj(falling))
 		return FALSE
+
 	var/atom/movable/living_buckled
 	if(isliving)
 		var/mob/living/falling_living = falling
@@ -705,9 +736,11 @@
 		if(falling_living.buckled)
 			living_buckled = falling
 			falling = falling_living.buckled
+
 	if(!falling_from_move && falling.currently_z_moving)
 		return FALSE
-	if(!force && !falling.can_z_move(DOWN, src, target, ZMOVE_FALL_FLAGS))
+
+	if(!force && !falling.can_z_move(fall_dir, src, target, ZMOVE_FALL_FLAGS))
 		falling.set_currently_z_moving(FALSE, TRUE)
 		living_buckled?.set_currently_z_moving(FALSE, TRUE)
 		return FALSE
@@ -766,8 +799,10 @@
 	if(mob_hurt || !density)
 		return
 	playsound(src, 'sound/weapons/punch1.ogg', 35, TRUE)
-	C.visible_message(span_danger("[C] slams into [src]!"),
-					span_userdanger("You slam into [src]!"))
+	C.visible_message(
+		span_danger("[capitalize(C.declent_ru(NOMINATIVE))] с размаху вреза[pluralize_ru(C.gender,"ет","ют")]ся в [declent_ru(ACCUSATIVE)]!"),
+		span_userdanger("Вы с размаху врезаетесь в [declent_ru(ACCUSATIVE)]!")
+	)
 	C.take_organ_damage(damage)
 	C.Weaken(0.1 SECONDS)
 
@@ -795,7 +830,7 @@
 
 	for(var/atom/movable/movable_content as anything in contents)
 		// We don't want to block ourselves
-		if((movable_content == source_atom))
+		if(movable_content == source_atom)
 			continue
 		// dont consider ignored atoms or their types
 		if(length(ignore_atoms))
@@ -868,3 +903,20 @@
 	/// Ought to work
 	turf_mask.color = list(255,255,255,0, 255,255,255,0, 255,255,255,0, 0,0,0,0, 0,0,0,255)
 	underlay_appearance.overlays += turf_mask
+
+/proc/get_random_reachable_space_turf()
+	var/list/datum/space_level/reachable_levels = levels_by_trait(REACHABLE)
+	var/trys = 1000
+	var/turf/target_space_turf
+	while(trys > 0) {
+		var/x = rand(1, world.maxx)
+		var/y = rand(1, world.maxy)
+		var/z = pick(reachable_levels)
+		target_space_turf = locate(x, y, z)
+		if(isspaceturf(target_space_turf))
+			break
+
+		trys--
+	}
+
+	return target_space_turf

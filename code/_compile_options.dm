@@ -18,7 +18,7 @@
 #ifdef REFERENCE_TRACKING
 #warn Reference tracking is enabled
 ///Run a lookup on things hard deleting by default.
-//#define GC_FAILURE_HARD_LOOKUP
+#define GC_FAILURE_HARD_LOOKUP
 #ifdef GC_FAILURE_HARD_LOOKUP
 //Ensures all early assets can actually load early
 #define DO_NOT_DEFER_ASSETS
@@ -42,7 +42,7 @@
 #define MAX_PAPER_MESSAGE_LEN 4096
 #define MAX_PAPER_FIELDS 50
 #define MAX_BOOK_MESSAGE_LEN 9216
-#define MAX_NAME_LEN 50 	//diona names can get loooooooong
+#define MAX_NAME_LEN 50	//diona names can get loooooooong
 
 /// Removes characters incompatible with file names.
 #define SANITIZE_FILENAME(text) (GLOB.filename_forbidden_chars.Replace(text, ""))
@@ -66,4 +66,6 @@
 #ifndef PRELOAD_RSC //set to:
 #define PRELOAD_RSC 0 // 0 to allow using external resources or on-demand behaviour;
 #endif // 1 to use the default behaviour;
-	   // 2 for preloading absolutely everything;
+		// 2 for preloading absolutely everything;
+
+//#define PASSIVE_GC

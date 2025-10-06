@@ -55,9 +55,9 @@
 		uneq_all()
 
 	if(!is_component_functioning("radio") || stat == UNCONSCIOUS)
-		radio.on = 0
+		radio.set_on(FALSE)
 	else
-		radio.on = 1
+		radio.set_on(TRUE)
 
 /mob/living/silicon/robot/proc/SetEmagged(new_state)
 	emagged = new_state
@@ -114,7 +114,7 @@
 		weaponlock_time --
 		if(weaponlock_time <= 0)
 			if(src.client)
-				to_chat(src, "<span class='warning'><B>Weapon Lock Timed Out!</span>")
+				to_chat(src, "<span class='warning'><b>Weapon Lock Timed Out!</span>")
 			weapon_lock = 0
 			weaponlock_time = 120
 
@@ -131,7 +131,7 @@
 
 
 /mob/living/silicon/robot/update_fire()
-	var/static/robot_fire_olay = mutable_appearance('icons/mob/OnFire.dmi', "Generic_mob_burning")
+	var/static/robot_fire_olay = mutable_appearance('icons/mob/OnFire.dmi', "human_generic_burn")
 	cut_overlay(robot_fire_olay)
 	if(on_fire)
 		add_overlay(robot_fire_olay)

@@ -4,10 +4,7 @@
 /obj/item/grenade/bananade
 	name = "bananade"
 	desc = "A yellow grenade."
-	w_class = WEIGHT_CLASS_SMALL
-	icon = 'icons/obj/weapons/grenade.dmi'
 	icon_state = "banana"
-	item_state = "flashbang"
 	var/deliveryamt = 8
 	var/spawner_type = /obj/item/grown/bananapeel
 
@@ -38,7 +35,7 @@
 
 /obj/item/grenade/bananade/casing/examine(mob/user)
 	. = ..()
-	. += span_info("Only banana peels fit in this assembly. Currently: <b>[fillamt]/9<b>.")
+	. += span_notice("Only banana peels fit in this assembly. Currently: <b>[fillamt]/9<b>.")
 
 
 /obj/item/grenade/bananade/casing/screwdriver_act(mob/living/user, obj/item/I)

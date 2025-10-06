@@ -1,6 +1,6 @@
 /datum/species
 	var/name                     // Species name.
-	var/name_plural 			 // Pluralized name (since "[name]s" is not always valid)
+	var/name_plural			 // Pluralized name (since "[name]s" is not always valid)
 	var/a = "a"					 // the "a" or "an" in "a Vulpkanin" or "an Abductor", use with singular version
 
 	var/icobase = 'icons/mob/human_races/r_human.dmi'    // Normal icon set.
@@ -48,9 +48,7 @@
 	var/digestion_ratio = 1 //How quickly the species digests/absorbs reagents.
 	var/taste_sensitivity = TASTE_SENSITIVITY_NORMAL //the most widely used factor; humans use a different one
 
-	var/hunger_icon = 'icons/mob/screen_hunger.dmi'
-	var/hunger_type
-	var/hunger_level
+	var/hunger_type = "default" // Used to pick nutrition bar icon for HUD
 
 	var/hazard_high_pressure = HAZARD_HIGH_PRESSURE   // Dangerously high pressure.
 	var/warning_high_pressure = WARNING_HIGH_PRESSURE // High pressure warning.
@@ -103,6 +101,8 @@
 
 	/// Maximum health of this species
 	var/total_health = 100
+	/// Maximum stamina of this species, MUST be lower than MAX_STAMINA_LOSS
+	var/total_stamina = BASE_MAX_STAMINA
 	/// What type of damage does this species take if it's low on blood?
 	var/blood_damage_type = OXY
 	/// Species default genes
@@ -135,7 +135,7 @@
 
 	var/bodyflags = 0
 
-	var/blood_color = COLOR_BLOOD_BASE //Red.
+	var/blood_color = BLOOD_COLOR_RED //Red.
 	var/flesh_color = "#d1aa2e" //Gold.
 	var/single_gib_type = /obj/effect/decal/cleanable/blood/gibs
 	var/remains_type = /obj/effect/decal/remains/human //What sort of remains is left behind when the species dusts
@@ -155,6 +155,7 @@
 	var/has_gender = TRUE
 	var/blacklisted = FALSE
 	var/dangerous_existence = FALSE
+	var/ignore_critical_condition = FALSE // If true, this species will not be affected by complex critical condition
 
 	/// Death vars. See [/proc/genderize_decode] for more info.
 	var/death_message = "цепене%(ет,ют)% и расслабля%(ет,ют)%ся, %(его,её,его,их)% взгляд становится пустым и безжизненным..."
@@ -264,6 +265,8 @@
 	/// Contains info for all age related preferences.
 	var/list/age_sheet
 
+	/// List of all possible blood overlays for current race blood_mask. Init automaticly, don't force any value
+	var/static/list/blood_overlays
 
 /datum/species/New()
 	unarmed = new unarmed_type()
@@ -355,38 +358,39 @@
 	return FALSE
 
 
-/datum/species/proc/on_species_gain(mob/living/carbon/human/H) //Handles anything not already covered by basic species assignment.
+/datum/species/proc/on_species_gain(mob/living/carbon/human/target) //Handles anything not already covered by basic species assignment.
 	SHOULD_CALL_PARENT(TRUE)
 
 	if(speed_mod)
-		H.add_or_update_variable_movespeed_modifier(/datum/movespeed_modifier/species_speedmod, multiplicative_slowdown = speed_mod)
+		target.add_or_update_variable_movespeed_modifier(/datum/movespeed_modifier/species_speedmod, multiplicative_slowdown = speed_mod)
 
 	if(toolspeedmod)
-		H.add_or_update_variable_actionspeed_modifier(/datum/actionspeed_modifier/species_tool_mod, multiplicative_slowdown = toolspeedmod)
+		target.add_or_update_variable_actionspeed_modifier(/datum/actionspeed_modifier/species_tool_mod, multiplicative_slowdown = toolspeedmod)
 
 	if(surgeryspeedmod)
-		H.add_or_update_variable_actionspeed_modifier(/datum/actionspeed_modifier/species_surgery_mod, multiplicative_slowdown = surgeryspeedmod)
+		target.add_or_update_variable_actionspeed_modifier(/datum/actionspeed_modifier/species_surgery_mod, multiplicative_slowdown = surgeryspeedmod)
 
 	if(length(inherent_traits))
-		H.add_traits(inherent_traits, SPECIES_TRAIT)
+		target.add_traits(inherent_traits, SPECIES_TRAIT)
 
 	if(inherent_factions)
 		for(var/i in inherent_factions)
-			H.faction += i //Using +=/-= for this in case you also gain the faction from a different source.
+			target.faction += i //Using +=/-= for this in case you also gain the faction from a different source.
 
-	for(var/obj/item/item as anything in H.get_equipped_items())
-		if(QDELETED(item) || item.loc != H)	// was deleted or dropped already
+	for(var/obj/item/item as anything in target.get_equipped_items())
+		if(QDELETED(item) || item.loc != target)	// was deleted or dropped already
 			continue
-		var/item_slot = H.get_slot_by_item(item)
+
+		var/item_slot = target.get_slot_by_item(item)
 		if(item_slot in no_equip)
-			H.drop_item_ground(item, force = TRUE)
+			target.drop_item_ground(item, force = TRUE)
 			continue
 
-		if(isclothing(item) && !H.is_general_slot(item_slot))
+		if(isclothing(item) && !target.is_general_slot(item_slot))
 			var/obj/item/clothing/cloth_item = item
 			// faction based cloth
-			if(cloth_item.faction_restricted && faction_check(cloth_item.faction_restricted, H.faction))
-				H.drop_item_ground(cloth_item, force = TRUE)
+			if(cloth_item.faction_restricted && faction_check(cloth_item.faction_restricted, target.faction))
+				target.drop_item_ground(cloth_item, force = TRUE)
 				continue
 
 			// species restricted cloth
@@ -400,43 +404,51 @@
 				wearable = FALSE
 
 			if(!wearable)
-				H.drop_item_ground(cloth_item, force = TRUE)
+				target.drop_item_ground(cloth_item, force = TRUE)
 
-	if(!H.w_uniform)
-		H.drop_item_ground(H.r_store, force = TRUE)
-		H.drop_item_ground(H.l_store, force = TRUE)
-		H.drop_item_ground(H.wear_id, force = TRUE)
-		H.drop_item_ground(H.belt, force = TRUE)
-		H.drop_item_ground(H.wear_pda, force = TRUE)
+	if(!target.w_uniform)
+		target.drop_item_ground(target.r_store, force = TRUE)
+		target.drop_item_ground(target.l_store, force = TRUE)
+		target.drop_item_ground(target.wear_id, force = TRUE)
+		target.drop_item_ground(target.belt, force = TRUE)
+		target.drop_item_ground(target.wear_pda, force = TRUE)
 
-	if(!H.wear_suit)
-		H.drop_item_ground(H.s_store, force = TRUE)
+	if(!target.wear_suit)
+		target.drop_item_ground(target.s_store, force = TRUE)
 
-	H.hud_used?.update_locked_slots()
+	target.hud_used?.update_locked_slots()
+	gain_muscles(target, STRENGTH_LEVEL_DEFAULT, STRENGTH_LEVEL_MAXDEFAULT, TRUE)
+	target.update_body(TRUE)
 
 
-/datum/species/proc/on_species_loss(mob/living/carbon/human/H)
+/datum/species/proc/gain_muscles(mob/living/carbon/human/target, default, max_level, can_become_stronger = TRUE)
+	target.AddComponent(/datum/component/muscles, max_level, default, can_become_stronger)
+
+
+/datum/species/proc/on_species_loss(mob/living/carbon/human/human)
 	SHOULD_CALL_PARENT(TRUE)
 
 	if(speed_mod)
-		H.remove_movespeed_modifier(/datum/movespeed_modifier/species_speedmod)
+		human.remove_movespeed_modifier(/datum/movespeed_modifier/species_speedmod)
 
 	if(toolspeedmod)
-		H.remove_actionspeed_modifier(/datum/actionspeed_modifier/species_tool_mod)
+		human.remove_actionspeed_modifier(/datum/actionspeed_modifier/species_tool_mod)
 
 	if(surgeryspeedmod)
-		H.remove_actionspeed_modifier(/datum/actionspeed_modifier/species_surgery_mod)
+		human.remove_actionspeed_modifier(/datum/actionspeed_modifier/species_surgery_mod)
 
 	if(length(inherent_traits))
-		H.remove_traits(inherent_traits, SPECIES_TRAIT)
+		human.remove_traits(inherent_traits, SPECIES_TRAIT)
 
-	H.meatleft = initial(H.meatleft)
+	human.meatleft = initial(human.meatleft)
 
-	H.hud_used?.update_locked_slots()
+	human.hud_used?.update_locked_slots()
 
 	if(inherent_factions)
 		for(var/i in inherent_factions)
-			H.faction -= i
+			human.faction -= i
+
+	qdel(human?.GetComponent(/datum/component/muscles))
 
 
 /datum/species/proc/updatespeciescolor(mob/living/carbon/human/H) //Handles changing icobase for species that have multiple skin colors.
@@ -494,7 +506,7 @@
 		user.do_cpr(target)
 
 /datum/species/proc/grab(mob/living/carbon/human/user, mob/living/carbon/human/target, datum/martial_art/attacker_style)
-	var/message = "<span class='warning'>[target.declent_ru(NOMINATIVE)] блокиру[pluralize_ru(target.gender,"ет","ют")] попытку захвата [user.declent_ru(GENITIVE)]!</span>"
+	var/message = span_warning("[target.declent_ru(NOMINATIVE)] блокиру[pluralize_ru(target.gender,"ет","ют")] попытку захвата [user.declent_ru(GENITIVE)]!")
 	if(target.check_martial_art_defense(target, user, null, message))
 		return FALSE
 
@@ -510,7 +522,7 @@
 
 /datum/species/proc/harm(mob/living/carbon/human/user, mob/living/carbon/human/target, datum/martial_art/attacker_style)
 	if(HAS_TRAIT(user, TRAIT_PACIFISM) || GLOB.pacifism_after_gt)
-		to_chat(user, "<span class='warning'>[pluralize_ru(user.gender,"Ты не хочешь","Вы не хотите")] навредить [target.declent_ru(DATIVE)]!</span>")
+		to_chat(user, span_warning("Вы не хотите навредить [target.declent_ru(DATIVE)]!"))
 		return FALSE
 
 	//Vampire code
@@ -520,7 +532,7 @@
 			to_chat(user, span_warning("Отсутствует кровь!"))
 			return
 		if(target.mind && (target.mind.has_antag_datum(/datum/antagonist/vampire) || target.mind.has_antag_datum(/datum/antagonist/mindslave/thrall)))
-			to_chat(user, span_warning("[pluralize_ru(user.gender,"Твои","Ваши")] клыки не могут пронзить холодную плоть [target.declent_ru(GENITIVE)]."))
+			to_chat(user, span_warning("Ваши клыки не могут пронзить холодную плоть [target.declent_ru(GENITIVE)]."))
 			return
 		if(HAS_TRAIT(target, TRAIT_SKELETON))
 			to_chat(user, span_warning("В скелете нет ни капли крови!"))
@@ -530,7 +542,7 @@
 		add_attack_logs(user, target, "vampirebit")
 		return
 
-	var/message = "<span class='warning'>[target.declent_ru(NOMINATIVE)] блокиру[pluralize_ru(target.gender,"ет","ют")] атаку [user.declent_ru(GENITIVE)]!</span>"
+	var/message = span_warning("[target.declent_ru(NOMINATIVE)] блокиру[pluralize_ru(target.gender,"ет","ют")] атаку [user.declent_ru(GENITIVE)]!")
 	if(target.check_martial_art_defense(target, user, null, message))
 		return FALSE
 	if(attacker_style && attacker_style.harm_act(user, target) == TRUE)
@@ -541,15 +553,15 @@
 
 		//вносим проверку что это не диона, ведь у дионы свои атаки
 		//вносим проверку на тип атаки, иначе рвущие атаки будут рвать кулаками, а дионы хлестать кулаками.
-		switch (user.dna.species.unarmed_type)
-			if (/datum/unarmed_attack/diona) attack_species += ""
-			if (/datum/unarmed_attack/claws) attack_species += "[genderize_ru(user.gender,"","а","о","и")] когтями"
-			if (/datum/unarmed_attack) attack_species += "[genderize_ru(user.gender,"","а","о","и")] кулаком"
+		switch(user.dna.species.unarmed_type)
+			if(/datum/unarmed_attack/diona) attack_species += ""
+			if(/datum/unarmed_attack/claws) attack_species += "[genderize_ru(user.gender,"","а","о","и")] когтями"
+			if(/datum/unarmed_attack) attack_species += "[genderize_ru(user.gender,"","а","о","и")] кулаком"
 
 		user.do_attack_animation(target, attack.animation_type)
 		if(attack.harmless)
-			playsound(target.loc, attack.attack_sound, 25, 1, -1)
-			target.visible_message("<span class='danger'>[user.declent_ru(NOMINATIVE)] [attack_species] [target.declent_ru(ACCUSATIVE)]!</span>")
+			playsound(target.loc, attack.attack_sound, 25, TRUE, -1)
+			target.visible_message(span_danger("[user.declent_ru(NOMINATIVE)] [attack_species] [target.declent_ru(ACCUSATIVE)]!"))
 			return FALSE
 		add_attack_logs(user, target, "Melee attacked with fists")
 
@@ -562,15 +574,21 @@
 		target.lastattackerckey = user.ckey
 
 		var/damage_type = BRUTE
-		var/damage = rand(user.dna.species.punchdamagelow + user.physiology.punch_damage_low, user.dna.species.punchdamagehigh + user.physiology.punch_damage_high)
+		var/delta = 0
+		var/list/deltas = list()
+		SEND_SIGNAL(user, COMSIG_GET_MELEE_DAMAGE_DELTAS, deltas, null)
+		for(var/addition in deltas)
+			delta += addition
+
+		var/damage = rand(user.dna.species.punchdamagelow + user.physiology.punch_damage_low, user.dna.species.punchdamagehigh + user.physiology.punch_damage_high) + delta
 		damage += attack.damage
 		if(!damage)
-			playsound(target.loc, attack.miss_sound, 25, 1, -1)
-			target.visible_message("<span class='danger'>[user.declent_ru(NOMINATIVE)] [attack_species] [target.declent_ru(ACCUSATIVE)], но промахива[pluralize_ru(user.gender,"ется","ются")]!</span>")
+			playsound(target.loc, attack.miss_sound, 25, TRUE, -1)
+			target.visible_message(span_danger("[user.declent_ru(NOMINATIVE)] [attack_species] [target.declent_ru(ACCUSATIVE)], но промахива[pluralize_ru(user.gender,"ется","ются")]!"))
 			return FALSE
 
 		var/obj/item/organ/external/affecting = target.get_organ(ran_zone(user.zone_selected))
-		var/armor_block = target.run_armor_check(affecting, "melee")
+		var/armor_block = target.run_armor_check(affecting, MELEE)
 
 		// Contract diseases
 
@@ -591,9 +609,9 @@
 			if(!is_infected && (V.spread_flags & CONTACT))
 				V.Contract(user, act_type = CONTACT, need_protection_check = TRUE, zone = user.hand ? BODY_ZONE_PRECISE_L_HAND : BODY_ZONE_PRECISE_R_HAND)
 
-		playsound(target.loc, attack.attack_sound, 25, 1, -1)
+		playsound(target.loc, attack.attack_sound, 25, TRUE, -1)
 
-		target.visible_message("<span class='danger'>[user.declent_ru(NOMINATIVE)] [attack_species] [target.declent_ru(ACCUSATIVE)]!</span>")
+		target.visible_message(span_danger("[user.declent_ru(NOMINATIVE)] [attack_species] [target.declent_ru(ACCUSATIVE)]!"))
 
 		var/all_objectives = user?.mind?.get_all_objectives()
 		if(target.mind && all_objectives)
@@ -603,9 +621,11 @@
 
 		target.apply_damage(damage, damage_type, affecting, armor_block, sharp = attack.sharp) //moving this back here means Armalis are going to knock you down  70% of the time, but they're pure adminbus anyway.
 		if((target.stat != DEAD) && damage >= (user.dna.species.punchstunthreshold + user.physiology.punch_stun_threshold))
-			target.visible_message("<span class='danger'>[user.declent_ru(NOMINATIVE)] ослабля[pluralize_ru(user.gender,"ет","ют")] [target.declent_ru(ACCUSATIVE)]!</span>", \
-							"<span class='userdanger'>[user.declent_ru(NOMINATIVE)] ослабля[pluralize_ru(user.gender,"ет","ют")] [target.declent_ru(ACCUSATIVE)]!</span>")
-			target.apply_effect(4 SECONDS, WEAKEN, armor_block)
+			target.visible_message(
+				span_danger("[user.declent_ru(NOMINATIVE)] ослабля[pluralize_ru(user.gender,"ет","ют")] [target.declent_ru(ACCUSATIVE)]!"), \
+				span_userdanger("[user.declent_ru(NOMINATIVE)] ослабля[pluralize_ru(user.gender,"ет","ют")] [target.declent_ru(ACCUSATIVE)]!")
+			)
+			target.apply_effect(4 SECONDS, KNOCKDOWN, armor_block)
 			target.forcesay(GLOB.hit_appends)
 		else if(target.body_position == LYING_DOWN)
 			target.forcesay(GLOB.hit_appends)
@@ -614,7 +634,7 @@
 /datum/species/proc/disarm(mob/living/carbon/human/user, mob/living/carbon/human/target, datum/martial_art/attacker_style)
 	if(user == target)
 		return FALSE
-	var/message = "<span class='warning'>[target.declent_ru(NOMINATIVE)] блокиру[pluralize_ru(target.gender,"ет","ют")] попытку обезоруживания [user.declent_ru(GENITIVE)]!</span>"
+	var/message = span_warning("[target.declent_ru(NOMINATIVE)] блокиру[pluralize_ru(target.gender,"ет","ют")] попытку обезоруживания [user.declent_ru(GENITIVE)]!")
 	if(target.check_martial_art_defense(target, user, null, message))
 		return FALSE
 	if(attacker_style && attacker_style.disarm_act(user, target) == TRUE)
@@ -631,10 +651,10 @@
 			if(istype(user.gloves, /obj/item/clothing/gloves))
 				var/obj/item/clothing/gloves/gloves = user.gloves
 				extra_knock_chance = gloves.extra_knock_chance
-		if(randn <= 10 + extra_knock_chance)
-			target.apply_effect(4 SECONDS, KNOCKDOWN, target.run_armor_check(affecting, "melee"))
-			playsound(target.loc, 'sound/weapons/thudswoosh.ogg', 50, 1, -1)
-			target.visible_message("<span class='danger'>[user.declent_ru(NOMINATIVE)] толка[pluralize_ru(user.gender,"ет","ют")] [target.declent_ru(ACCUSATIVE)]!</span>")
+		if(randn <= 5 + extra_knock_chance)
+			target.apply_effect(4 SECONDS, KNOCKDOWN, target.run_armor_check(affecting, MELEE))
+			playsound(target.loc, 'sound/weapons/thudswoosh.ogg', 50, TRUE, -1)
+			target.visible_message(span_danger("[user.declent_ru(NOMINATIVE)] толка[pluralize_ru(user.gender,"ет","ют")] [target.declent_ru(ACCUSATIVE)]!"))
 			add_attack_logs(user, target, "Pushed over", ATKLOG_ALL)
 			if(!iscarbon(user))
 				target.LAssailant = null
@@ -645,7 +665,7 @@
 		user.do_attack_animation(target, ATTACK_EFFECT_DISARM)
 		if(target.move_resist > user.pull_force)
 			return FALSE
-		if(!(target.status_flags & CANPUSH))
+		if(!(target.status_flags & CANPUSH) || HAS_TRAIT(target, TRAIT_PUSHIMMUNE))
 			return FALSE
 		if(target.anchored)
 			return FALSE
@@ -654,7 +674,7 @@
 
 	var/shove_dir = get_dir(user.loc, target.loc)
 	var/turf/shove_to = get_step(target.loc, shove_dir)
-	playsound(shove_to, 'sound/weapons/thudswoosh.ogg', 50, 1, -1)
+	playsound(shove_to, 'sound/weapons/thudswoosh.ogg', 50, TRUE, -1)
 
 	if(shove_to == user.loc)
 		return FALSE
@@ -687,25 +707,30 @@
 			if(AM.shove_impact(target, user)) // check for special interactions EG. tabling someone
 				return TRUE
 
-	var/moved = target.Move(shove_to, shove_dir)
+	var/moved = TRUE
+	if(target.a_intent == INTENT_HELP || prob(25)) // Chance to move with shove
+		moved = target.Move(shove_to, shove_dir)
+
+	SEND_SIGNAL(target, COMSIG_HUMAN_DISARM_HIT, user, target)
 	if(!moved) //they got pushed into a dense object
-		add_attack_logs(user, target, "Disarmed into a dense object", ATKLOG_ALL)
-		target.visible_message(span_warning("[user] slams [target]"), \
-								span_userdanger("You get slammed into the obstacle by [user]!"), \
-								"You hear a loud thud.")
-		if(!HAS_TRAIT(target, TRAIT_FLOORED))
-			target.Knockdown(3 SECONDS)
-			addtimer(CALLBACK(target, TYPE_PROC_REF(/mob/living/carbon, SetKnockdown), 0), 3 SECONDS) // so you cannot chain stun someone
-		else if(!user.IsStunned())
-			target.Stun(0.5 SECONDS)
+		if(prob(75)) // Chance to knockdown on wall hit
+			add_attack_logs(user, target, "Disarmed into a dense object", ATKLOG_ALL)
+			target.visible_message(span_warning("[capitalize(user.declent_ru(NOMINATIVE))] толка[pluralize_ru(user.gender, "ет", "ют")] [target.declent_ru(ACCUSATIVE)]"), \
+									span_userdanger("Вы врезаетесь в препятствие из-за [user.declent_ru(NOMINATIVE)]!"), \
+									"Раздаётся глухой удар.")
+			if(!HAS_TRAIT(target, TRAIT_FLOORED))
+				target.Knockdown(3 SECONDS)
+				addtimer(CALLBACK(target, TYPE_PROC_REF(/mob/living/carbon, SetKnockdown), 0), 3 SECONDS) // so you cannot chain stun someone
+			else if(!user.IsStunned())
+				target.Stun(0.5 SECONDS)
 	else
 		var/obj/item/I = target.get_active_hand()
-		if(I && prob(60))
+		if(I && prob(40)) // Chance to disarm target item
 			target.drop_from_active_hand()
 			add_attack_logs(user, target, "Disarmed object out of hand", ATKLOG_ALL)
 		else
 			if(I)
-				to_chat(target, span_warning("Your grip on [I] loosens!"))
+				to_chat(target, span_warning("Ваша хватка на [I.declent_ru(NOMINATIVE)] ослабевает!"))
 			add_attack_logs(user, target, "Disarmed, shoved back", ATKLOG_ALL)
 	target.stop_pulling()
 
@@ -718,7 +743,7 @@
 		if(M.hand)
 			temp = M.bodyparts_by_name[BODY_ZONE_PRECISE_L_HAND]
 		if(!temp || !temp.is_usable())
-			to_chat(M, "<span class='warning'>[pluralize_ru(M.gender,"Ты не можешь","Вы не можете")] пользоваться своей рукой.</span>")
+			to_chat(M, span_warning("Вы не можете пользоваться своей рукой."))
 			return
 
 	if(M.mind)
@@ -726,7 +751,7 @@
 
 	if((M != H) && M.a_intent != INTENT_HELP && H.check_shields(M, 0, M.name, attack_type = UNARMED_ATTACK))
 		add_attack_logs(M, H, "Melee attacked with fists (miss/block)")
-		H.visible_message("<span class='warning'>[M.declent_ru(NOMINATIVE)] пыта[pluralize_ru(M.gender,"ется","ются")] коснуться [H.declent_ru(ACCUSATIVE)]!</span>")
+		H.visible_message(span_warning("[M.declent_ru(NOMINATIVE)] пыта[pluralize_ru(M.gender,"ется","ются")] коснуться [H.declent_ru(ACCUSATIVE)]!"))
 		return FALSE
 
 	switch(M.a_intent)
@@ -763,7 +788,7 @@
 /datum/unarmed_attack
 	var/attack_verb = list("ударил", "вмазал", "стукнул", "вдарил", "влепил")	// Empty hand hurt intent verb.
 	var/damage = 0						// How much flat bonus damage an attack will do. This is a *bonus* guaranteed damage amount on top of the random damage attacks do.
-	var/attack_sound = "punch"
+	var/attack_sound = SFX_PUNCH
 	var/miss_sound = 'sound/weapons/punchmiss.ogg'
 	var/sharp = FALSE
 	var/animation_type = ATTACK_EFFECT_PUNCH
@@ -791,8 +816,12 @@
 	attack_verb = list("хлестнул", "искромсал", "разорвал") //армалисами почти никто не пользуется. Зачем вносить пол вырезаной расе которой никогда не будет в игре?
 	damage = 6
 
+/datum/unarmed_attack/claws/shadowlings
+	attack_verb = list("хлестнул", "искромсал", "разорвал")
+
 
 /datum/species/proc/can_equip(obj/item/I, slot, mob/living/carbon/human/user, disable_warning = FALSE, bypass_equip_delay_self = FALSE, bypass_obscured = FALSE, bypass_incapacitated = FALSE)
+	var/disable_warning_sound = sound('sound/machines/chime.ogg')
 	if(slot in no_equip)
 		return FALSE
 
@@ -801,7 +830,7 @@
 
 	if(!bypass_obscured && (slot & user.check_obscured_slots()))
 		if(!disable_warning)
-			to_chat(user, span_warning("Вы не можете надеть [I.name], слот закрыт другой одеждой."))
+			to_chat(user, span_warning("Вы не можете надеть [I.declent_ru(ACCUSATIVE)], слот закрыт другой одеждой."))
 		return FALSE
 
 	// this check prevents us from equipping something to a slot it doesn't support,
@@ -829,7 +858,7 @@
 
 			if(!wearable)
 				if(!disable_warning)
-					to_chat(user, span_warning("Вы [name] и не можете использовать [I.name]."))
+					to_chat(user, span_warning("Вы [name], и не можете использовать [I.declent_ru(ACCUSATIVE)]."))
 				return FALSE
 
 	switch(slot)
@@ -892,7 +921,7 @@
 			var/obj/item/organ/external/chest = user.get_organ(BODY_ZONE_CHEST)
 			if(!user.w_uniform && !nojumpsuit && (!chest || !chest.is_robotic()))
 				if(!disable_warning)
-					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.name]."))
+					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.declent_ru(ACCUSATIVE)]."))
 				return FALSE
 
 			return bypass_equip_delay_self || I.equip_delay_self <= 0 || equip_delay_self_check(I, slot, user)
@@ -938,7 +967,7 @@
 			var/obj/item/organ/external/chest = user.get_organ(BODY_ZONE_CHEST)
 			if(!user.w_uniform && !nojumpsuit && (!chest || !chest.is_robotic()))
 				if(!disable_warning)
-					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.name]."))
+					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.declent_ru(ACCUSATIVE)]."))
 				return FALSE
 
 			return bypass_equip_delay_self || I.equip_delay_self <= 0 || equip_delay_self_check(I, slot, user)
@@ -951,7 +980,7 @@
 			var/obj/item/organ/external/chest = user.get_organ(BODY_ZONE_CHEST)
 			if(!user.w_uniform && !nojumpsuit && (!chest || !chest.is_robotic()))
 				if(!disable_warning)
-					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.name]."))
+					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.declent_ru(ACCUSATIVE)]."))
 				return FALSE
 
 			return bypass_equip_delay_self || I.equip_delay_self <= 0 || equip_delay_self_check(I, slot, user)
@@ -964,7 +993,7 @@
 			var/obj/item/organ/external/limb = user.get_organ(BODY_ZONE_L_LEG)
 			if(!user.w_uniform && !nojumpsuit && (!limb || !limb.is_robotic()))
 				if(!disable_warning)
-					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.name]."))
+					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.declent_ru(ACCUSATIVE)]."))
 				return FALSE
 
 			return TRUE
@@ -976,7 +1005,7 @@
 			var/obj/item/organ/external/limb = user.get_organ(BODY_ZONE_R_LEG)
 			if(!user.w_uniform && !nojumpsuit && (!limb || !limb.is_robotic()))
 				if(!disable_warning)
-					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.name]."))
+					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.declent_ru(ACCUSATIVE)]."))
 				return FALSE
 
 			return TRUE
@@ -987,11 +1016,11 @@
 				return FALSE
 			if(!user.wear_suit)
 				if(!disable_warning)
-					to_chat(user, span_warning("Вам нужен костюм перед тем как вы сможете прикрепить [I.name]."))
+					to_chat(user, span_warning("Вам нужен костюм перед тем как вы сможете прикрепить [I.declent_ru(ACCUSATIVE)]."))
 				return FALSE
 			if(!user.wear_suit.can_store_weighted(I))
 				if(!disable_warning)
-					to_chat(user, span_warning("Размер [I] слишком большой, чтобы прикрепить."))
+					to_chat(user, span_warning("Размер [I.declent_ru(GENITIVE)] слишком большой."))
 				return FALSE
 
 			if(is_pda(I) || is_pen(I) || is_type_in_list(I, user.wear_suit.allowed))
@@ -999,7 +1028,7 @@
 
 			if(!user.wear_suit.allowed)
 				if(!disable_warning)
-					user << 'sound/machines/chime.ogg'
+					SEND_SOUND(user, disable_warning_sound) // I don't know why he added that, but okay.
 					to_chat(user, span_danger("Откуда у Вас этот костюм? Срочно сообщите о находке в высшие инстанции!"))
 				return FALSE
 
@@ -1025,13 +1054,13 @@
 		if(ITEM_SLOT_ACCESSORY)
 			if(!user.w_uniform)
 				if(!disable_warning)
-					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.name]."))
+					to_chat(user, span_warning("Вам нужен комбинезон перед тем как вы сможете прикрепить [I.declent_ru(ACCUSATIVE)]."))
 				return FALSE
 
 			var/obj/item/clothing/under/uniform = user.w_uniform
 			if(!uniform.can_attach_accessory(I))
 				if(!disable_warning)
-					to_chat(user, span_warning("У вас уже есть аксессуар этого типа на [uniform.name]."))
+					to_chat(user, span_warning("У вас уже есть аксессуар этого типа на [uniform.declent_ru(PREPOSITIONAL)]."))
 				return FALSE
 
 			return TRUE
@@ -1043,7 +1072,7 @@
  * Proc that provide delayed item equip. Returns `TRUE` on success.
  */
 /datum/species/proc/equip_delay_self_check(obj/item/I, slot, mob/living/carbon/human/user)
-	user.visible_message(span_notice("[user] начинает надевать [I.name]..."), span_notice("Вы начинаете надевать [I.name]..."))
+	user.visible_message(span_notice("[user] начина[pluralize_ru(user.gender,"ет","ют")] надевать [I.declent_ru(ACCUSATIVE)]..."), span_notice("Вы начинаете надевать [I.declent_ru(ACCUSATIVE)]..."))
 	return do_after(user, I.equip_delay_self, user)
 
 
@@ -1200,13 +1229,13 @@ It'll return null if the organ doesn't correspond, so include null checks when u
 
 
 /**
-  * Species-specific runechat colour handler
-  *
-  * Checks the species datum flags and returns the appropriate colour
-  * Can be overridden on subtypes to short-circuit these checks (Example: Grey colour is eye colour)
-  * Arguments:
-  * * H - The human who this DNA belongs to
-  */
+ * Species-specific runechat colour handler
+ *
+ * Checks the species datum flags and returns the appropriate colour
+ * Can be overridden on subtypes to short-circuit these checks (Example: Grey colour is eye colour)
+ * Arguments:
+ * * H - The human who this DNA belongs to
+ */
 /datum/species/proc/get_species_runechat_color(mob/living/carbon/human/H)
 	if(bodyflags & HAS_SKIN_COLOR)
 		return H.skin_colour
@@ -1217,3 +1246,9 @@ It'll return null if the organ doesn't correspond, so include null checks when u
 /datum/species/proc/get_emote_pitch(mob/living/carbon/human/H, tolerance)
 	var/age_limits = get_age_limits(src, list(SPECIES_AGE_MIN, SPECIES_AGE_MAX))
 	return 1 + 0.5 * (age_limits[SPECIES_AGE_MIN] + 10 - H.age) / age_limits[SPECIES_AGE_MAX] + (0.01 * rand(-tolerance, tolerance))
+
+/datum/species/proc/get_blood_overlays()
+	if(isnull(blood_overlays))
+		blood_overlays = icon_states(blood_mask)
+
+	return blood_overlays

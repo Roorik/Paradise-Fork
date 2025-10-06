@@ -23,10 +23,17 @@
 		JOB_TITLE_CHIEF = 1500
 	)
 
+/datum/station_goal/proc/can_gain()
+	return TRUE
+
 /datum/station_goal/proc/send_report()
 	on_report()
 	var/directive = "Nanotrasen Directive [pick(GLOB.phonetic_alphabet)] \Roman[rand(1,50)]"
-	GLOB.priority_announcement.Announce("Поступила приоритетная директива НаноТрейзен. Отправлены подробности проекта «[name]».", "Приоритетное оповещение.", 'sound/AI/commandreport.ogg')
+	GLOB.minor_announcement.announce(
+		message = "Поступила приоритетная директива Нанотрейзен. Отправлены подробности проекта \"[html_decode(name)]\".",
+		new_title = ANNOUNCE_PRIORITY_RU,
+		new_sound = 'sound/AI/commandreport.ogg'
+	)
 	print_command_report("<div style='text-align:center;'><img src = ntlogo.png>" + "<h3>[directive]</h3></div><hr>" + get_report(), "[directive]", FALSE, src)
 
 /datum/station_goal/proc/on_report()
@@ -41,7 +48,7 @@
 
 /datum/station_goal/proc/print_result()
 	if(check_completion())
-		to_chat(world, "<b>Station Goal</b>: [name]:  <span class='greenannounce'>Completed!</span>")
+		to_chat(world, "<b>Station Goal</b>: [name]:  [span_greenannounce("Completed!")]")
 	else
 		to_chat(world, "<b>Station Goal</b>: [name]: [span_boldannounceooc("Failed!")]")
 
@@ -62,3 +69,5 @@
 		send_report()
 	else if(href_list["remove"])
 		qdel(src)
+
+#undef STATION_GOAL_DEFAULT_BOUNTY

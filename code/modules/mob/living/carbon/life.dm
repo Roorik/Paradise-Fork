@@ -31,6 +31,9 @@
 	// Increase germ_level regularly
 	handle_germs()
 
+	if(HAS_TRAIT(src, TRAIT_HAS_CARBON_REGENERATION))
+		heal_overall_damage(0.5, 0.5)
+
 	if(stat != DEAD)
 		return TRUE
 
@@ -204,7 +207,9 @@
 	if(!internal)
 		update_action_buttons_icon()
 		return
-
+	if(!istype(internal))
+		internal = null
+		return
 	return internal.remove_air_volume(volume_needed)
 
 

@@ -10,7 +10,6 @@
 	icon = 'icons/obj/objects.dmi'
 	icon_state = "mass_driver"
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 2
 	active_power_usage = 50
 
@@ -95,8 +94,6 @@
 	name = "mass driver frame"
 	icon = 'icons/obj/objects.dmi'
 	icon_state = "mass_driver_frame"
-	density = FALSE
-	anchored = FALSE
 	/// Current construction stage
 	var/build = MASS_DRIVER_BUILD_LOOSE
 
@@ -225,8 +222,8 @@
 
 
 /obj/machinery/mass_driver_frame/verb/rotate()
-	set category = "Object"
-	set name = "Rotate Frame"
+	set category = STATPANEL_OBJECT
+	set name = "Повернуть каркас"
 	set src in view(1)
 
 	if(usr.incapacitated() || HAS_TRAIT(usr, TRAIT_HANDS_BLOCKED) || HAS_TRAIT(usr, TRAIT_FAKEDEATH))

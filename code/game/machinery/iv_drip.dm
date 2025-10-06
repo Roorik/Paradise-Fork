@@ -2,10 +2,9 @@
 #define IV_INJECTING 1
 
 /obj/machinery/iv_drip
-	name = "\improper IV drip"
+	name = "IV drip"
 	icon = 'icons/goonstation/objects/iv.dmi'
 	icon_state = "stand"
-	anchored = FALSE
 	mouse_drag_pointer = MOUSE_ACTIVE_POINTER
 	var/obj/item/reagent_containers/iv_bag/bag = null
 
@@ -87,7 +86,7 @@
 	. = ..()
 	if(!.) // ..() will return 0 if we didn't actually move anywhere.
 		return .
-	playsound(loc, pick('sound/items/cartwheel1.ogg', 'sound/items/cartwheel2.ogg'), 100, 1, ignore_walls = FALSE)
+	playsound(loc, pick('sound/items/cartwheel1.ogg', 'sound/items/cartwheel2.ogg'), 100, TRUE, ignore_walls = FALSE)
 
 #undef IV_TAKING
 #undef IV_INJECTING

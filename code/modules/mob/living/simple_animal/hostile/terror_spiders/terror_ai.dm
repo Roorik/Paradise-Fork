@@ -81,7 +81,7 @@
 		return targets2
 	return targets3
 
-/mob/living/simple_animal/hostile/poison/terror_spider/LoseTarget()
+/mob/living/simple_animal/hostile/poison/terror_spider/lose_target()
 	if(target && isliving(target))
 		var/mob/living/T = target
 		if(T.stat > 0)
@@ -314,7 +314,7 @@
 				entry_vent = null
 				return
 			var/obj/machinery/atmospherics/unary/vent_pump/exit_vent = pick(vents)
-			visible_message("<B>[capitalize(declent_ru(NOMINATIVE))] залезает в вентиляционные каналы!</B>", span_notice("Слышно, как что-то сжимается в вентиляционных каналах."))
+			visible_message("<b>[capitalize(declent_ru(NOMINATIVE))] залезает в вентиляционные каналы!</b>", span_notice("Слышно, как что-то сжимается в вентиляционных каналах."))
 			spawn(rand(20,60))
 				var/original_location = loc
 				forceMove(exit_vent)
@@ -334,7 +334,7 @@
 						if(ai_ventbreaker && exit_vent.welded)
 							exit_vent.set_welded(FALSE)
 							exit_vent.visible_message(span_danger("[capitalize(declent_ru(NOMINATIVE))] выбивает приваренную крышку [exit_vent.declent_ru(GENITIVE)]!"))
-							playsound(exit_vent.loc, 'sound/machines/airlock_alien_prying.ogg', 50, 0)
+							playsound(exit_vent.loc, 'sound/machines/airlock_alien_prying.ogg', 50, FALSE)
 						forceMove(exit_vent.loc)
 						entry_vent = null
 						var/area/new_area = get_area(loc)

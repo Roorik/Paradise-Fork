@@ -10,7 +10,7 @@
 	layer = WALL_OBJ_LAYER
 	resistance_flags = FIRE_PROOF
 	damage_deflection = 12
-	armor = list("melee" = 50, "bullet" = 20, "laser" = 20, "energy" = 20, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 90, "acid" = 50)
+	armor = list(MELEE = 50, BULLET = 20, LASER = 20, ENERGY = 20, BOMB = 0, BIO = 0, RAD = 0, FIRE = 90, ACID = 50)
 	var/datum/wires/camera/wires = null // Wires datum
 	max_integrity = 100
 	integrity_failure = 50
@@ -34,6 +34,11 @@
 
 	var/in_use_lights = 0 // TO BE IMPLEMENTED
 	var/toggle_sound = 'sound/items/wirecutter.ogg'
+
+	var/list/localMotionTargets = list()
+	var/detectTime = 0
+	/// Don't forget, there's another 3 seconds in queueAlarm()
+	var/alarm_delay = 30
 
 /obj/machinery/camera/Initialize(mapload, list/network, c_tag, obj/item/camera_assembly/input_assembly)
 	. = ..()
@@ -102,23 +107,17 @@
 
 	cancelCameraAlarm()
 
-/obj/machinery/camera/tesla_act(power)//EMP proof upgrade also makes it tesla immune
-	if(isEmpProof())
-		return
-	..()
-	qdel(src)//to prevent bomb testing camera from exploding over and over forever
-
-/obj/machinery/camera/ex_act(severity)
+/obj/machinery/camera/ex_act(severity, target)
 	if(invuln)
 		return
-	..()
+	return ..()
 
 /obj/machinery/camera/proc/setViewRange(num = 7)
 	view_range = num
 	GLOB.cameranet.updateVisibility(src, opacity_check = FALSE)
 
 /obj/machinery/camera/singularity_pull(S, current_size)
-	if (status && current_size >= STAGE_FIVE) // If the singulo is strong enough to pull anchored objects and the camera is still active, turn off the camera as it gets ripped off the wall.
+	if(status && current_size >= STAGE_FIVE) // If the singulo is strong enough to pull anchored objects and the camera is still active, turn off the camera as it gets ripped off the wall.
 		toggle_cam(null, 0)
 	..()
 
@@ -172,17 +171,21 @@
 		for(var/mob/living/silicon/ai/AI as anything in GLOB.ai_list)
 			if(AI.control_disabled || (AI.stat == DEAD))
 				continue
-			if(user.name == "Unknown")
+			if(user.name == UNKNOWN_NAME_RUS)
 				to_chat(AI, "<b>[user]</b> holds <a href='byond://?_src_=usr;show_paper=1;'>the [itemname]</a> up to one of your cameras ...")
 			else
 				to_chat(AI, "<b><a href='byond://?src=[AI.UID()];track=[html_encode(user.name)]'>[user]</a></b> holds <a href='byond://?_src_=usr;show_paper=1;'>the [itemname]</a> up to one of your cameras ...")
-			AI.last_paper_seen = {"<HTML><meta charset="UTF-8"><HEAD><TITLE>[itemname]</TITLE></HEAD><BODY><TT>[info]</TT></BODY></HTML>"}
+			AI.last_paper_seen = "<tt>[info]</tt>"
+			AI.last_paper_seen_title = itemname
 
 		for(var/obj/machinery/computer/security/console as anything in computers_watched_by)
-			for(var/uid_watcher as anything in console.watchers)
+			for(var/uid_watcher in console.concurrent_users)
 				var/watcher = locateUID(uid_watcher)
 				to_chat(watcher, "[user] holds the [itemname] up to one of the cameras ...")
-				watcher << browse(text({"<HTML><meta charset="UTF-8"><HEAD><TITLE>[]</TITLE></HEAD><BODY><TT>[]</TT></BODY></HTML>"}, itemname, info), text("window=[]", itemname))
+				var/datum/browser/popup = new(watcher, itemname, itemname)
+				popup.include_default_stylesheet = FALSE
+				popup.set_content("<tt>[info]</tt>")
+				popup.open(FALSE)
 
 		return ATTACK_CHAIN_PROCEED_SUCCESS
 
@@ -223,8 +226,10 @@
 		return
 	WELDER_ATTEMPT_WELD_MESSAGE
 	if(I.use_tool(src, user, 100, volume = I.tool_volume))
-		visible_message(span_warning("[user] unwelds [src], leaving it as just a frame bolted to the wall."),
-						span_warning("You unweld [src], leaving it as just a frame bolted to the wall"))
+		visible_message(
+			span_warning("[user] unwelds [src], leaving it as just a frame bolted to the wall."),
+			span_warning("You unweld [src], leaving it as just a frame bolted to the wall")
+		)
 		deconstruct(TRUE)
 
 /obj/machinery/camera/run_obj_armor(damage_amount, damage_type, damage_flag = 0, attack_dir)
@@ -279,7 +284,7 @@
 			assembly = null
 		else
 			var/obj/item/I = new /obj/item/camera_assembly(loc)
-			I.obj_integrity = I.max_integrity * 0.5
+			I.update_integrity(I.max_integrity * 0.5)
 			new /obj/item/stack/cable_coil(loc, 2)
 	qdel(src)
 
@@ -321,7 +326,7 @@
 		else
 			visible_message(span_danger("\The [src] [change_msg]!"))
 
-		playsound(loc, toggle_sound, 100, 1)
+		playsound(loc, toggle_sound, 100, TRUE)
 	update_icon(UPDATE_ICON_STATE)
 
 /obj/machinery/camera/proc/triggerCameraAlarm()
@@ -331,12 +336,12 @@
 	SSalarm.triggerAlarm("Camera", get_area(src), list(UID()), src)
 
 /obj/machinery/camera/proc/cancelCameraAlarm()
-	if (!alarm_on) // you don't have to turn off alarm twice
+	if(!alarm_on) // you don't have to turn off alarm twice
 		return
 	alarm_on = FALSE
 	SSalarm.cancelAlarm("Camera", get_area(src), src)
 
-/obj/machinery/camera/proc/can_use()
+/obj/machinery/camera/proc/can_use(mob/user)
 	if(!status)
 		return 0
 	if(stat & EMPED)
@@ -353,7 +358,7 @@
 	if(isXRay())
 		see = range(view_range, pos)
 	else
-		see = hear(view_range, pos)
+		see = get_hear(view_range, pos)
 	if(check_lower || check_higher)
 		for(var/turf/seen in see)
 			if(check_lower)
@@ -375,12 +380,12 @@
 
 /obj/machinery/camera/proc/update_computers_watched_by()
 	for(var/obj/machinery/computer/security/computer as anything in computers_watched_by)
-		computer.update_camera_view()
+		computer.update_active_camera_screen()
 
 /atom/proc/auto_turn()
 	//Automatically turns based on nearby walls.
 	var/turf/simulated/wall/T = null
-	for(var/i = 1, i <= 8; i += i)
+	for(var/i = 1, i <= 8, i += i)
 		T = get_ranged_target_turf(src, i, 1)
 		if(istype(T))
 			//If someone knows a better way to do this, let me know. -Giacom
@@ -435,6 +440,15 @@
 		cam["z"] = 0
 	return cam
 
+
+/obj/machinery/camera/proc/can_AI_see(mob/living/silicon/ai/ai)
+	if(!ai)
+		return TRUE
+
+	var/list/tempnetwork = network & ai.network
+	return tempnetwork.len > 0
+
+
 /obj/machinery/camera/get_remote_view_fullscreens(mob/user)
 	if(view_range == short_range) //unfocused
 		user.overlay_fullscreen("remote_view", /atom/movable/screen/fullscreen/impaired, 2)
@@ -467,4 +481,29 @@
 		prev_turf = get_turf(src)
 
 /obj/machinery/camera/portable/triggerCameraAlarm() // AI camera doesnt trigger alarm
+	return
+
+/obj/machinery/camera/mortar
+	alpha = 0
+	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
+	invuln = TRUE
+	network = list("mortar")
+	use_power = NO_POWER_USE
+	interact_offline = TRUE
+
+/obj/machinery/camera/mortar/Initialize(mapload)
+	c_tag = "Para-Cam ([x]):([y])"
+	. = ..()
+	QDEL_IN(src, 3 MINUTES)
+
+/obj/machinery/camera/mortar/isXRay()
+	return TRUE
+
+/obj/machinery/camera/mortar/blob_act(obj/structure/blob/B)
+	return
+
+/obj/machinery/camera/mortar/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay)
+	return
+
+/obj/machinery/camera/mortar/flamer_fire_act(damage)
 	return

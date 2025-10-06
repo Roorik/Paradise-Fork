@@ -8,7 +8,6 @@
 	icon_state = "biogen-empty"
 	density = TRUE
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 40
 	/// Is the biogenerator curretly grinding up plants?
 	var/processing = FALSE
@@ -48,9 +47,9 @@
 	QDEL_LIST(stored_plants)
 	return ..()
 
-/obj/machinery/biogenerator/ex_act(severity)
-	container?.ex_act(severity)
-	..()
+/obj/machinery/biogenerator/ex_act(severity, target)
+	container?.ex_act(severity, target)
+	return ..()
 
 /obj/machinery/biogenerator/handle_atom_del(atom/A)
 	..()
@@ -263,7 +262,7 @@
 	if(stat & (NOPOWER | BROKEN))
 		return
 	if(processing)
-		to_chat(user, "<span class='warning'>[src] is currently processing!</span>")
+		to_chat(user, span_warning("[src] is currently processing!"))
 		return
 
 	processing = TRUE
@@ -277,7 +276,7 @@
 		qdel(plant)
 
 	stored_plants.Cut()
-	playsound(loc, 'sound/machines/blender.ogg', 50, 1)
+	playsound(loc, 'sound/machines/blender.ogg', 50, TRUE)
 	use_power(plants_processed * 150)
 	addtimer(CALLBACK(src, PROC_REF(biogenerator_end_processing)), (plants_processed * 5) / productivity)
 

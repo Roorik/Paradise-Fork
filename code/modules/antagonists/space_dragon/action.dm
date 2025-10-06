@@ -1,6 +1,6 @@
 //Small sprites
 /datum/action/innate/small_sprite_dragon
-	name = "Toggle Giant Sprite"
+	name = "Переключить спрайт"
 	desc = "Остальные продолжат видеть вас огромным."
 	button_icon_state = "carp"
 	background_icon_state = "bg_alien"
@@ -27,7 +27,7 @@
 
 
 /datum/action/innate/space_dragon_gust
-	name = "Gust"
+	name = "Порыв ветра"
 	desc = "Эта способность отталкивает всех, кто находится рядом с вами."
 	button_icon_state = "repulse"
 	background_icon_state = "bg_alien"
@@ -58,7 +58,7 @@
 
 
 /datum/action/innate/summon_rift
-	name = "Summon Rift"
+	name = "Создать разлом"
 	desc = "Открывает разлом призыва орды космических карпов."
 	button_icon_state = "carp_rift"
 	background_icon_state = "bg_alien"
@@ -98,7 +98,7 @@
 
 
 /datum/action/innate/lesser_carp_rift
-	name = "Lesser Carp Rift"
+	name = "малый разлом карпов"
 	desc = "Открывает малый разлом карпов, который позволяет перемещаться на малое расстояние."
 	button_icon_state = "rift"
 	background_icon_state = "bg_alien"
@@ -115,7 +115,7 @@
 		return FALSE
 	var/turf/current_location = get_turf(owner)
 	var/turf/destination = get_teleport_loc(current_location, owner, range)
-	if (!make_rift(destination))
+	if(!make_rift(destination))
 		return FALSE
 	COOLDOWN_START(src, rift_cooldown, cooldown_time)
 	return TRUE
@@ -124,11 +124,11 @@
 /datum/action/innate/lesser_carp_rift/proc/make_rift(atom/target_atom)
 	var/turf/owner_turf = get_turf(owner)
 	var/turf/target_turf = get_turf(target_atom)
-	if (!target_turf)
+	if(!target_turf)
 		return FALSE
 
 	var/list/open_exit_turfs = list()
-	for (var/turf/potential_exit as anything in (RANGE_TURFS(1, target_turf) - target_turf))
+	for(var/turf/potential_exit as anything in (RANGE_TURFS(1, target_turf) - target_turf))
 		if(potential_exit.is_blocked_turf(exclude_mobs = TRUE))
 			continue
 		open_exit_turfs += potential_exit
@@ -148,7 +148,7 @@
 
 /// If you touch the entrance you are teleported to the exit, exit doesn't do anything
 /obj/effect/temp_visual/lesser_carp_rift
-	name = "lesser carp rift"
+	name = "малый разлом карпов"
 	icon = 'icons/obj/biomass.dmi'
 	icon_state = "carp_rift"
 	duration = 5 SECONDS
@@ -190,18 +190,18 @@
 /obj/effect/temp_visual/lesser_carp_rift/entrance/proc/on_entered(datum/source, atom/movable/entered_atom)
 	SIGNAL_HANDLER
 
-	if (!length(exit_locs))
+	if(!length(exit_locs))
 		return
-	if (!ismob(entered_atom) && !isobj(entered_atom))
+	if(!ismob(entered_atom) && !isobj(entered_atom))
 		return
-	if (entered_atom.anchored)
+	if(entered_atom.anchored)
 		return
 	if(!entered_atom.loc)
 		return
-	if (isobserver(entered_atom))
+	if(isobserver(entered_atom))
 		return
 
-	if (isliving(entered_atom))
+	if(isliving(entered_atom))
 		var/mob/living/teleported_mob = entered_atom
 		teleported_mob.changeNext_move(disorient_time)
 
@@ -218,10 +218,9 @@
 
 /// Just an animation
 /obj/effect/temp_visual/lesser_carp_rift_dissipating
-	name = "lesser carp rift"
+	name = "малый разлом карпов"
 	icon = 'icons/obj/biomass.dmi'
 	icon_state = "rift"
-	duration = 1 SECONDS
 
 
 /obj/effect/temp_visual/lesser_carp_rift_dissipating/proc/setup_animation(new_alpha)

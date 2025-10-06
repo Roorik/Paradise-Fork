@@ -1,22 +1,12 @@
 //Cleanbot
 /mob/living/simple_animal/bot/cleanbot
-	name = "\improper Cleanbot"
+	name = "Cleanbot"
 	desc = "Маленький робот-уборщик. Он выглядит таким увлечённым!"
-	ru_names = list(
-		NOMINATIVE = "чистобот",
-		GENITIVE = "чистобота",
-		DATIVE = "чистоботу",
-		ACCUSATIVE = "чистобота",
-		INSTRUMENTAL = "чистоботом",
-		PREPOSITIONAL = "чистоботе",
-	)
-	icon = 'icons/obj/aibots.dmi'
 	icon_state = "cleanbot"
 	density = FALSE
-	anchored = FALSE
 	health = 25
 	maxHealth = 25
-	radio_channel = "Service" //Service
+	radio_channel = SRV_FREQ_NAME //Service
 	bot_filter = RADIO_CLEANBOT
 	bot_type = CLEAN_BOT
 	model = "Cleanbot"
@@ -40,7 +30,15 @@
 	var/next_dest
 	var/next_dest_loc
 
-
+/mob/living/simple_animal/bot/cleanbot/get_ru_names()
+	return list(
+		NOMINATIVE = "чистобот",
+		GENITIVE = "чистобота",
+		DATIVE = "чистоботу",
+		ACCUSATIVE = "чистобота",
+		INSTRUMENTAL = "чистоботом",
+		PREPOSITIONAL = "чистоботе",
+	)
 
 /mob/living/simple_animal/bot/cleanbot/Initialize(mapload)
 	. = ..()
@@ -199,6 +197,7 @@
 	target_types += /obj/effect/decal/cleanable/ash
 	target_types += /obj/effect/decal/cleanable/greenglow
 	target_types += /obj/effect/decal/cleanable/dirt
+	target_types += /obj/effect/decal/cleanable/blood/paint
 
 	if(blood)
 		target_types += /obj/effect/decal/cleanable/blood/xeno/
@@ -237,7 +236,7 @@
 	if(prob(50))
 		drop_part(robot_arm, Tsec)
 	do_sparks(3, TRUE, src)
-	..()
+	return ..()
 
 
 /mob/living/simple_animal/bot/cleanbot/show_controls(mob/M)
@@ -268,7 +267,7 @@
 
 
 /mob/living/simple_animal/bot/cleanbot/ui_act(action, params)
-	if (..())
+	if(..())
 		return
 	if(topic_denied(usr))
 		to_chat(usr, span_danger("Интерфейс [declent_ru(GENITIVE)] не отвечает!"))

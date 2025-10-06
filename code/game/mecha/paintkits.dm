@@ -193,7 +193,6 @@
 
 /obj/item/paintkit/firefighter_aluminizer
 	name = "APLU \"Aluminizer\" customisation kit"
-	icon_state = "paintkit"
 	desc = "A kit containing all the needed tools and parts to paint a Firefighter white"
 
 	new_name = "Aluminizer"
@@ -356,7 +355,7 @@
 /obj/item/paintkit/ashed
 	name = "Ashed customisation kit"
 	icon_state = "paintkit_ash"
-	desc = "Набор, позволяющий вам переделать многие экзокостюмы в их более шахтерский аналог! По крайней мере, расцветкой."
+	desc = "Набор, позволяющий вам переделать многие экзокостюмы в их более шахтёрский аналог! По крайней мере, расцветкой."
 
 	new_name = "Ashed Mech"
 	name_prefix = "Ashed"
@@ -373,7 +372,7 @@
 /obj/item/paintkit/lockermech_ashed
 	name = "Ashed customisation kit"
 	icon_state = "paintkit_ash"
-	desc = "Набор, позволяющий вам переделать шкафомех в его более шахтерский аналог! По крайней мере, расцветкой."
+	desc = "Набор, позволяющий вам переделать шкафомех в его более шахтёрский аналог! По крайней мере, расцветкой."
 
 	name_prefix = "Ashed"
 	new_icon = "ashedlockermech"

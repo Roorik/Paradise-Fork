@@ -1,23 +1,20 @@
+#define HULL_BREACH 1
+#define BRIDGE_MODE 2
+#define FIX_TILE 3
+#define AUTO_TILE 4
+#define REPLACE_TILE 5
+#define TILE_EMAG 6
+
 //Floorbot
 /mob/living/simple_animal/bot/floorbot
-	name = "\improper Floorbot"
+	name = "Floorbot"
 	desc = "Маленький робот для починки полов и обшивки. Он выглядит таким увлечённым!"
-	ru_names = list(
-		NOMINATIVE = "ремонтный робот",
-		GENITIVE = "ремонтного робота",
-		DATIVE = "ремонтному роботу",
-		ACCUSATIVE = "ремонтного робота",
-		INSTRUMENTAL = "ремонтным роботом",
-		PREPOSITIONAL = "ремонтном роботе",
-	)
-	icon = 'icons/obj/aibots.dmi'
 	icon_state = "floorbot0"
 	density = FALSE
-	anchored = FALSE
 	health = 25
 	maxHealth = 25
 
-	radio_channel = "Engineering"
+	radio_channel = ENG_FREQ_NAME
 	bot_type = FLOOR_BOT
 	bot_filter = RADIO_FLOORBOT
 	model = "Floorbot"
@@ -27,7 +24,7 @@
 	window_name = "Автоматическая Ремонтная Единица v1.1"
 	path_image_color = "#FFA500"
 
-	/// Determines what to do when process_scan() recieves a target. See process_scan() for details.
+	/// Determines what to do when process_scan() receives a target. See process_scan() for details.
 	var/process_type
 	var/targetdirection
 	var/amount = 10
@@ -44,13 +41,15 @@
 	var/oldloc = null
 	var/toolbox_color = ""
 
-	#define HULL_BREACH		1
-	#define BRIDGE_MODE		2
-	#define FIX_TILE		3
-	#define AUTO_TILE		4
-	#define REPLACE_TILE	5
-	#define TILE_EMAG		6
-
+/mob/living/simple_animal/bot/floorbot/get_ru_names()
+	return list(
+		NOMINATIVE = "ремонтный робот",
+		GENITIVE = "ремонтного робота",
+		DATIVE = "ремонтному роботу",
+		ACCUSATIVE = "ремонтного робота",
+		INSTRUMENTAL = "ремонтным роботом",
+		PREPOSITIONAL = "ремонтном роботе",
+	)
 
 /mob/living/simple_animal/bot/floorbot/Initialize(mapload, new_toolbox_color)
 	. = ..()
@@ -84,26 +83,26 @@
 	var/dat
 	dat += hack(user)
 	dat += showpai(user)
-	dat += "<TT><B>Панель управления ремонтным роботом v1.1</B></TT><BR><BR>"
-	dat += "Состояние: <a href='byond://?src=[UID()];power=1'>[on ? "Включён" : "Выключен"]</A><BR>"
-	dat += "Панель технического обслуживания [open ? "открыта" : "закрыта"]<BR>"
-	dat += "Плиток пола в запасе: [amount]<BR>"
-	dat += "Управление поведением [locked ? "заблокировано" : "разблокировано"]<BR>"
+	dat += "<tt><b>Панель управления ремонтным роботом v1.1</b></tt><br><br>"
+	dat += "Состояние: <a href='byond://?src=[UID()];power=1'>[on ? "Включён" : "Выключен"]</a><br>"
+	dat += "Панель технического обслуживания [open ? "открыта" : "закрыта"]<br>"
+	dat += "Плиток пола в запасе: [amount]<br>"
+	dat += "Управление поведением [locked ? "заблокировано" : "разблокировано"]<br>"
 	if(!locked || issilicon(user) || user.can_admin_interact())
-		dat += "Устанавливать плитки пола на сегменты обшивки:<a href='byond://?src=[UID()];operation=autotile'>[autotile ? "Да" : "Нет"]</A><BR>"
-		dat += "Заменять плитки пола: <a href='byond://?src=[UID()];operation=replace'>[replacetiles ? "Да" : "Нет"]</A><BR>"
-		dat += "Загружать свободные плитки во внутреннее хранилище: <a href='byond://?src=[UID()];operation=tiles'>[eattiles ? "Да" : "Нет"]</A><BR>"
-		dat += "Перерабатывать металл в плитки пола, когда хранилище опустошено: <a href='byond://?src=[UID()];operation=make'>[maketiles ? "Да" : "Нет"]</A><BR>"
-		dat += "Уведомлять, когда хранилище опустошено: <a href='byond://?src=[UID()];operation=emptynag'>[nag_on_empty ? "Да" : "Нет"]</A><BR>"
-		dat += "Ремонтировать повреждения пола и обшивки: <a href='byond://?src=[UID()];operation=fix'>[fixfloors ? "Да" : "Нет"]</A><BR>"
-		dat += "Закрепиться на месте: <a href='byond://?src=[UID()];operation=anchor'>[anchored ? "Да" : "Нет"]</A><BR>"
-		dat += "Режим патрулирования: <a href='byond://?src=[UID()];operation=patrol'>[auto_patrol ? "Да" : "Нет"]</A><BR>"
+		dat += "Устанавливать плитки пола на сегменты обшивки:<a href='byond://?src=[UID()];operation=autotile'>[autotile ? "Да" : "Нет"]</a><br>"
+		dat += "Заменять плитки пола: <a href='byond://?src=[UID()];operation=replace'>[replacetiles ? "Да" : "Нет"]</a><br>"
+		dat += "Загружать свободные плитки во внутреннее хранилище: <a href='byond://?src=[UID()];operation=tiles'>[eattiles ? "Да" : "Нет"]</a><br>"
+		dat += "Перерабатывать металл в плитки пола, когда хранилище опустошено: <a href='byond://?src=[UID()];operation=make'>[maketiles ? "Да" : "Нет"]</a><br>"
+		dat += "Уведомлять, когда хранилище опустошено: <a href='byond://?src=[UID()];operation=emptynag'>[nag_on_empty ? "Да" : "Нет"]</a><br>"
+		dat += "Ремонтировать повреждения пола и обшивки: <a href='byond://?src=[UID()];operation=fix'>[fixfloors ? "Да" : "Нет"]</a><br>"
+		dat += "Закрепиться на месте: <a href='byond://?src=[UID()];operation=anchor'>[anchored ? "Да" : "Нет"]</a><br>"
+		dat += "Режим патрулирования: <a href='byond://?src=[UID()];operation=patrol'>[auto_patrol ? "Да" : "Нет"]</a><br>"
 		var/bmode
 		if(targetdirection)
 			bmode = dir2text(targetdirection)
 		else
 			bmode = "Выключен"
-		dat += "Режим постройки моста: <a href='byond://?src=[UID()];operation=bridgemode'>[bmode]</A><BR>"
+		dat += "Режим постройки моста: <a href='byond://?src=[UID()];operation=bridgemode'>[bmode]</a><br>"
 
 	return dat
 
@@ -157,7 +156,7 @@
 			set_anchored(!anchored)
 
 		if("bridgemode")
-			var/setdir = input("Выберите направление строительства:") as null|anything in list("север","юг","запад","восток","отключить")
+			var/setdir = tgui_input_list(usr, "Выберите направление строительства:", , list("север","юг","запад","восток","отключить"))
 			switch(setdir)
 				if("север")
 					targetdirection = 1
@@ -468,7 +467,7 @@
 			amount = 0
 
 	do_sparks(3, TRUE, src)
-	..()
+	return ..()
 
 
 /mob/living/simple_animal/bot/floorbot/OnUnarmedAttack(atom/A)
@@ -485,3 +484,9 @@
 /obj/machinery/bot_core/floorbot
 	req_access = list(ACCESS_CONSTRUCTION, ACCESS_ROBOTICS)
 
+#undef HULL_BREACH
+#undef BRIDGE_MODE
+#undef FIX_TILE
+#undef AUTO_TILE
+#undef REPLACE_TILE
+#undef TILE_EMAG

@@ -1,5 +1,5 @@
 // Do not attemtp to remove the blank string from the server arg. It will break DB saving.
-/proc/add_note(target_ckey, notetext, timestamp, adminckey, logged = 1, server = "", checkrights = 1)
+/proc/add_note(target_ckey, notetext, timestamp, adminckey, logged = 1, checkrights = 1)
 	if(checkrights && !check_rights(R_ADMIN|R_MOD))
 		return
 	if(!SSdbcore.IsConnected())
@@ -53,10 +53,6 @@
 	else if(usr && (usr.ckey == ckey(adminckey))) // Don't ckeyize special note sources
 		adminckey = ckey(adminckey)
 
-	if(!server)
-		if(config && CONFIG_GET(string/servername))
-			server = CONFIG_GET(string/servername)
-
 	var/datum/db_query/query_noteadd = SSdbcore.NewQuery({"
 		INSERT INTO [CONFIG_GET(string/utility_database)].[format_table_name("notes")] (ckey, timestamp, notetext, adminckey, server, crew_playtime)
 		VALUES (:targetckey, NOW(), :notetext, :adminkey, :server, :crewnum)
@@ -64,7 +60,7 @@
 		"targetckey" = target_ckey,
 		"notetext" = notetext,
 		"adminkey" = adminckey,
-		"server" = server,
+		"server" = CONFIG_GET(string/instance_id),
 		"crewnum" = crew_number
 	))
 	if(!query_noteadd.warn_execute())
@@ -202,7 +198,7 @@
 			if(!linkless)
 				output += " <a href='byond://?_src_=holder;removenote=[id]'>\[Remove Note\]</a> <a href='byond://?_src_=holder;editnote=[id]'>\[Edit Note\]</a>"
 				if(last_editor)
-					output += " <font size='2'>Last edit by [last_editor]</font>"
+					output += " <span style='font-size: 2;'>Last edit by [last_editor]</span>"
 			output += "<br>[notetext]<hr style='background:#000000; border:0; height:1px'>"
 		qdel(query_get_notes)
 	else if(index)
@@ -234,11 +230,10 @@
 	else
 		output += "<center><a href='byond://?_src_=holder;addnoteempty=1'>\[Add Note\]</a></center>"
 		output += ruler
-	usr << browse(output.Join(""), "window=show_notes;size=900x500")
 	var/datum/browser/popup = new(usr, "show_notes", "<div align='center'>Notes</div>", 900, 500)
 	popup.set_content(output.Join(""))
 	popup.set_window_options("can_close=1;can_minimize=0;can_maximize=0;can_resize=0;titlebar=1;")
 	popup.add_stylesheet("dark_inputs", "html/dark_inputs.css")
-	popup.open()
+	popup.open(TRUE)
 	onclose(usr, "show_notes")
 

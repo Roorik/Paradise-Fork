@@ -4,9 +4,9 @@
 	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | ACID_PROOF
 	var/team = 0
 
-/obj/machinery/abductor/New()
+/obj/machinery/abductor/Initialize(mapload)
+	. = ..()
 	GLOB.abductor_equipment.Add(src)
-	..()
 
 /obj/machinery/abductor/Destroy()
 	GLOB.abductor_equipment.Remove(src)
@@ -28,21 +28,36 @@
 	var/obj/machinery/computer/camera_advanced/abductor/camera
 	var/list/datum/icon_snapshot/disguises = list()
 
-/obj/machinery/abductor/console/Initialize()
+/obj/machinery/abductor/console/Initialize(mapload)
 	. = ..()
+	return INITIALIZE_HINT_LATELOAD
+
+/obj/machinery/abductor/console/LateInitialize()
+	. = ..()
+	// GLOB.abductor_equipment is populated in Initialize;
+	// delaying linkage until after.
 	Link_Abduction_Equipment()
+
+/obj/machinery/abductor/console/Destroy()
+	gizmo = null
+	vest = null
+	experiment = null
+	pad = null
+	camera = null
+	disguises.Cut()
+	return ..()
 
 /obj/machinery/abductor/console/attack_hand(mob/user)
 	if(..())
 		return
 	if(!isabductor(user))
-		to_chat(user, "<span class='warning'>You start mashing alien buttons at random!</span>")
+		to_chat(user, span_warning("You start mashing alien buttons at random!"))
 		if(do_after(user, 10 SECONDS, src))
 			TeleporterSend()
 		return
 	user.set_machine(src)
-	var/dat = {"<!DOCTYPE html><meta charset="UTF-8">"}
-	dat += "<H3> Abductsoft 3000 </H3>"
+	var/dat = ""
+	dat += "<h3> Abductsoft 3000 </h3>"
 
 	if(experiment != null)
 		var/points = experiment.points
@@ -50,42 +65,42 @@
 		dat += "Collected Samples : [points] <br>"
 		dat += "Gear Credits: [credits] <br>"
 		dat += "<b>Transfer data in exchange for supplies:</b><br>"
-		dat += "<a href='byond://?src=[UID()];dispense=baton'>Advanced Baton</A><br>"
-		dat += "<a href='byond://?src=[UID()];dispense=helmet'>Agent Helmet</A><br>"
-		dat += "<a href='byond://?src=[UID()];dispense=vest'>Agent Vest</A><br>"
-		dat += "<a href='byond://?src=[UID()];dispense=silencer'>Radio Silencer</A><br>"
-		dat += "<a href='byond://?src=[UID()];dispense=tool'>Science Tool</A><br>"
-		dat += "<a href='byond://?src=[UID()];dispense=mind_device'>Mental Interface Device</A><br>"
-		dat += "<a href='byond://?src=[UID()];dispense=medkit'>Medkit</A><br>"
+		dat += "<a href='byond://?src=[UID()];dispense=baton'>Advanced Baton</a><br>"
+		dat += "<a href='byond://?src=[UID()];dispense=helmet'>Agent Helmet</a><br>"
+		dat += "<a href='byond://?src=[UID()];dispense=vest'>Agent Vest</a><br>"
+		dat += "<a href='byond://?src=[UID()];dispense=silencer'>Radio Silencer</a><br>"
+		dat += "<a href='byond://?src=[UID()];dispense=tool'>Science Tool</a><br>"
+		dat += "<a href='byond://?src=[UID()];dispense=mind_device'>Mental Interface Device</a><br>"
+		dat += "<a href='byond://?src=[UID()];dispense=medkit'>Medkit</a><br>"
 	else
-		dat += "<span class='bad'>NO EXPERIMENT MACHINE DETECTED</span> <br>"
+		dat += "[span_bad("NO EXPERIMENT MACHINE DETECTED")] <br>"
 
 	if(pad)
-		dat += "<span class='bad'>Emergency Teleporter System.</span>"
-		dat += "<span class='bad'>Consider using primary observation console first.</span>"
-		dat += "<a href='byond://?src=[UID()];teleporter_send=1'>Activate Teleporter</A><br>"
+		dat += span_bad("Emergency Teleporter System.")
+		dat += span_bad("Consider using primary observation console first.")
+		dat += "<a href='byond://?src=[UID()];teleporter_send=1'>Activate Teleporter</a><br>"
 		if(gizmo && gizmo.marked)
-			dat += "<a href='byond://?src=[UID()];teleporter_retrieve=1'>Retrieve Mark</A><br>"
+			dat += "<a href='byond://?src=[UID()];teleporter_retrieve=1'>Retrieve Mark</a><br>"
 		else
-			dat += "<span class='linkOff'>Retrieve Mark</span><br>"
+			dat += "[span_linkoff("Retrieve Mark")]<br>"
 	else
-		dat += "<span class='bad'>NO TELEPAD DETECTED</span></br>"
+		dat += "[span_bad("NO TELEPAD DETECTED")]</br>"
 
 	if(vest)
 		dat += "<h4> Agent Vest Mode </h4><br>"
 		var/mode = vest.mode
 		if(mode == VEST_STEALTH)
-			dat += "<a href='byond://?src=[UID()];flip_vest=1'>Combat</A>"
-			dat += "<span class='linkOff'>Stealth</span>"
+			dat += "<a href='byond://?src=[UID()];flip_vest=1'>Combat</a>"
+			dat += span_linkoff("Stealth")
 		else
-			dat += "<span class='linkOff'>Combat</span>"
-			dat += "<a href='byond://?src=[UID()];flip_vest=1'>Stealth</A>"
+			dat += span_linkoff("Combat")
+			dat += "<a href='byond://?src=[UID()];flip_vest=1'>Stealth</a>"
 
 		dat+="<br>"
 		dat += "<a href='byond://?src=[UID()];select_disguise=1'>Select Agent Vest Disguise</a><br>"
 		dat += "<a href='byond://?src=[UID()];toggle_vest=1'>[HAS_TRAIT_FROM(vest, TRAIT_NODROP, ABDUCTOR_VEST_TRAIT) ? "Unlock" : "Lock"] Vest</a><br>"
 	else
-		dat += "<span class='bad'>NO AGENT VEST DETECTED</span>"
+		dat += span_bad("NO AGENT VEST DETECTED")
 	var/datum/browser/popup = new(user, "computer", "Abductor Console", 400, 500)
 	popup.set_content(dat)
 	popup.open()
@@ -138,19 +153,19 @@
 		vest.flip_mode()
 
 /obj/machinery/abductor/console/proc/SelectDisguise(remote = 0)
-	var/entry_name = input( "Choose Disguise", "Disguise") as null|anything in disguises
+	var/entry_name = tgui_input_list(usr, "Choose Disguise", "Disguise", disguises)
 	var/datum/icon_snapshot/chosen = disguises[entry_name]
 	if(chosen && (remote || in_range(usr,src)))
 		vest.SetDisguise(chosen)
 
 /obj/machinery/abductor/console/proc/SetDroppoint(turf/location,user)
 	if(!istype(location))
-		to_chat(user, "<span class='warning'>That place is not safe for the specimen.</span>")
+		to_chat(user, span_warning("That place is not safe for the specimen."))
 		return
 
 	if(pad)
 		pad.teleport_target = location
-		to_chat(user, "<span class='notice'>Location marked as test subject release point.</span>")
+		to_chat(user, span_notice("Location marked as test subject release point."))
 
 
 /obj/machinery/abductor/console/proc/Link_Abduction_Equipment() // these must all be explicitly `in machines` or they will not properly link.
@@ -175,7 +190,7 @@
 	entry.name = target.name
 	entry.icon = target.icon
 	entry.icon_state = target.icon_state
-	entry.overlays = target.get_overlays_copy(list(L_HAND_LAYER,R_HAND_LAYER))
+	entry.overlays = target.get_overlays_copy(list(HANDS_LAYER))
 	//Update old disguise instead of adding new one
 	if(disguises[entry.name])
 		disguises[entry.name] = entry
@@ -197,7 +212,7 @@
 	if(vest == V)
 		return FALSE
 
-	for(var/obj/machinery/abductor/console/C in GLOB.machines)
+	for(var/obj/machinery/abductor/console/C in SSmachines.get_by_type(/obj/machinery/abductor/console))
 		if(C.vest == V)
 			C.vest = null
 			break

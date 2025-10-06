@@ -1,7 +1,7 @@
 /datum/gear/shoes
 	subtype_path = /datum/gear/shoes
 	slot = ITEM_SLOT_FEET
-	sort_category = "Shoes"
+	sort_category = "Обувь"
 
 /datum/gear/shoes/sandals
 	index_name = "sandals, wooden"
@@ -29,15 +29,17 @@
 
 /datum/gear/shoes/cowboyboots
 	index_name = "cowboy boots, select"
-	display_name = "cowboy boots"
+	display_name = "Ковбойские сапоги"
 	path = /obj/item/clothing/shoes/cowboy
 
 /datum/gear/shoes/cowboyboots/New()
 	..()
-	var/list/boots = list("brown" = /obj/item/clothing/shoes/cowboy,
-						  "black" = /obj/item/clothing/shoes/cowboy/black,
-						  "white" = /obj/item/clothing/shoes/cowboy/white,
-						  "pink" = /obj/item/clothing/shoes/cowboy/pink,)
+	var/list/boots = list(
+		"brown" = /obj/item/clothing/shoes/cowboy,
+		"black" = /obj/item/clothing/shoes/cowboy/black,
+		"white" = /obj/item/clothing/shoes/cowboy/white,
+		"pink" = /obj/item/clothing/shoes/cowboy/pink
+	)
 	gear_tweaks += new /datum/gear_tweak/path(boots, src)
 
 /datum/gear/shoes/jackboots
@@ -54,16 +56,18 @@
 
 /datum/gear/shoes/shoes
 	index_name = "shoes, select"
-	display_name = "shoes"
+	display_name = "Ботинки"
 	path = /obj/item/clothing/shoes/black
 
 /datum/gear/shoes/shoes/New()
 	..()
-	var/list/boots = list(/obj/item/clothing/shoes/black,
-						  /obj/item/clothing/shoes/brown,
-						  /obj/item/clothing/shoes/white,
-						  /obj/item/clothing/shoes/convers,
-						  /obj/item/clothing/shoes/convers/red)
+	var/list/boots = list(
+		/obj/item/clothing/shoes/black,
+		/obj/item/clothing/shoes/brown,
+		/obj/item/clothing/shoes/white,
+		/obj/item/clothing/shoes/convers,
+		/obj/item/clothing/shoes/convers/red
+	)
 	gear_tweaks += new /datum/gear_tweak/path(boots, src, TRUE)
 
 /datum/gear/shoes/jackcross

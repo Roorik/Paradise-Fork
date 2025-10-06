@@ -1,6 +1,5 @@
 /obj/structure/AIcore
 	density = TRUE
-	anchored = FALSE
 	name = "AI core"
 	icon = 'icons/mob/ai.dmi'
 	icon_state = "0"
@@ -10,11 +9,43 @@
 	var/obj/item/circuitboard/aicore/circuit = null
 	var/obj/item/mmi/brain = null
 
-/obj/structure/AIcore/Destroy()
+/obj/structure/AIcore/Destroy(force)
 	QDEL_NULL(laws)
 	QDEL_NULL(circuit)
 	QDEL_NULL(brain)
+	if(state == AI_READY_CORE)
+		INVOKE_ASYNC(src, PROC_REF(death_alarm))
+
 	return ..()
+
+
+/obj/structure/AIcore/proc/death_alarm()
+	var/obj/item/radio/headset/all_channels/dummy = new(src)
+	var/static/msg = "Внимание! Обнаружено повреждение внутренних систем станционного ИИ. \
+					Требуется срочное вмешательство."
+	var/static/sender = "Автоматическая система оповещений"
+	dummy.autosay(msg, sender, COMM_FREQ_NAME)
+	qdel(dummy)
+
+	var/obj/item/pda/dummy_pda = new /obj/item/pda()
+	dummy_pda.owner = sender
+	var/datum/data/pda/app/messenger/sender_messenger = dummy_pda.find_program(/datum/data/pda/app/messenger)
+	var/obj/machinery/message_server/message_server = find_pda_server()
+
+	if(!message_server)
+		return
+
+	for(var/obj/item/pda/pda in GLOB.PDAs)
+		if(!(pda.ownjob in GLOB.ai_death_alarm_jobs))
+			continue
+
+		var/datum/data/pda/app/messenger/messenger = pda.find_program(/datum/data/pda/app/messenger)
+		if(!messenger?.can_receive())
+			continue
+
+		sender_messenger.create_message(pda, message = msg)
+
+	qdel(dummy_pda)
 
 
 /obj/structure/AIcore/attackby(obj/item/I, mob/user, params)
@@ -282,7 +313,7 @@
 
 /client/proc/empty_ai_core_toggle_latejoin()
 	set name = "Toggle AI Core Latejoin"
-	set category = "Admin.Toggles"
+	set category = STATPANEL_ADMIN_TOGGLES
 
 	var/list/cores = list()
 	for(var/obj/structure/AIcore/deactivated/D in world)
@@ -291,8 +322,9 @@
 	if(!cores.len)
 		to_chat(src, "No deactivated AI cores were found.")
 
-	var/id = input("Which core?", "Toggle AI Core Latejoin", null) as null|anything in cores
-	if(!id) return
+	var/id = tgui_input_list(usr, "Which core?", "Toggle AI Core Latejoin", cores, null)
+	if(!id)
+		return
 
 	var/obj/structure/AIcore/deactivated/D = cores[id]
 	if(!D) return
@@ -324,7 +356,7 @@ That prevents a few funky behaviors.
 /obj/structure/AIcore/transfer_ai(interaction, mob/user, mob/living/silicon/ai/AI, obj/item/aicard/card)
 	if(state != AI_READY_CORE || !..())
 		return
- //Transferring a carded AI to a core.
+//Transferring a carded AI to a core.
 	if(interaction == AI_TRANS_FROM_CARD)
 		AI.control_disabled = FALSE
 		AI.aiRadio.disabledAi = FALSE

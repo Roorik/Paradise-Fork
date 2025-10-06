@@ -2,14 +2,14 @@ GLOBAL_VAR_INIT(BSACooldown, 0)
 GLOBAL_VAR_INIT(nologevent, 0)
 
 ////////////////////////////////
-/proc/message_admins(var/msg)
+/proc/message_admins(msg)
 	msg = "<span class=\"admin\"><span class=\"prefix\">ADMIN LOG:</span> <span class=\"message\">[msg]</span></span>"
 	for(var/client/C in GLOB.admins)
 		if(R_ADMIN & C.holder.rights)
 			if(C.prefs && !(C.prefs.toggles & PREFTOGGLE_CHAT_NO_ADMINLOGS))
 				to_chat(C, msg, MESSAGE_TYPE_ADMINLOG, confidential = TRUE)
 
-/proc/msg_admin_attack(var/text, var/loglevel)
+/proc/msg_admin_attack(text, loglevel)
 	if(!GLOB.nologevent)
 		var/rendered = "<span class=\"admin\"><span class=\"prefix\">ATTACK:</span> <span class=\"message\">[text]</span></span>"
 		for(var/client/C in GLOB.admins)
@@ -21,7 +21,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
  * Arguments:
  * msg - The message being send
  * important - If the message is important. If TRUE it will ignore the CHAT_NO_TICKETLOGS preferences,
-               send a sound and flash the window. Defaults to FALSE
+ * send a sound and flash the window. Defaults to FALSE
  */
 /proc/message_adminTicket(msg, important = FALSE)
 	for(var/client/C in GLOB.admins)
@@ -30,7 +30,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 				to_chat(C, msg, MESSAGE_TYPE_ADMINPM, confidential = TRUE)
 			if(important)
 				if(C.prefs?.sound & SOUND_ADMINHELP)
-					SEND_SOUND(C, 'sound/effects/adminhelp.ogg')
+					SEND_SOUND(C, sound('sound/effects/adminhelp.ogg'))
 				window_flash(C)
 
 /**
@@ -38,19 +38,19 @@ GLOBAL_VAR_INIT(nologevent, 0)
  * Arguments:
  * msg - The message being send
  * important - If the message is important. If TRUE it will ignore the CHAT_NO_TICKETLOGS preferences,
-               send a sound and flash the window. Defaults to FALSE
+ * send a sound and flash the window. Defaults to FALSE
  */
 /proc/message_mentorTicket(msg, important = FALSE)
 	for(var/client/C in GLOB.admins)
 		if(check_rights(R_ADMIN | R_MENTOR | R_MOD, 0, C.mob))
 			if(important || (C.prefs && !(C.prefs.toggles & PREFTOGGLE_CHAT_NO_TICKETLOGS)))
-				to_chat(C, msg, MESSAGE_TYPE_MENTORCHAT, confidential = TRUE)
+				to_chat(C, msg, MESSAGE_TYPE_MENTORPM, confidential = TRUE)
 			if(important)
 				if(C.prefs?.sound & SOUND_MENTORHELP)
-					SEND_SOUND(C, 'sound/effects/adminhelp.ogg')
+					SEND_SOUND(C, sound('sound/effects/adminhelp.ogg'))
 				window_flash(C)
 
-/proc/admin_ban_mobsearch(var/mob/M, var/ckey_to_find, var/mob/admin_to_notify)
+/proc/admin_ban_mobsearch(mob/M, ckey_to_find, mob/admin_to_notify)
 	if(!M || !M.ckey)
 		if(ckey_to_find)
 			for(var/mob/O in GLOB.mob_list)
@@ -68,7 +68,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 /datum/admins/proc/show_player_panel(mob/M in GLOB.mob_list)
 	set name = "\[Admin\] Show Player Panel"
-	set desc="Edit player (respawn, ban, heal, etc)"
+	set desc = "Edit player (respawn, ban, heal, etc)"
 
 	if(!M)
 		to_chat(usr, "You seem to be selecting a mob that doesn't exist anymore.", confidential=TRUE)
@@ -90,12 +90,18 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 	if(!check_rights(R_ADMIN|R_MOD))
 		return
+	var/our_key = M.key
+	if(M.client && M.client.holder)
+		if(M.client.holder.fakekey && M.client.holder.big_brother)
+			our_key = M.client.holder.fakekey
 
-	var/body = "<body>Options panel for <b>[M]</b>"
+	var/body = "<body>Options panel for <b>[our_key]</b>"
 	if(M.client)
 		body += " played by <b>[M.client]</b> "
-		if(check_rights(R_PERMISSIONS, 0))
-			body += "\[<a href='byond://?_src_=holder;editrights=rank;ckey=[M.ckey]'>[M.client.holder ? M.client.holder.rank : "Player"]</A>\] "
+		if(check_rights(R_PERMISSIONS, FALSE))
+			body += "\[<a href='byond://?_src_=holder;editrights=rank;ckey=[M.ckey]'>[M.client.holder ? M.client.holder.rank : "Player"]</a>\] "
+		else if(M.client.holder && M.client.holder.fakekey && M.client.holder.big_brother)
+			body += "\[Player\] "
 		else
 			body += "\[[M.client.holder ? M.client.holder.rank : "Player"]\] "
 		body += "\[<a href='byond://?_src_=holder;getplaytimewindow=[M.UID()]'>" + M.client.get_exp_type(EXP_TYPE_CREW) + " as [EXP_TYPE_CREW]</a>\]"
@@ -105,9 +111,9 @@ GLOBAL_VAR_INIT(nologevent, 0)
 		body += "<br>"
 
 	if(isnewplayer(M))
-		body += " <B>Hasn't Entered Game</B> "
+		body += " <b>Hasn't Entered Game</b> "
 	else
-		body += " \[<a href='byond://?_src_=holder;revive=[M.UID()]'>Heal</A>\] "
+		body += " \[<a href='byond://?_src_=holder;revive=[M.UID()]'>Heal</a>\] "
 
 
 	body += "<br><br>\[ "
@@ -134,50 +140,50 @@ GLOBAL_VAR_INIT(nologevent, 0)
 			body += "<b>Related accounts by IP:</b> [jointext(M.client.related_accounts_ip, " - ")]<br><br>"
 
 	if(M.ckey)
-		body += "<a href='byond://?_src_=holder;boot2=[M.UID()]'>Kick</A> | "
-		body += "<a href='byond://?_src_=holder;newban=[M.UID()];dbbanaddckey=[M.ckey]'>Ban</A> | "
-		body += "<a href='byond://?_src_=holder;jobban2=[M.UID()];dbbanaddckey=[M.ckey]'>Jobban</A> | "
-		body += "<a href='byond://?_src_=holder;appearanceban=[M.UID()];dbbanaddckey=[M.ckey]'>Appearance Ban</A> | "
-		body += "<a href='byond://?_src_=holder;shownoteckey=[M.ckey]'>Notes</A> | "
-		body += "<a href='byond://?_src_=holder;geoip=[M.UID()]'>GeoIP</A> | "
+		body += "<a href='byond://?_src_=holder;boot2=[M.UID()]'>Kick</a> | "
+		body += "<a href='byond://?_src_=holder;newban=[M.UID()];dbbanaddckey=[M.ckey]'>Ban</a> | "
+		body += "<a href='byond://?_src_=holder;jobban2=[M.UID()];dbbanaddckey=[M.ckey]'>Jobban</a> | "
+		body += "<a href='byond://?_src_=holder;appearanceban=[M.UID()];dbbanaddckey=[M.ckey]'>Appearance Ban</a> | "
+		body += "<a href='byond://?_src_=holder;shownoteckey=[M.ckey]'>Notes</a> | "
+		body += "<a href='byond://?_src_=holder;geoip=[M.UID()]'>GeoIP</a> | "
 		if(CONFIG_GET(string/forum_playerinfo_url))
-			body += "<a href='byond://?_src_=holder;webtools=[M.ckey]'>WebInfo</A> | "
+			body += "<a href='byond://?_src_=holder;webtools=[M.ckey]'>WebInfo</a> | "
 	if(M.client)
 		if(check_watchlist(M.client.ckey))
-			body += "<a href='byond://?_src_=holder;watchremove=[M.ckey]'>Remove from Watchlist</A> | "
-			body += "<a href='byond://?_src_=holder;watchedit=[M.ckey]'>Edit Watchlist Reason</A> "
+			body += "<a href='byond://?_src_=holder;watchremove=[M.ckey]'>Remove from Watchlist</a> | "
+			body += "<a href='byond://?_src_=holder;watchedit=[M.ckey]'>Edit Watchlist Reason</a> "
 		else
-			body += "<a href='byond://?_src_=holder;watchadd=[M.ckey]'>Add to Watchlist</A> "
+			body += "<a href='byond://?_src_=holder;watchadd=[M.ckey]'>Add to Watchlist</a> "
 
-		body += "| <a href='byond://?_src_=holder;sendtoprison=[M.UID()]'>Prison</A> | "
-		body += "\ <a href='byond://?_src_=holder;sendbacktolobby=[M.UID()]'>Send back to Lobby</A> | "
+		body += "| <a href='byond://?_src_=holder;sendtoprison=[M.UID()]'>Prison</a> | "
+		body += "\ <a href='byond://?_src_=holder;sendbacktolobby=[M.UID()]'>Send back to Lobby</a> | "
 		body += {"<br><b>Mute: </b>
-			\[<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_IC]'><font color='[check_mute(M.client.ckey, MUTE_IC) ? "red" : "#6685f5"]'>IC</font></a> |
-			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_OOC]'><font color='[check_mute(M.client.ckey, MUTE_OOC) ? "red" : "#6685f5"]'>OOC</font></a> |
-			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_PRAY]'><font color='[check_mute(M.client.ckey, MUTE_PRAY) ? "red" : "#6685f5"]'>PRAY</font></a> |
-			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_ADMINHELP]'><font color='[check_mute(M.client.ckey, MUTE_ADMINHELP) ? "red" : "#6685f5"]'>ADMINHELP</font></a> |
-			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_DEADCHAT]'><font color='[check_mute(M.client.ckey, MUTE_DEADCHAT) ?" red" : "#6685f5"]'>DEADCHAT</font></a> |
-			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_TTS]'><font color='[check_mute(M.client.ckey, MUTE_TTS)?"red":"#6685f5"]'>TTS</font></a> |
-			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_EMOTE]'><font color='[check_mute(M.client.ckey, MUTE_EMOTE) ? "red" : "#6685f5"]'>EMOTE</font></a>\]
-			(<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_ALL]'><font color='[check_mute(M.client.ckey, MUTE_ALL) ? "red" : "#6685f5"]'>toggle all</font></a>)
+			\[<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_IC]'><span style='color: [check_mute(M.client.ckey, MUTE_IC) ? "#ffaa00" : "#aabbff"];'>IC</span></a> |
+			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_OOC]'><span style='color: [check_mute(M.client.ckey, MUTE_OOC) ? "#ffaa00" : "#aabbff"];'>OOC</span></a> |
+			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_PRAY]'><span style='color: [check_mute(M.client.ckey, MUTE_PRAY) ? "#ffaa00" : "#aabbff"];'>PRAY</span></a> |
+			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_ADMINHELP]'><span style='color: [check_mute(M.client.ckey, MUTE_ADMINHELP) ? "#ffaa00" : "#aabbff"];'>ADMINHELP</span></a> |
+			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_DEADCHAT]'><span style='color: [check_mute(M.client.ckey, MUTE_DEADCHAT) ?"#ffaa00" : "#aabbff"];'>DEADCHAT</span></a> |
+			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_TTS]'><span style='color: [check_mute(M.client.ckey, MUTE_TTS)?"#ffaa00":"#aabbff"];'>TTS</span></a> |
+			<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_EMOTE]'><span style='color: [check_mute(M.client.ckey, MUTE_EMOTE) ? "#ffaa00" : "#aabbff"];'>EMOTE</span></a>\]
+			(<a href='byond://?_src_=holder;mute=[M.UID()];mute_type=[MUTE_ALL]'><span style='color: [check_mute(M.client.ckey, MUTE_ALL) ? "#ffaa00" : "#aabbff"];'>toggle all</span></a>)
 		"}
 		body += {"<br><b>Mob Manipulation:</b>
-			<a href='byond://?_src_=holder;randomizename=[M.UID()]'>Randomize Name</A> |
-			<a href='byond://?_src_=holder;userandomname=[M.UID()]'>User Randomize Name</A> |
-			<a href='byond://?_src_=holder;eraseflavortext=[M.UID()]'>Erase Flavor Text</A> |
+			<a href='byond://?_src_=holder;randomizename=[M.UID()]'>Randomize Name</a> |
+			<a href='byond://?_src_=holder;userandomname=[M.UID()]'>User Randomize Name</a> |
+			<a href='byond://?_src_=holder;eraseflavortext=[M.UID()]'>Erase Flavor Text</a> |
 			"}
 		if(ishuman(M))
 			body += {"
-			<a href='byond://?_src_=holder;cma_admin=[M.UID()]'>Mirror UI to Admin</A> |
-			<a href='byond://?_src_=holder;cma_self=[M.UID()]'>Mirror UI to Player</A> |
-			<a href='byond://?_src_=holder;select_equip=[M.UID()]'>Select Equipment</A> |
-			<a href='byond://?_src_=holder;update_mob_sprite=[M.UID()]'>Update Mob Sprite</A> |
-			<a href='byond://?_src_=holder;change_voice=[M.UID()]'>Change Voice</A> |
+			<a href='byond://?_src_=holder;cma_admin=[M.UID()]'>Mirror UI to Admin</a> |
+			<a href='byond://?_src_=holder;cma_self=[M.UID()]'>Mirror UI to Player</a> |
+			<a href='byond://?_src_=holder;select_equip=[M.UID()]'>Select Equipment</a> |
+			<a href='byond://?_src_=holder;update_mob_sprite=[M.UID()]'>Update Mob Sprite</a> |
+			<a href='byond://?_src_=holder;change_voice=[M.UID()]'>Change Voice</a> |
 			"}
 		if(isliving(M))
-			body += {"<a href='byond://?_src_=holder;check_contents=[M.UID()]'>Check Contents</A> |"}
+			body += {"<a href='byond://?_src_=holder;check_contents=[M.UID()]'>Check Contents</a> |"}
 		body += {"
-		<a href='byond://?_src_=holder;man_up=[M.UID()]'>Man Up</A> |
+		<a href='byond://?_src_=holder;man_up=[M.UID()]'>Man Up</a> |
 		"}
 
 
@@ -185,25 +191,25 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	if(isAI(M))
 		var/mob/living/silicon/ai/A = M
 		if(A.client && A.eyeobj) // No point following clientless AI eyes
-			jumptoeye = " <b>(<a href='byond://?_src_=holder;jumpto=[A.eyeobj.UID()]'>Eye</A>)</b>"
+			jumptoeye = " <b>(<a href='byond://?_src_=holder;jumpto=[A.eyeobj.UID()]'>Eye</a>)</b>"
 	body += {"<br><br>
-		<a href='byond://?_src_=holder;jumpto=[M.UID()]'><b>Jump to</b></A>[jumptoeye] |
-		<a href='byond://?_src_=holder;getmob=[M.UID()]'>Get</A> |
-		<a href='byond://?_src_=holder;sendmob=[M.UID()]'>Send To</A>
+		<a href='byond://?_src_=holder;jumpto=[M.UID()]'><b>Jump to</b></a>[jumptoeye] |
+		<a href='byond://?_src_=holder;getmob=[M.UID()]'>Get</a> |
+		<a href='byond://?_src_=holder;sendmob=[M.UID()]'>Send To</a>
 		<br><br>
 		[check_rights(R_ADMIN,0) ? "[ADMIN_TP(M,"Traitor panel")] | " : "" ]
-		<a href='byond://?_src_=holder;narrateto=[M.UID()]'>Narrate to</A> |
+		<a href='byond://?_src_=holder;narrateto=[M.UID()]'>Narrate to</a> |
 		[ADMIN_SM(M,"Subtle message")]
 	"}
 
 	if(check_rights(R_EVENT, 0))
-		body += {" | <a href='byond://?_src_=holder;Bless=[M.UID()]'>Bless</A> | <a href='byond://?_src_=holder;Smite=[M.UID()]'>Smite</A>"}
+		body += {" | <a href='byond://?_src_=holder;Bless=[M.UID()]'>Bless</a> | <a href='byond://?_src_=holder;Smite=[M.UID()]'>Smite</a>"}
 
 	if(isLivingSSD(M))
 		if(istype(M.loc, /obj/machinery/cryopod))
-			body += {" | <a href='byond://?_src_=holder;cryossd=[M.UID()]'>De-Spawn</A> "}
+			body += {" | <a href='byond://?_src_=holder;cryossd=[M.UID()]'>De-Spawn</a> "}
 		else
-			body += {" | <a href='byond://?_src_=holder;cryossd=[M.UID()]'>Cryo</A> "}
+			body += {" | <a href='byond://?_src_=holder;cryossd=[M.UID()]'>Cryo</a> "}
 
 	if(M.client)
 		if(!isnewplayer(M))
@@ -213,39 +219,39 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 			//Monkey
 			if(is_monkeybasic(M))
-				body += "<B>Monkeyized</B> | "
+				body += "<b>Monkeyized</b> | "
 			else
-				body += "<a href='byond://?_src_=holder;monkeyone=[M.UID()]'>Monkeyize</A> | "
+				body += "<a href='byond://?_src_=holder;monkeyone=[M.UID()]'>Monkeyize</a> | "
 
 			// Gorillas! OOGAS!
 			if(istype(M, /mob/living/simple_animal/hostile/gorilla))
-				body += "<a href='byond://?_src_=holder;makegorilla=[M.UID()]'>Re-Gorillize</A> | "
+				body += "<a href='byond://?_src_=holder;makegorilla=[M.UID()]'>Re-Gorillize</a> | "
 			else
-				body += "<a href='byond://?_src_=holder;makegorilla=[M.UID()]'>Gorillize</A> | "
+				body += "<a href='byond://?_src_=holder;makegorilla=[M.UID()]'>Gorillize</a> | "
 
 			//AI / Cyborg
 			if(isAI(M))
-				body += "<B>Is an AI</B> "
+				body += "<b>Is an AI</b> "
 			else if(ishuman(M))
-				body += {"<a href='byond://?_src_=holder;makeai=[M.UID()]'>AI</A> |
-					<a href='byond://?_src_=holder;makerobot=[M.UID()]'>Robot</A> |
-					<a href='byond://?_src_=holder;makesuper=[M.UID()]'>Superhero</A> |
+				body += {"<a href='byond://?_src_=holder;makeai=[M.UID()]'>AI</a> |
+					<a href='byond://?_src_=holder;makerobot=[M.UID()]'>Robot</a> |
+					<a href='byond://?_src_=holder;makesuper=[M.UID()]'>Superhero</a> |
 				"}
 
 			//Simple Animals
 			if(isanimal(M))
-				body += "<a href='byond://?_src_=holder;makeanimal=[M.UID()]'>Re-Animalize</A> | "
+				body += "<a href='byond://?_src_=holder;makeanimal=[M.UID()]'>Re-Animalize</a> | "
 			else
-				body += "<a href='byond://?_src_=holder;makeanimal=[M.UID()]'>Animalize</A> | "
+				body += "<a href='byond://?_src_=holder;makeanimal=[M.UID()]'>Animalize</a> | "
 
 			if(istype(M, /mob/dead/observer))
 				body += "<a href='byond://?_src_=holder;incarn_ghost=[M.UID()]'>Re-incarnate</a> | "
-				body += {"<a href='byond://?_src_=holder;togglerespawnability=[M.UID()]'>Toggle Respawnability</A> | "}
+				body += {"<a href='byond://?_src_=holder;togglerespawnability=[M.UID()]'>Toggle Respawnability</a> | "}
 
 			if(ispAI(M))
-				body += "<B>Is a pAI</B> "
+				body += "<b>Is a pAI</b> "
 			else
-				body += "<a href='byond://?_src_=holder;makePAI=[M.UID()]'>Make pAI</A> | "
+				body += "<a href='byond://?_src_=holder;makePAI=[M.UID()]'>Make pAI</a> | "
 
 			// DNA2 - Admin Hax
 			if(M.dna && iscarbon(M))
@@ -258,51 +264,51 @@ GLOBAL_VAR_INIT(nologevent, 0)
 					body += "<td>"
 					var/gene_name = GLOB.assigned_blocks[block]
 					if(gene_name)
-						var/text_color = "[M.dna.GetSEState(block) ? "#006600" : "#ff0000"]"
-						body += "<a href='byond://?_src_=holder;togmutate=[M.UID()];block=[block];version=old;' style='color:[text_color];'>[gene_name]</A><sub>[block]</sub>"
+						var/text_color = "[M.dna.GetSEState(block) ? "#00cc66" : "#ffaa00"]"
+						body += "<a href='byond://?_src_=holder;togmutate=[M.UID()];block=[block];version=old;' style='color:[text_color];'>[gene_name]</a><sub>[block]</sub>"
 					else
 						body += "[block]"
 					body += "</td>"
 				body += "</tr></table>"
 
 			body += {"<br><br>
-				<b>Rudimentary transformation:</b><font size=2><br>These transformations only create a new mob type and copy stuff over. They do not take into account MMIs and similar mob-specific things. The buttons in 'Transformations' are preferred, when possible.</font><br>
-				<a href='byond://?_src_=holder;simplemake=observer;mob=[M.UID()]'>Observer</A> |
-				\[ Alien: <a href='byond://?_src_=holder;simplemake=drone;mob=[M.UID()]'>Drone</A>,
-				<a href='byond://?_src_=holder;simplemake=hunter;mob=[M.UID()]'>Hunter</A>,
-				<a href='byond://?_src_=holder;simplemake=queen;mob=[M.UID()]'>Queen</A>,
-				<a href='byond://?_src_=holder;simplemake=sentinel;mob=[M.UID()]'>Sentinel</A>,
-				<a href='byond://?_src_=holder;simplemake=larva;mob=[M.UID()]'>Larva</A> \]
-				<a href='byond://?_src_=holder;simplemake=human;mob=[M.UID()]'>Human</A>
-				\[ slime: <a href='byond://?_src_=holder;simplemake=slime;mob=[M.UID()]'>Baby</A>,
-				<a href='byond://?_src_=holder;simplemake=adultslime;mob=[M.UID()]'>Adult</A> \]
-				<a href='byond://?_src_=holder;simplemake=monkey;mob=[M.UID()]'>Monkey</A> |
-				<a href='byond://?_src_=holder;simplemake=robot;mob=[M.UID()]'>Cyborg</A> |
-				<a href='byond://?_src_=holder;simplemake=cat;mob=[M.UID()]'>Cat</A> |
-				<a href='byond://?_src_=holder;simplemake=runtime;mob=[M.UID()]'>Runtime</A> |
-				<a href='byond://?_src_=holder;simplemake=corgi;mob=[M.UID()]'>Corgi</A> |
-				<a href='byond://?_src_=holder;simplemake=ian;mob=[M.UID()]'>Ian</A> |
-				<a href='byond://?_src_=holder;simplemake=crab;mob=[M.UID()]'>Crab</A> |
-				<a href='byond://?_src_=holder;simplemake=coffee;mob=[M.UID()]'>Coffee</A> |
-				\[ Construct: <a href='byond://?_src_=holder;simplemake=constructarmoured;mob=[M.UID()]'>Armoured</A> ,
-				<a href='byond://?_src_=holder;simplemake=constructbuilder;mob=[M.UID()]'>Builder</A> ,
-				<a href='byond://?_src_=holder;simplemake=constructwraith;mob=[M.UID()]'>Wraith</A> \]
-				<a href='byond://?_src_=holder;simplemake=shade;mob=[M.UID()]'>Shade</A>
+				<b>Rudimentary transformation:</b><span style='font-size: 2;'><br>These transformations only create a new mob type and copy stuff over. They do not take into account MMIs and similar mob-specific things. The buttons in 'Transformations' are preferred, when possible.</span><br>
+				<a href='byond://?_src_=holder;simplemake=observer;mob=[M.UID()]'>Observer</a> |
+				\[ Alien: <a href='byond://?_src_=holder;simplemake=drone;mob=[M.UID()]'>Drone</a>,
+				<a href='byond://?_src_=holder;simplemake=hunter;mob=[M.UID()]'>Hunter</a>,
+				<a href='byond://?_src_=holder;simplemake=queen;mob=[M.UID()]'>Queen</a>,
+				<a href='byond://?_src_=holder;simplemake=sentinel;mob=[M.UID()]'>Sentinel</a>,
+				<a href='byond://?_src_=holder;simplemake=larva;mob=[M.UID()]'>Larva</a> \]
+				<a href='byond://?_src_=holder;simplemake=human;mob=[M.UID()]'>Human</a>
+				\[ slime: <a href='byond://?_src_=holder;simplemake=slime;mob=[M.UID()]'>Baby</a>,
+				<a href='byond://?_src_=holder;simplemake=adultslime;mob=[M.UID()]'>Adult</a> \]
+				<a href='byond://?_src_=holder;simplemake=monkey;mob=[M.UID()]'>Monkey</a> |
+				<a href='byond://?_src_=holder;simplemake=robot;mob=[M.UID()]'>Cyborg</a> |
+				<a href='byond://?_src_=holder;simplemake=cat;mob=[M.UID()]'>Cat</a> |
+				<a href='byond://?_src_=holder;simplemake=runtime;mob=[M.UID()]'>Runtime</a> |
+				<a href='byond://?_src_=holder;simplemake=corgi;mob=[M.UID()]'>Corgi</a> |
+				<a href='byond://?_src_=holder;simplemake=ian;mob=[M.UID()]'>Ian</a> |
+				<a href='byond://?_src_=holder;simplemake=crab;mob=[M.UID()]'>Crab</a> |
+				<a href='byond://?_src_=holder;simplemake=coffee;mob=[M.UID()]'>Coffee</a> |
+				\[ Construct: <a href='byond://?_src_=holder;simplemake=constructarmoured;mob=[M.UID()]'>Armoured</a> ,
+				<a href='byond://?_src_=holder;simplemake=constructbuilder;mob=[M.UID()]'>Builder</a> ,
+				<a href='byond://?_src_=holder;simplemake=constructwraith;mob=[M.UID()]'>Wraith</a> \]
+				<a href='byond://?_src_=holder;simplemake=shade;mob=[M.UID()]'>Shade</a>
 			"}
 
 	if(M.client)
 		body += {"<br><br>
 			<b>Other actions:</b>
 			<br>
-			<a href='byond://?_src_=holder;forcespeech=[M.UID()]'>Forcesay</A> |
-			<a href='byond://?_src_=holder;aroomwarp=[M.UID()]'>Admin Room</A> |
-			<a href='byond://?_src_=holder;tdome1=[M.UID()]'>Thunderdome 1</A> |
-			<a href='byond://?_src_=holder;tdome2=[M.UID()]'>Thunderdome 2</A> |
-			<a href='byond://?_src_=holder;tdomeadmin=[M.UID()]'>Thunderdome Admin</A> |
-			<a href='byond://?_src_=holder;tdomeobserve=[M.UID()]'>Thunderdome Observer</A> |
-			<a href='byond://?_src_=holder;contractor_stop=[M.UID()]'>Stop Syndicate Jail Timer</A> |
-			<a href='byond://?_src_=holder;contractor_start=[M.UID()]'>Start Syndicate Jail Timer</A> |
-			<a href='byond://?_src_=holder;contractor_release=[M.UID()]'>Release now from Syndicate Jail</A> |
+			<a href='byond://?_src_=holder;forcespeech=[M.UID()]'>Forcesay</a> |
+			<a href='byond://?_src_=holder;aroomwarp=[M.UID()]'>Admin Room</a> |
+			<a href='byond://?_src_=holder;tdome1=[M.UID()]'>Thunderdome 1</a> |
+			<a href='byond://?_src_=holder;tdome2=[M.UID()]'>Thunderdome 2</a> |
+			<a href='byond://?_src_=holder;tdomeadmin=[M.UID()]'>Thunderdome Admin</a> |
+			<a href='byond://?_src_=holder;tdomeobserve=[M.UID()]'>Thunderdome Observer</a> |
+			<a href='byond://?_src_=holder;contractor_stop=[M.UID()]'>Stop Syndicate Jail Timer</a> |
+			<a href='byond://?_src_=holder;contractor_start=[M.UID()]'>Start Syndicate Jail Timer</a> |
+			<a href='byond://?_src_=holder;contractor_release=[M.UID()]'>Release now from Syndicate Jail</a> |
 		"}
 
 	body += {"<br></body>
@@ -311,19 +317,12 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	var/datum/browser/popup = new(usr, "adminplayeropts", "<div align='center'>Options for [M.key]</div>", 600, 615)
 	popup.set_content(body)
 	popup.set_window_options("can_close=1;can_minimize=0;can_maximize=0;can_resize=0;titlebar=1;")
-	popup.open()
+	popup.open(TRUE)
 	onclose(usr, "adminplayeropts")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Show Player Panel") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Show Player Panel")
 
-
-/datum/player_info/var/author // admin who authored the information
-/datum/player_info/var/rank //rank of admin who made the notes
-/datum/player_info/var/content // text content of the information
-/datum/player_info/var/timestamp // Because this is bloody annoying
-
-#define PLAYER_NOTES_ENTRIES_PER_PAGE 50
 /datum/admins/proc/PlayerNotes()
-	set category = "Admin.Ban"
+	set category = STATPANEL_ADMIN_BAN
 	set name = "Player Notes"
 
 	if(!check_rights(R_ADMIN|R_MOD))
@@ -331,8 +330,8 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 	show_note()
 
-/datum/admins/proc/show_player_notes(var/key as text)
-	set category = "Admin.Ban"
+/datum/admins/proc/show_player_notes(key as text)
+	set category = STATPANEL_ADMIN_BAN
 	set name = "Show Player Notes"
 
 	if(!check_rights(R_ADMIN|R_MOD))
@@ -341,7 +340,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	show_note(key)
 
 /datum/admins/proc/vpn_whitelist()
-	set category = "Admin.Ban"
+	set category = STATPANEL_ADMIN_BAN
 	set name = "VPN Ckey Whitelist"
 	if(!check_rights(R_BAN))
 		return
@@ -353,14 +352,16 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	if(!check_rights(R_BAN))
 		return
 
-	var/dat = {"<!DOCTYPE html><meta charset="UTF-8"><B>Job Bans!</B><HR><table>"}
+	var/dat = {"<b>Job Bans!</b><hr><table>"}
 	for(var/t in GLOB.jobban_keylist)
 		var/r = t
-		if( findtext(r,"##") )
+		if(findtext(r,"##"))
 			r = copytext( r, 1, findtext(r,"##") )//removes the description
-		dat += text("<tr><td>[t] (<a href='byond://?src=[UID()];removejobban=[r]'>unban</A>)</td></tr>")
+		dat += text("<tr><td>[t] (<a href='byond://?src=[UID()];removejobban=[r]'>unban</a>)</td></tr>")
 	dat += "</table>"
-	usr << browse(dat, "window=ban;size=400x400")
+	var/datum/browser/popup = new(usr, "jobban", "Jobban", 400, 400)
+	popup.set_content(dat)
+	popup.open(FALSE)
 
 
 /datum/admins/proc/Game()
@@ -382,13 +383,12 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	dat += "<p><a href='byond://?src=[cached_UID];create_turf=1'>Create Turf</a><br></p>"
 	dat += "<p><a href='byond://?src=[cached_UID];create_mob=1'>Create Mob</a></p>"
 	if(marked_datum && istype(marked_datum, /atom))
-		dat += "<A href='byond://?src=[cached_UID];dupe_marked_datum=1'>Duplicate Marked Datum</A><br>"
+		dat += "<a href='byond://?src=[cached_UID];dupe_marked_datum=1'>Duplicate Marked Datum</a><br>"
 
 	var/datum/browser/popup = new(usr, "game_panel", "<div align='center'>Game Panel</div>", 220, 300)
 	popup.set_content(dat.Join(""))
 	popup.set_window_options("can_close=1;can_minimize=0;can_maximize=0;can_resize=0;titlebar=1;")
 	popup.open()
-	onclose(usr, "game_panel")
 	return
 
 /////////////////////////////////////////////////////////////////////////////////////////////////admins2.dm merge
@@ -396,7 +396,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 
 /datum/admins/proc/restart()
-	set category = "Server"
+	set category = STATPANEL_SERVER
 	set name = "Restart"
 	set desc = "Restarts the world."
 
@@ -419,7 +419,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 			return FALSE
 
 	if(result)
-		SSblackbox.record_feedback("tally", "admin_verb", 1, "Reboot World") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+		BLACKBOX_LOG_ADMIN_VERB("Reboot World")
 		var/init_by = "Initiated by [usr.client.holder.fakekey ? "Admin" : usr.key]."
 		switch(result)
 
@@ -444,7 +444,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 
 /datum/admins/proc/end_round()
-	set category = "Server"
+	set category = STATPANEL_SERVER
 	set name = "End Round"
 	set desc = "Instantly ends the round and brings up the scoreboard, like shadowlings or wizards dying."
 
@@ -463,12 +463,12 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	if(announcement)
 		to_chat(world, "<span class='warning'><big><b>[announcement]</b></big></span>")
 	SSticker.force_ending = TRUE
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "End Round") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("End Round")
 	SSticker.mode_result = "admin ended"
 
 
 /datum/admins/proc/announce()
-	set category = "Admin.Event"
+	set category = STATPANEL_ADMIN_EVENT
 	set name = "Announce"
 	set desc = "Announce your desires to the world"
 
@@ -483,10 +483,14 @@ GLOBAL_VAR_INIT(nologevent, 0)
 		message = replacetext(message, "\n", "<br>") // required since we're putting it in a <p> tag
 		to_chat(world, chat_box_notice("<span class='notice'><b>[usr.client.holder.fakekey ? "Administrator" : usr.key] Announces:</b><br><br><p>[message]</p></span>"))
 		log_admin("Announce: [key_name(usr)] : [message]")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Announce") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+		for(var/client/clients_to_alert in GLOB.clients)
+			window_flash(clients_to_alert)
+			if(clients_to_alert.prefs?.sound & SOUND_ADMINHELP)
+				SEND_SOUND(clients_to_alert, sound('sound/effects/adminhelp.ogg'))
+	BLACKBOX_LOG_ADMIN_VERB("Announce")
 
 /datum/admins/proc/toggleooc()
-	set category = "Admin.Toggles"
+	set category = STATPANEL_ADMIN_TOGGLES
 	set desc="Globally Toggles OOC"
 	set name="Toggle OOC"
 
@@ -495,10 +499,10 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 	toggle_ooc()
 	log_and_message_admins("toggled OOC.")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Toggle OOC") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Toggle OOC")
 
 /datum/admins/proc/togglelooc()
-	set category = "Admin.Toggles"
+	set category = STATPANEL_ADMIN_TOGGLES
 	set desc="Globally Toggles LOOC"
 	set name="Toggle LOOC"
 
@@ -508,14 +512,14 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	CONFIG_SET(flag/looc_allowed, !CONFIG_GET(flag/looc_allowed))
 
 	if(CONFIG_GET(flag/looc_allowed))
-		to_chat(world, "<B>The LOOC channel has been globally enabled!</B>")
+		to_chat(world, "<b>The LOOC channel has been globally enabled!</b>")
 	else
-		to_chat(world, "<B>The LOOC channel has been globally disabled!</B>")
+		to_chat(world, "<b>The LOOC channel has been globally disabled!</b>")
 	log_and_message_admins("toggled LOOC.")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Toggle LOOC") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Toggle LOOC")
 
 /datum/admins/proc/toggledsay()
-	set category = "Admin.Toggles"
+	set category = STATPANEL_ADMIN_TOGGLES
 	set desc="Globally Toggles DSAY"
 	set name="Toggle DSAY"
 
@@ -525,14 +529,14 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	CONFIG_SET(flag/dsay_allowed, !CONFIG_GET(flag/dsay_allowed))
 
 	if(CONFIG_GET(flag/dsay_allowed))
-		to_chat(world, "<B>Deadchat has been globally enabled!</B>")
+		to_chat(world, "<b>Deadchat has been globally enabled!</b>")
 	else
-		to_chat(world, "<B>Deadchat has been globally disabled!</B>")
+		to_chat(world, "<b>Deadchat has been globally disabled!</b>")
 	log_and_message_admins("toggled deadchat.")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Toggle Deadchat") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc
+	BLACKBOX_LOG_ADMIN_VERB("Toggle Deadchat")
 
 /datum/admins/proc/toggleoocdead()
-	set category = "Admin.Toggles"
+	set category = STATPANEL_ADMIN_TOGGLES
 	set desc="Toggle Dead OOC."
 	set name="Toggle Dead OOC"
 
@@ -541,14 +545,14 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 	CONFIG_SET(flag/dooc_allowed, !(CONFIG_GET(flag/dooc_allowed)))
 	if(CONFIG_GET(flag/dooc_allowed))
-		to_chat(world, "<B>Dead OOC has been globally enabled!</B>")
+		to_chat(world, "<b>Dead OOC has been globally enabled!</b>")
 	else
-		to_chat(world, "<B>Dead OOC has been globally disabled!</B>")
+		to_chat(world, "<b>Dead OOC has been globally disabled!</b>")
 	log_and_message_admins("toggled Dead OOC.")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Toggle Dead OOC") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Toggle Dead OOC")
 
 /datum/admins/proc/toggleemoji()
-	set category = "Admin.Toggles"
+	set category = STATPANEL_ADMIN_TOGGLES
 	set desc = "Toggle OOC Emoji"
 	set name = "Toggle OOC Emoji"
 
@@ -557,10 +561,10 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	CONFIG_SET(flag/disable_ooc_emoji, !CONFIG_GET(flag/disable_ooc_emoji))
 
 	log_and_message_admins("toggled OOC Emoji.")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Toggle OOC Emoji")
+	BLACKBOX_LOG_ADMIN_VERB("Toggle OOC Emoji")
 
 /datum/admins/proc/startnow()
-	set category = "Server"
+	set category = STATPANEL_SERVER
 	set desc="Start the round RIGHT NOW"
 	set name="Start Now"
 
@@ -582,14 +586,15 @@ GLOBAL_VAR_INIT(nologevent, 0)
 		if(SSticker.current_state == GAME_STATE_STARTUP)
 			msg = " (The server is still setting up, but the round will be started as soon as possible.)"
 		message_admins("<span class='darkmblue'>[usr.key] has started the game.[msg]</span>")
-		SSblackbox.record_feedback("tally", "admin_verb", 1, "Start Game") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+		BLACKBOX_LOG_ADMIN_VERB("Start Game")
 		return 1
 	else
-		to_chat(usr, "<font color='red'>Error: Start Now: Game has already started.</font>", confidential=TRUE)
+		to_chat(usr, "<span style='color: red;'>Error: Start Now: Game has already started.</span>", confidential=TRUE)
 		return
 
+
 /datum/admins/proc/toggleenter()
-	set category = "Server"
+	set category = STATPANEL_SERVER
 	set desc="People can't enter"
 	set name="Toggle Entering"
 
@@ -597,16 +602,16 @@ GLOBAL_VAR_INIT(nologevent, 0)
 		return
 
 	GLOB.enter_allowed = !( GLOB.enter_allowed )
-	if(!( GLOB.enter_allowed ))
-		to_chat(world, "<B>New players may no longer enter the game.</B>")
+	if(!( GLOB.enter_allowed))
+		to_chat(world, "<b>New players may no longer enter the game.</b>")
 	else
-		to_chat(world, "<B>New players may now enter the game.</B>")
+		to_chat(world, "<b>New players may now enter the game.</b>")
 	log_and_message_admins("toggled new player game entering.")
 	world.update_status()
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Toggle Entering") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Toggle Entering")
 
 /datum/admins/proc/toggleAI()
-	set category = "Admin.Toggles"
+	set category = STATPANEL_ADMIN_TOGGLES
 	set desc="People can't be AI"
 	set name="Toggle AI"
 
@@ -615,15 +620,15 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 	CONFIG_SET(flag/allow_ai, !CONFIG_GET(flag/allow_ai))
 	if(!CONFIG_GET(flag/allow_ai))
-		to_chat(world, "<B>The AI job is no longer chooseable.</B>")
+		to_chat(world, "<b>The AI job is no longer chooseable.</b>")
 	else
-		to_chat(world, "<B>The AI job is chooseable now.</B>")
+		to_chat(world, "<b>The AI job is chooseable now.</b>")
 	log_and_message_admins("toggled AI allowed.")
 	world.update_status()
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Toggle AI") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Toggle AI")
 
 /datum/admins/proc/toggleaban()
-	set category = "Admin.Toggles"
+	set category = STATPANEL_ADMIN_TOGGLES
 	set desc="Toggle the ability for players to respawn."
 	set name="Toggle Respawn"
 
@@ -632,15 +637,15 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 	GLOB.abandon_allowed = !( GLOB.abandon_allowed )
 	if(GLOB.abandon_allowed)
-		to_chat(world, "<B>You may now respawn.</B>")
+		to_chat(world, "<b>You may now respawn.</b>")
 	else
-		to_chat(world, "<B>You may no longer respawn :(</B>")
+		to_chat(world, "<b>You may no longer respawn :(</b>")
 	log_and_message_admins("toggled respawn to [GLOB.abandon_allowed ? "On" : "Off"].")
 	world.update_status()
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Toggle Respawn") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Toggle Respawn")
 
 /datum/admins/proc/delay()
-	set category = "Server"
+	set category = STATPANEL_SERVER
 	set desc="Delay the game start/end"
 	set name="Delay"
 
@@ -662,7 +667,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 		SSticker.ticker_going = TRUE
 		to_chat(world, "<b>The game will start soon.</b>")
 		log_admin("[key_name(usr)] removed the delay.")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Delay") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Delay")
 
 ////////////////////////////////////////////////////////////////////////////////////////////////ADMIN HELPER PROCS
 
@@ -706,11 +711,11 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 
 /**
-  * A proc that return whether the mob is a "Special Character" aka Antagonist
-  *
-  * Arguments:
-  * * M - the mob you're checking
-  */
+ * A proc that return whether the mob is a "Special Character" aka Antagonist
+ *
+ * Arguments:
+ * * M - the mob you're checking
+ */
 /proc/is_special_character(mob/M)
 	if(!SSticker.mode)
 		return FALSE
@@ -726,11 +731,11 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 
 /**
-  * A proc that return an array of capitalized strings containing name of the antag types they are
-  *
-  * Arguments:
-  * * M - the mob you're checking
-  */
+ * A proc that return an array of capitalized strings containing name of the antag types they are
+ *
+ * Arguments:
+ * * M - the mob you're checking
+ */
 /proc/get_antag_type_strings_list(mob/M) // return an array of all the antag types they are with name
 	var/list/antag_list = list()
 
@@ -743,7 +748,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 		antag_list += "Revolutionary"
 	if(M.mind in SSticker.mode.cult)
 		antag_list += "Cultist"
-	if(M.mind in SSticker.mode.syndicates)
+	if(M.mind.has_antag_datum(/datum/antagonist/nuclear_operative))
 		antag_list += "Nuclear Operative"
 	if(M.mind in SSticker.mode.wizards)
 		antag_list += "Wizard"
@@ -769,15 +774,15 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 
 /**
-  * A proc that return a string containing all the singled out antags . Empty string if not antag
-  *
-  * Usually, you'd return a FALSE, but since this is consumed by javascript you're in
-  * for a world of hurt if you pass a byond FALSE which get converted into a fucking string anyway and pass for TRUE in check. Fuck.
-  * It always append "(May be other antag)"
-  * Arguments:
-  * * M - the mob you're checking
-  * *
-  */
+ * A proc that return a string containing all the singled out antags . Empty string if not antag
+ *
+ * Usually, you'd return a FALSE, but since this is consumed by javascript you're in
+ * for a world of hurt if you pass a byond FALSE which get converted into a fucking string anyway and pass for TRUE in check. Fuck.
+ * It always append "(May be other antag)"
+ * Arguments:
+ * * M - the mob you're checking
+ * *
+ */
 /proc/get_antag_type_truncated_plaintext_string(mob/M as mob)
 	var/list/antag_list = get_antag_type_strings_list(M)
 
@@ -788,14 +793,14 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 
 /datum/admins/proc/spawn_atom(object as text)
-	set category = "Admin.Event"
+	set category = STATPANEL_ADMIN_EVENT
 	set desc = "(путь атома) Создать атом. Добавьте точку к тексту, чтобы исключить подтипы пути, соответствующего входным данным."
 	set name = "Spawn"
 
 	return usr.client.spawn_atom_impl(object, FALSE)
 
 /datum/admins/proc/spawn_atom_adv(object as text)
-	set category = "Admin.Event"
+	set category = STATPANEL_ADMIN_EVENT
 	set desc = "(путь атома) Создать атом c aргументами в New(). Добавьте точку к тексту, чтобы исключить подтипы пути, соответствующего входным данным."
 	set name = "Advanced Spawn"
 
@@ -848,15 +853,16 @@ GLOBAL_VAR_INIT(nologevent, 0)
 
 		arguments = list(usr.loc) + arguments
 
-		var/atom/A = new chosen(arglist(arguments))
-		A.flags |= ADMIN_SPAWNED
+		var/atom/atom = new chosen(arglist(arguments))
+		if(atom)
+			atom.flags |= ADMIN_SPAWNED
 
 	log_and_message_admins("spawned [chosen] at [COORD(usr)][LAZYLEN(arguments) > 1 ? " with parameters [print_single_line(arguments)]": ""]")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Spawn Atom") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Spawn Atom")
 
 
-/datum/admins/proc/show_traitor_panel(var/mob/M in GLOB.mob_list)
-	set category = "Admin.Admin"
+/datum/admins/proc/show_traitor_panel(mob/M in GLOB.mob_list)
+	set category = STATPANEL_ADMIN_ADMIN
 	set desc = "Edit mobs's memory and role"
 	set name = "\[Admin\] Show Traitor Panel"
 
@@ -871,10 +877,10 @@ GLOBAL_VAR_INIT(nologevent, 0)
 		return
 
 	M.mind.edit_memory()
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Show Traitor Panel") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Show Traitor Panel")
 
 /datum/admins/proc/toggleguests()
-	set category = "Admin.Toggles"
+	set category = STATPANEL_ADMIN_TOGGLES
 	set desc="Guests can't enter"
 	set name="Toggle Guests"
 
@@ -882,39 +888,43 @@ GLOBAL_VAR_INIT(nologevent, 0)
 		return
 
 	GLOB.guests_allowed = !( GLOB.guests_allowed )
-	if(!( GLOB.guests_allowed ))
-		to_chat(world, "<B>Guests may no longer enter the game.</B>")
+	if(!( GLOB.guests_allowed))
+		to_chat(world, "<b>Guests may no longer enter the game.</b>")
 	else
-		to_chat(world, "<B>Guests may now enter the game.</B>")
+		to_chat(world, "<b>Guests may now enter the game.</b>")
 	log_and_message_admins("toggled guests game entering [GLOB.guests_allowed ? "" : "dis"]allowed.")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Toggle Guests") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Toggle Guests")
 
 /datum/admins/proc/output_ai_laws()
 	var/ai_number = 0
+	var/list/messages = list()
 	for(var/mob/living/silicon/S in GLOB.mob_list)
+		if(istype(S, /mob/living/silicon/decoy) && !S.client)
+			continue
 		ai_number++
 		if(isAI(S))
-			to_chat(usr, "<b>AI [key_name(S, TRUE)]'s laws:</b>", confidential=TRUE)
+			messages += "<b>AI [key_name(S, TRUE)]'s laws:</b>"
 		else if(isrobot(S))
 			var/mob/living/silicon/robot/R = S
-			to_chat(usr, "<b>CYBORG [key_name(S, TRUE)]'s [R.connected_ai?"(Slaved to: [R.connected_ai])":"(Independent)"] laws:</b>", confidential=TRUE)
+			messages += "<b>CYBORG [key_name(S, TRUE)]'s [R.connected_ai?"(Slaved to: [R.connected_ai])":"(Independent)"] laws:</b>"
 		else if(ispAI(S))
 			var/mob/living/silicon/pai/P = S
-			to_chat(usr, "<b>pAI [key_name(S, TRUE)]'s laws:</b>", confidential=TRUE)
-			to_chat(usr, "[P.pai_law0]", confidential=TRUE)
+			messages += "<b>pAI [key_name(S, TRUE)]'s laws:</b>"
+			messages += "[P.pai_law0]"
 			if(P.pai_laws)
-				to_chat(usr, "[P.pai_laws]")
+				messages += "[P.pai_laws]"
 			continue // Skip showing normal silicon laws for pAIs - they don't have any
 		else
-			to_chat(usr, "<b>SILICON [key_name(S, TRUE)]'s laws:</b>", confidential=TRUE)
+			messages += "<b>SILICON [key_name(S, TRUE)]'s laws:</b>"
 
 		if(S.laws == null)
-			to_chat(usr, "[key_name(S, TRUE)]'s laws are null. Contact a coder.", confidential=TRUE)
+			messages += "[key_name(S, TRUE)]'s laws are null. Contact a coder."
 		else
-			S.laws.show_laws(usr)
+			messages += S.laws.return_laws_text()
 	if(!ai_number)
-		to_chat(usr, "<b>No AI's located.</b>", confidential=TRUE)//Just so you know the thing is actually working and not just ignoring you.
+		messages += "<b>No AI's located.</b>" //Just so you know the thing is actually working and not just ignoring you.
 
+	to_chat(usr, chat_box_examine(messages.Join("\n")), confidential=TRUE)
 
 	log_and_message_admins("checked the AI laws")
 
@@ -931,7 +941,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 //ALL DONE
 //*********************************************************************************************************
 
-/proc/formatJumpTo(var/location,var/where="")
+/proc/formatJumpTo(location, where="")
 	var/turf/loc
 	if(istype(location,/turf/))
 		loc = location
@@ -941,7 +951,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 		where=formatLocation(loc)
 	return "<a href='byond://?_src_=holder;adminplayerobservecoodjump=1;X=[loc.x];Y=[loc.y];Z=[loc.z]'>[where]</a>"
 
-/proc/formatLocation(var/location)
+/proc/formatLocation(location)
 	var/turf/loc
 	if(istype(location,/turf/))
 		loc = location
@@ -950,7 +960,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	var/area/A = get_area(location)
 	return "[A.name] - [loc.x],[loc.y],[loc.z]"
 
-/proc/formatPlayerPanel(var/mob/U,var/text="PP")
+/proc/formatPlayerPanel(mob/U, text="PP")
 	return "[ADMIN_PP(U,"[text]")]"
 
 //Kicks all the clients currently in the lobby. The second parameter (kick_only_afk) determins if an is_afk() check is ran, or if all clients are kicked
@@ -995,7 +1005,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 		var/mob/living/simple_animal/possessed_object/tomob = new(toitem)
 
 		log_and_message_admins("has put [frommob.ckey] in control of [tomob.name].")
-		SSblackbox.record_feedback("tally", "admin_verb", 1, "Ghost Drag")
+		BLACKBOX_LOG_ADMIN_VERB("Ghost Drag")
 
 		tomob.ckey = frommob.ckey
 		qdel(frommob)
@@ -1020,7 +1030,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 			tomob.ghostize(0)
 
 		log_and_message_admins("has put [frommob.ckey] in control of [tomob.name].")
-		SSblackbox.record_feedback("tally", "admin_verb", 1, "Ghost Drag")
+		BLACKBOX_LOG_ADMIN_VERB("Ghost Drag")
 
 		tomob.ckey = frommob.ckey
 		qdel(frommob)
@@ -1039,7 +1049,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
 			return TRUE
 
 		log_and_message_admins("has put [frommob.ckey] in control of an empty AI core.")
-		SSblackbox.record_feedback("tally", "admin_verb", 1, "Ghost Drag")
+		BLACKBOX_LOG_ADMIN_VERB("Ghost Drag")
 
 		var/transfer_key = frommob.key // frommob is qdel'd in frommob.AIize()
 		var/mob/living/silicon/ai/ai_character = frommob.AIize()
@@ -1077,7 +1087,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
  * Enables an admin to upload a new titlescreen image.
  */
 /client/proc/admin_change_title_screen()
-	set category = "Admin.Fun"
+	set category = STATPANEL_ADMIN_FUN
 	set name = "Title Screen: Change"
 
 	if(!check_rights(R_EVENT))
@@ -1102,7 +1112,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
  * Sets a titlescreen notice, a big red text on the main screen.
  */
 /client/proc/change_title_screen_notice()
-	set category = "Admin.Fun"
+	set category = STATPANEL_ADMIN_FUN
 	set name = "Title Screen: Set Notice"
 
 	if(!check_rights(R_EVENT))
@@ -1124,7 +1134,7 @@ GLOBAL_VAR_INIT(nologevent, 0)
  * An admin debug command that enables you to change the HTML on the go.
  */
 /client/proc/change_title_screen_html()
-	set category = "Admin.Fun"
+	set category = STATPANEL_ADMIN_FUN
 	set name = "Title Screen: Set HTML"
 
 	if(!check_rights(R_DEBUG))
@@ -1143,4 +1153,4 @@ GLOBAL_VAR_INIT(nologevent, 0)
 	SStitle.set_title_html(new_html)
 
 	message_admins("[key_name_admin(usr)] has changed the title screen HTML.")
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Change Title Screen")
+	BLACKBOX_LOG_ADMIN_VERB("Change Title Screen")

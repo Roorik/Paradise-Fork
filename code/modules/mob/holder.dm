@@ -7,6 +7,7 @@
 	righthand_file = 'icons/mob/inhands/mobs_righthand.dmi'
 	slot_flags = ITEM_SLOT_HEAD
 	origin_tech = "biotech=2"
+	holder_flags = HUMAN_HOLDER
 
 
 /obj/item/holder/New()
@@ -49,15 +50,15 @@
 	for(var/mob/living/M in contents)
 		M.show_message(message, m_type, chat_message_type)
 
-/obj/item/holder/emp_act(var/intensity)
+/obj/item/holder/emp_act(intensity)
 	for(var/mob/living/M in contents)
 		M.emp_act(intensity)
 
-/obj/item/holder/ex_act(var/intensity)
+/obj/item/holder/ex_act(intensity)
 	for(var/mob/living/M in contents)
 		M.ex_act(intensity)
 
-/obj/item/holder/container_resist(var/mob/living/L)
+/obj/item/holder/container_resist(mob/living/L)
 	var/mob/M = src.loc                      //Get our mob holder (if any).
 
 	if(istype(M))
@@ -74,30 +75,38 @@
 				return
 		M.status_flags &= ~PASSEMOTES
 
-
-//Mob procs and vars for scooping up
-/mob/living
-	var/holder_type = null
-
 /mob/living/simple_animal/MouseDrop(atom/over_object)
-	var/mob/living/carbon/human/human_to_ask = over_object //changed to human to avoid stupid issues like xenos holding animals.
+	var/mob/living/carbon/human_to_ask = over_object
+
 	if(!istype(human_to_ask))
 		return ..()
+
+	if(holder_type)
+		var/obj/item/holder = holder_type
+		var/holder_flags = holder.holder_flags
+		if(!(holder_flags & ALIEN_HOLDER && isalien(human_to_ask)) && \
+		!(holder_flags & HUMAN_HOLDER && ishuman(human_to_ask)))
+			return ..()
+
 	if(human_to_ask.incapacitated() || HAS_TRAIT(human_to_ask, TRAIT_HANDS_BLOCKED) || !Adjacent(human_to_ask) || !holder_type)
 		return ..()
+
 	if(usr == src)
-		switch(alert(human_to_ask, "[src] wants you to pick [p_them()] up. Do it?",,"Yes","No"))
+		switch(tgui_alert(human_to_ask, "[src] wants you to pick [p_them()] up. Do it?",,list("Yes","No")))
 			if("Yes")
 				if(Adjacent(human_to_ask))
-					get_scooped(human_to_ask)
+					pick_up_mob(human_to_ask)
 				else
-					to_chat(src, "<span class='warning'>You need to stay in reaching distance to be picked up.</span>")
+					to_chat(src, span_warning("You need to stay in reaching distance to be picked up."))
 			if("No")
-				to_chat(src, "<span class='warning'>[human_to_ask] decided not to pick you up.</span>")
+				to_chat(src, span_warning("[human_to_ask] decided not to pick you up."))
 	else
 		return ..()
 
-/mob/living/proc/get_scooped(var/mob/living/carbon/grabber)
+/mob/living/simple_animal/proc/pick_up_mob(mob/living/carbon/human_to_ask)
+	get_scooped(human_to_ask)
+
+/mob/living/proc/get_scooped(mob/living/carbon/grabber)
 	if(!holder_type)
 		return
 
@@ -109,9 +118,8 @@
 	if(desc)
 		H.desc = desc
 	H.attack_hand(grabber)
-
 	to_chat(grabber, "<span class='notice'>Вы подняли [src.name].")
-	to_chat(src, "<span class='notice'>[grabber.name] поднял[genderize_ru(grabber.gender,"","а","о","и")] вас.</span>")
+	to_chat(src, span_notice("[grabber.name] поднял[genderize_ru(grabber.gender,"","а","о","и")] вас."))
 	grabber.status_flags |= PASSEMOTES
 
 	switch(mob_size)
@@ -141,7 +149,6 @@
 	origin_tech = "materials=3;programming=4;powerstorage=3;engineering=4"
 
 /obj/item/holder/drone/emagged
-	name = "maintenance drone"
 	icon_state = "drone-emagged"
 	origin_tech = "materials=3;programming=4;powerstorage=3;engineering=4;syndicate=3"
 
@@ -244,6 +251,7 @@
 	desc = "It's a pet"
 	icon = 'icons/mob/pets.dmi'
 	icon_state = "fox"
+	slot_flags = ITEM_SLOT_NECK
 
 /obj/item/holder/sloth
 	name = "pet"
@@ -360,17 +368,17 @@
 	icon_state = "cock"
 	slot_flags = null
 
-/obj/item/holder/hamster
+/obj/item/holder/wooly_mouse
 	name = "pet"
 	desc = "It's a pet"
 	icon = 'icons/mob/animal.dmi'
-	icon_state = "hamster"
+	icon_state = "wooly_mouse"
 
-/obj/item/holder/hamster_rep
-	name = "Представитель Алексей"
-	desc = "Уважаемый хомяк"
+/obj/item/holder/mouse_rep
+	name = "Господин Мышкин"
+	desc = "Самый уважаемый грызун во вселенной."
 	icon = 'icons/mob/animal.dmi'
-	icon_state = "hamster_rep"
+	icon_state = "mouse_rep"
 
 /obj/item/holder/fennec
 	name = "fennec"
@@ -409,7 +417,6 @@
 /obj/item/holder/possum/poppy
 	name = "poppy"
 	desc = "It's a possum Poppy. Ewwww..."
-	icon = 'icons/mob/pets.dmi'
 	icon_state = "possum_poppy"
 
 /obj/item/holder/frog
@@ -442,3 +449,16 @@
 	desc = "Honk honk"
 	icon = 'icons/mob/animal.dmi'
 	icon_state = "clowngoblin"
+
+/obj/item/holder/library_owl
+	name = "pet"
+	desc = "It's a pet"
+	icon = 'icons/mob/pets.dmi'
+	icon_state = "library_owl"
+
+/obj/item/holder/alice
+	name = "Alisa"
+	desc = "fox with beret"
+	icon = 'icons/mob/pets.dmi'
+	icon_state = "alisa"
+	slot_flags = ITEM_SLOT_NECK

@@ -14,11 +14,11 @@
 	voice = GetVoice()
 	tts_seed = GetTTSVoice()
 
-	if(.) //not dead
-
+	if(.) // not dead
 		handle_pain()
 		handle_heartbeat()
 		dna.species.handle_life(src)
+
 		if(!client)
 			dna.species.handle_npc(src)
 
@@ -108,50 +108,54 @@
 
 	if(getBrainLoss() >= 60 && stat != DEAD)
 		if(prob(3))
-			var/list/s1 = list("Я [pick("ПОНИ","ЯЩЕР","ТАЯРА","КОТЁНОК","ВУЛЬП","ДРАСК","ПТИЧКА","ВОКСИК","МАШИНА","БОЕВОЙ МЕХ","РАКЕТА")] [pick("НЬЕЕЕЕЕЕЕЕЕЕ","СКРЭЭЭЭЭЭЭЭЭ","МЯУ","НЯ~","РАВР","ГАВ-ГАВ","ХИССССС","ВРУУУМ-ВРУУУУМ","ПИУ-ПИУ","ЧУ-ЧУ")]!",
-							   "Без кислорода блоб не распространяется?",
-							   "КАПИТАН - КОМДОН",
-							   "[pick("", "Этот чёртов маньяк,")] [pick("Жордж", "Джордж", "Горж", "Грудж")] [pick("Меленс", "Мэлонс", "Мвырлнс")] убивает меня ПАМА;ГИТЕ!!!",
-							   "Можишь пж дать [pick("теликенез","халга","эпелепсию")]?",
-							   "ООООО МОЯ ОБОРОНА",
-							   "Джонни, эти синдикатовцы даже в СБ!",
-							   "Блоп в турбине",
-							   "не бей пж!11!",
-							   "АХАХААХАХАХАХАХАХХАХХАХАХ!",
-							   "ПАМАГИТЕ ЩЕТКУРИТИ",
-							   "ВОКсЫ нЕ мОГут ЛюБИТь",
-							   "Мой папа владеет этой станцией",
-							   "Повар добавил [pick("ПРОТЕИН", "туолетную воду", "муравьёв", "энзимы","акулу","виТамины","РеАктивный МутАген","ТеСлиум","сКрэКтониум")] в [pick("мой суп","мою шОверму","мой рЭйнбургер","мой зеЛёный Сольент","мои СушИ","мой борш")]!",
-							   "У ОБЕЗЬЯН ТАЗЕРЫ!",
-							   "кМ потраТел мои ;поенты на [pick("бОевые дробавики","ризИновые перЧатке","кУчу херни!")]",
-							   "EI'NATH!",
-							   "ПОДЪЁМ ХРЮШКИ!",
-							   "эта [pick("был мой младшей брат!!","была мая невеста","был мой осТавшЕйся друк","был Мой деДдом","былА мая люБов","была моя жена","был мой муж","маИ малЕнькие ДеТи","МаЯ разУмнАя коШка","быЛ мой косЯк")]!!!")
+			var/list/s1 = list(
+				"Я [pick("ПОНИ","ЯЩЕР","ТАЯРА","КОТЁНОК","ВУЛЬП","ДРАСК","ПТИЧКА","ВОКСИК","МАШИНА","БОЕВОЙ МЕХ","РАКЕТА")] [pick("НЬЕЕЕЕЕЕЕЕЕЕ","СКРЭЭЭЭЭЭЭЭЭ","МЯУ","НЯ~","РАВР","ГАВ-ГАВ","ХИССССС","ВРУУУМ-ВРУУУУМ","ПИУ-ПИУ","ЧУ-ЧУ")]!",
+				"Без кислорода блоб не распространяется?",
+				"КАПИТАН - КОМДОН",
+				"[pick("", "Этот чёртов маньяк,")] [pick("Жордж", "Джордж", "Горж", "Грудж")] [pick("Меленс", "Мэлонс", "Мвырлнс")] убивает меня ПАМА;ГИТЕ!!!",
+				"Можишь пж дать [pick("теликенез","халга","эпелепсию")]?",
+				"ООООО МОЯ ОБОРОНА",
+				"Джонни, эти синдикатовцы даже в СБ!",
+				"Блоп в турбине",
+				"не бей пж!11!",
+				"АХАХААХАХАХАХАХАХХАХХАХАХ!",
+				"ПАМАГИТЕ ЩЕТКУРИТИ",
+				"ВОКсЫ нЕ мОГут ЛюБИТь",
+				"Мой папа владеет этой станцией",
+				"Повар добавил [pick("ПРОТЕИН", "туолетную воду", "муравьёв", "энзимы","акулу","виТамины","РеАктивный МутАген","ТеСлиум","сКрэКтониум")] в [pick("мой суп","мою шОверму","мой рЭйнбургер","мой зеЛёный Сольент","мои СушИ","мой борш")]!",
+				"У ОБЕЗЬЯН ТАЗЕРЫ!",
+				"кМ потраТел мои ;поенты на [pick("бОевые дробавики","ризИновые перЧатке","кУчу херни!")]",
+				"EI'NATH!",
+				"ПОДЪЁМ ХРЮШКИ!",
+				"эта [pick("был мой младшей брат!!","была мая невеста","был мой осТавшЕйся друк","был Мой деДдом","былА мая люБов","была моя жена","был мой муж","маИ малЕнькие ДеТи","МаЯ разУмнАя коШка","быЛ мой косЯк")]!!!"
+			)
 
-			var/list/s2 = list("ФУС РО ДА",
-							   "Гребаные мандарины!!!",
-							   "Праверь меня",
-							   "Моё лицо!",
-							   "СПОКОЙНО БЛЯТЬ!",
-							   "ВАААААААААГХ!!!",
-							   "Папробуй догани!",
-							   "ЗА ИМПЕРАТОРА!",
-							   "У кЛоунА лиМитка!",
-							   "это всё дварфы, чел, всё дварфы",
-							   "СПЕЙС МАРИНЫ",
-							   "Мввыы ссдееллалии этво вво имя хаосса",
-							   "Фотареалистичные тикстуры",
-							   "Любоф цвятёт",
-							   "ПАКЕТЫ!!!",
-							   "[pick("ГДЕ МОЙ","МНЕ НУЖЕН","ДАЙ МНЕ МОЙ","ОКУНИ МЕНЯ В")] [pick("ДЕРМАЛИН","АЛКИЗИН","ДИЛОВИН","ИНАПРОВАЛИН","БИКАРДИН","ГИПЕРЗИН","КЕЛОТАН","ЛЕПОРАЗИН","СОЛЬ","МАННИТОЛ","КРИОКСАДОН","СПЕЙС ЛУБ","КАППУЛЕТИУМ","ЛСД")]!",
-							   "ВоИмЯФлАфИ",
-							   "У меНя еСтЬ Лююди на Цк!!!",
-							   "П-п-помогите т-т-теха",
-							   "Ани идут, ани ИДУТ! АНИ ИДУТ!!!",
-							   "КОНЕЦ БЛИЗОК!",
-							   "Помогите [pick("маг","убийца","генокрад","культ","морф","демон","нюка","вампир!","воксы!","клоун!")] [pick("в турбине","на мостике","на ЦК","в медбее","в бриге","в инженерке","на базе синдиката","на спутнике ИИ","в моей голове","в дормах")]!",
-							   "Я ГОТОВ УМЕРЕТЬ ВО ИМЯ [pick("РИТУАЛА","СВОБОДЫ","ЗАРПЛАТЫ","ОЧКОВ","ТЕХНОЛОГИЙ","СОБАКИ","СИРОПА","ПУШИСТЫХ ДРУЗЕЙ","ЛУТА ИЗ ГЕЙТА")]",
-							   "УБИЙ ИХ, [pick("ПЕТУХ","КИРА-КЛОЙН","КЛУВНИ","МИМАНЬЯК","БОМБЯЩИЯ ТАЯРА","ОФЕЦЕР","МОРФЛЕНГ","НАС-РИ")]!")
+			var/list/s2 = list(
+				"ФУС РО ДА",
+				"Гребаные мандарины!!!",
+				"Праверь меня",
+				"Моё лицо!",
+				"СПОКОЙНО БЛЯТЬ!",
+				"ВАААААААААГХ!!!",
+				"Папробуй догани!",
+				"ЗА ИМПЕРАТОРА!",
+				"У кЛоунА лиМитка!",
+				"это всё дварфы, чел, всё дварфы",
+				"СПЕЙС МАРИНЫ",
+				"Мввыы ссдееллалии этво вво имя хаосса",
+				"Фотареалистичные тикстуры",
+				"Любоф цвятёт",
+				"ПАКЕТЫ!!!",
+				"[pick("ГДЕ МОЙ","МНЕ НУЖЕН","ДАЙ МНЕ МОЙ","ОКУНИ МЕНЯ В")] [pick("ДЕРМАЛИН","АЛКИЗИН","ДИЛОВИН","ИНАПРОВАЛИН","БИКАРДИН","ГИПЕРЗИН","КЕЛОТАН","ЛЕПОРАЗИН","СОЛЬ","МАННИТОЛ","КРИОКСАДОН","СПЕЙС ЛУБ","КАППУЛЕТИУМ","ЛСД")]!",
+				"ВоИмЯФлАфИ",
+				"У меНя еСтЬ Лююди на Цк!!!",
+				"П-п-помогите т-т-теха",
+				"Ани идут, ани ИДУТ! АНИ ИДУТ!!!",
+				"КОНЕЦ БЛИЗОК!",
+				"Помогите [pick("маг","убийца","генокрад","культ","морф","демон","нюка","вампир!","воксы!","клоун!")] [pick("в турбине","на мостике","на ЦК","в медбее","в бриге","в инженерке","на базе синдиката","на спутнике ИИ","в моей голове","в дормах")]!",
+				"Я ГОТОВ УМЕРЕТЬ ВО ИМЯ [pick("РИТУАЛА","СВОБОДЫ","ЗАРПЛАТЫ","ОЧКОВ","ТЕХНОЛОГИЙ","СОБАКИ","СИРОПА","ПУШИСТЫХ ДРУЗЕЙ","ЛУТА ИЗ ГЕЙТА")]",
+				"УБИЙ ИХ, [pick("ПЕТУХ","КИРА-КЛОЙН","КЛУВНИ","МИМАНЬЯК","БОМБЯЩИЯ ТАЯРА","ОФЕЦЕР","МОРФЛЕНГ","НАС-РИ")]!"
+			)
 			switch(pick(1,2,3))
 				if(1)
 					say(pick(s1))
@@ -168,16 +172,16 @@
 		var/instability = DEFAULT_GENE_STABILITY - gene_stability
 		if(prob(instability * 0.1))
 			adjustFireLoss(min(5, instability * 0.67))
-			to_chat(src, "<span class='danger'>You feel like your skin is burning and bubbling off!</span>")
+			to_chat(src, span_danger("Вы ощущаете, как ваша кожа горит и покрывается волдырями!"))
 		if(gene_stability < GENETIC_DAMAGE_STAGE_2)
 			if(prob(instability * 0.83))
 				adjustCloneLoss(min(4, instability * 0.05))
-				to_chat(src, "<span class='danger'>You feel as if your body is warping.</span>")
+				to_chat(src, span_danger("Вам кажется, что ваше тело теряет свою форму."))
 			if(prob(instability * 0.1))
 				adjustToxLoss(min(5, instability * 0.67))
-				to_chat(src, "<span class='danger'>You feel weak and nauseous.</span>")
+				to_chat(src, span_danger("Вы чувствуете слабость и тошноту."))
 			if(gene_stability < GENETIC_DAMAGE_STAGE_3 && prob(1))
-				to_chat(src, "<span class='biggerdanger'>You feel incredibly sick... Something isn't right!</span>")
+				to_chat(src, span_biggerdanger("Вам невероятно плохо... Что-то не так!"))
 				spawn(300)
 					if(gene_stability < GENETIC_DAMAGE_STAGE_3)
 						gib()
@@ -213,7 +217,7 @@
 					if(prob(5))
 						radiation = max(radiation-5, 0)
 						Weaken(6 SECONDS)
-						to_chat(src, "<span class='danger'>You feel weak.</span>")
+						to_chat(src, span_danger("Вы чувствуете слабость."))
 						emote("collapse")
 
 				if(75 to 100)
@@ -221,7 +225,7 @@
 					apply_damages(burn = 2, tox = 2, spread_damage = TRUE)
 					autopsy_damage = 4
 					if(prob(2))
-						to_chat(src, "<span class='danger'>You mutate!</span>")
+						to_chat(src, span_danger("Вы мутируете!"))
 						randmutb(src)
 						check_genes()
 
@@ -230,7 +234,7 @@
 					apply_damages(burn = 3, tox = 2, spread_damage = TRUE)
 					autopsy_damage = 5
 					if(prob(4))
-						to_chat(src, "<span class='danger'>You mutate!</span>")
+						to_chat(src, span_danger("Вы мутируете!"))
 						randmutb(src)
 						check_genes()
 
@@ -239,7 +243,7 @@
 					apply_damages(burn = 3, tox = 2, spread_damage = TRUE)
 					autopsy_damage = 5
 					if(prob(6))
-						to_chat(src, "<span class='danger'>You mutate!</span>")
+						to_chat(src, span_danger("Вы мутируете!"))
 						randmutb(src)
 						check_genes()
 
@@ -292,7 +296,7 @@
 		return
 
 	SEND_SIGNAL(src, COMSIG_HUMAN_EARLY_HANDLE_ENVIRONMENT, environment)
-	
+
 	var/loc_temp = get_temperature(environment)
 //	to_chat(world, "Loc temp: [loc_temp] - Body temp: [bodytemperature] - Fireloss: [getFireLoss()] - Thermal protection: [get_main_thermal_protection()] - Fire protection: [thermal_protection + add_fire_protection(loc_temp)] - Heat capacity: [environment_heat_capacity] - Location: [loc] - src: [src]")
 
@@ -656,16 +660,23 @@
 
 		// nutrition decrease
 		if(nutrition >= 0 && stat != DEAD)
-			handle_nutrition_alerts()
 			// THEY HUNGER
 			var/hunger_rate = is_vamp ? HUNGER_FACTOR_VAMPIRE : HUNGER_FACTOR * dna.species.hunger_drain_mod * physiology.hunger_mod
 			if(satiety > 0)
 				satiety--
+
 			if(satiety < 0)
 				satiety++
 				if(prob(round(-satiety/40)))
 					Jitter(10 SECONDS)
+
 				hunger_rate *= 3
+
+			var/list/hunger_mods = list()
+			SEND_SIGNAL(src, COMSIG_GET_HUNGER_MODS, hunger_mods)
+			for(var/mod in hunger_mods)
+				hunger_rate *= mod
+
 			adjust_nutrition(-hunger_rate)
 
 		if(nutrition > NUTRITION_LEVEL_FULL)
@@ -688,15 +699,15 @@
 			metabolism_efficiency = 1
 		else if(nutrition > NUTRITION_LEVEL_FED && satiety > 80)
 			if(metabolism_efficiency != 1.25)
-				to_chat(src, "<span class='notice'>You feel vigorous.</span>")
+				to_chat(src, span_notice("Вы чувствуете прилив сил."))
 				metabolism_efficiency = 1.25
 		else if(nutrition < NUTRITION_LEVEL_STARVING + 50)
 			if(metabolism_efficiency != 0.8)
-				to_chat(src, "<span class='notice'>You feel sluggish.</span>")
+				to_chat(src, span_notice("Вы чувствуете вялость."))
 			metabolism_efficiency = 0.8
 		else
 			if(metabolism_efficiency == 1.25)
-				to_chat(src, "<span class='notice'>You no longer feel vigorous.</span>")
+				to_chat(src, span_notice("Прилив сил проходит."))
 			metabolism_efficiency = 1
 
 	if(HAS_TRAIT(src, TRAIT_NO_INTORGANS))
@@ -733,14 +744,15 @@
 				return
 
 		if(health <= HEALTH_THRESHOLD_CRIT)
-			if(prob(5))
-				emote(pick("faint", "collapse", "cry", "moan", "gasp", "shudder", "shiver"))
-			SetStuttering(10 SECONDS)
-			EyeBlurry(10 SECONDS)
-			if(prob(7))
-				AdjustConfused(4 SECONDS)
-			if(prob(5))
-				Paralyse(4 SECONDS)
+			if(get_perceived_trauma(shock_reduction()) <= 0)
+				if(prob(5))
+					emote(pick("faint", "collapse", "cry", "moan", "gasp", "shudder", "shiver"))
+				SetStuttering(10 SECONDS)
+				EyeBlurry(10 SECONDS)
+				if(prob(7))
+					AdjustConfused(4 SECONDS)
+				if(prob(5))
+					Paralyse(4 SECONDS)
 			switch(health)
 				if(-INFINITY to -100)
 					adjustOxyLoss(1)
@@ -755,7 +767,7 @@
 				if(-99 to -80)
 					adjustOxyLoss(1)
 					if(prob(4))
-						to_chat(src, "<span class='userdanger'>Your chest hurts...</span>")
+						to_chat(src, span_userdanger("Грудь пронзает боль..."))
 						Paralyse(4 SECONDS)
 						var/datum/disease/critical/heart_failure/D = new
 						D.Contract(src)
@@ -768,7 +780,7 @@
 						var/datum/disease/critical/heart_failure/D = new
 						D.Contract(src)
 					if(prob(6))
-						to_chat(src, "<span class='userdanger'>You feel [pick("horrible pain", "awful", "like shit", "absolutely awful", "like death", "like you are dying", "nothing", "warm", "sweaty", "tingly", "really, really bad", "horrible")]!</span>")
+						to_chat(src, span_userdanger("Вы чувствуете [pick("себя ужасно", "себя отвратительно", "себя, как дерьмо", "себя очень плохо", "тепло", "покалывание", "себя очень, очень плохо", "себя кошмарно")]!"))
 						Weaken(6 SECONDS)
 					if(prob(3))
 						Paralyse(4 SECONDS)
@@ -778,8 +790,8 @@
 						var/datum/disease/critical/shock/D = new
 						D.Contract(src)
 					if(prob(5))
-						to_chat(src, "<span class='userdanger'>You feel [pick("terrible", "awful", "like shit", "sick", "numb", "cold", "sweaty", "tingly", "horrible")]!</span>")
-						Weaken(6 SECONDS)
+						to_chat(src, span_userdanger("Вы чувствуете [pick("себя ужасно", "себя отвратительно", "себя, как дерьмо", "боль", "онемение", "холод", "покалывание", "себя кошмарно")]!"))
+						Knockdown(6 SECONDS)
 
 
 #define BODYPART_PAIN_REDUCTION 5
@@ -846,7 +858,7 @@
 				healthdoll.cut_overlay(cached_overlays - new_overlays)
 				healthdoll.cached_healthdoll_overlays = new_overlays
 
-		if(health <= HEALTH_THRESHOLD_CRIT)
+		if(health <= HEALTH_THRESHOLD_CRIT && get_perceived_trauma(shock_reduction) < 0)
 			throw_alert("succumb", /atom/movable/screen/alert/succumb)
 		else
 			clear_alert("succumb")
@@ -854,46 +866,19 @@
 #undef BODYPART_PAIN_REDUCTION
 
 
-/mob/living/carbon/human/proc/handle_nutrition_alerts() //This is a terrible abuse of the alert system; something like this should be a HUD element
-	var/new_hunger
-	switch(nutrition)
-		if(NUTRITION_LEVEL_FULL to INFINITY)
-			new_hunger = "fat"
-		if(NUTRITION_LEVEL_WELL_FED to NUTRITION_LEVEL_FULL)
-			new_hunger = "full"
-		if(NUTRITION_LEVEL_FED to NUTRITION_LEVEL_WELL_FED)
-			new_hunger = "well_fed"
-		if(NUTRITION_LEVEL_HUNGRY to NUTRITION_LEVEL_FED)
-			new_hunger = "fed"
-		if(NUTRITION_LEVEL_STARVING to NUTRITION_LEVEL_HUNGRY)
-			new_hunger = "hungry"
-		else
-			new_hunger = "starving"
-
-	if(HAS_TRAIT(src, TRAIT_NO_HUNGER) && !isvampire(src))
-		new_hunger = "full"
-
-	if(dna.species.hunger_type)
-		new_hunger += "/[dna.species.hunger_type]"
-
-	if(dna.species.hunger_level != new_hunger)
-		dna.species.hunger_level = new_hunger
-		throw_alert(ALERT_NUTRITION, text2path("/atom/movable/screen/alert/hunger/[new_hunger]"), icon_override = dna.species.hunger_icon)
-		med_hud_set_status()
-
 /mob/living/carbon/human/proc/handle_embedded_objects()
 	for(var/obj/item/organ/external/bodypart as anything in bodyparts)
 		for(var/obj/item/thing in bodypart.embedded_objects)
 			if(prob(thing.embedded_pain_chance))
 				apply_damage(thing.w_class * thing.embedded_pain_multiplier, def_zone = bodypart)
-				to_chat(src, span_userdanger("[thing] embedded in your [bodypart.name] hurts!"))
+				to_chat(src, span_userdanger("[capitalize(thing.declent_ru(NOMINATIVE))] в ваш[genderize_ru(bodypart.gender, "ем", "ей", "ем", "их")] [GLOB.body_zone[bodypart.limb_zone][PREPOSITIONAL]] причиняет боль!"))
 
 			if(prob(thing.embedded_fall_chance))
 				bodypart.remove_embedded_object(thing)
 				apply_damage(thing.w_class * thing.embedded_fall_pain_multiplier, def_zone = bodypart)
 				visible_message(
-					span_danger("[thing] falls out of [name]'s [bodypart.name]!"),
-					span_userdanger("[thing] falls out of your [bodypart.name]!"),
+					span_danger("[capitalize(thing.declent_ru(NOMINATIVE))] выпадает из [GLOB.body_zone[bodypart.limb_zone][GENITIVE]] [name]!"),
+					span_danger("[capitalize(thing.declent_ru(NOMINATIVE))] выпадает из ваш[genderize_ru(bodypart.gender, "его", "ей", "его", "их")] [GLOB.body_zone[bodypart.limb_zone][GENITIVE]]!"),
 				)
 
 
@@ -980,7 +965,7 @@
 			// Humans can lack a mind datum, y'know
 			if(H.mind && (H.mind.assigned_role == JOB_TITLE_DETECTIVE || H.mind.assigned_role == JOB_TITLE_CORONER))
 				continue //too cool for puke
-			to_chat(H, "<span class='warning'>You smell something foul...</span>")
+			to_chat(H, span_warning("Вы чувствуете тошнотворный запах..."))
 			H.fakevomit()
 
 /mob/living/carbon/human/proc/handle_heartbeat()
@@ -1000,7 +985,7 @@
 
 				if(heartbeat >= rate)
 					heartbeat = 0
-					src << sound('sound/effects/electheart.ogg',0,0,CHANNEL_HEARTBEAT,30)//Credit to GhostHack (www.ghosthack.de) for sound.
+					SEND_SOUND(src, sound('sound/effects/electheart.ogg', channel = CHANNEL_HEARTBEAT, volume = 30))//Credit to GhostHack (www.ghosthack.de) for sound.
 
 				else
 					heartbeat++
@@ -1018,7 +1003,7 @@
 
 			if(heartbeat >= rate)
 				heartbeat = 0
-				src << sound('sound/effects/singlebeat.ogg',0,0,CHANNEL_HEARTBEAT,50)
+				SEND_SOUND(src, sound('sound/effects/singlebeat.ogg', channel = CHANNEL_HEARTBEAT, volume = 50))
 			else
 				heartbeat++
 

@@ -1,12 +1,13 @@
 GLOBAL_VAR_INIT(normal_ooc_colour, "#275FC5")
 GLOBAL_VAR_INIT(member_ooc_colour, "#035417")
+GLOBAL_VAR_INIT(devs_ooc_colour, "#129c00")
 GLOBAL_VAR_INIT(mentor_ooc_colour, "#00B0EB")
 GLOBAL_VAR_INIT(moderator_ooc_colour, "#184880")
 GLOBAL_VAR_INIT(admin_ooc_colour, "#b82e00")
 
 /client/verb/ooc(msg = "" as text)
 	set name = "OOC"
-	set category = "OOC"
+	set category = STATPANEL_OOC
 
 	if(!mob)
 		return
@@ -34,23 +35,23 @@ GLOBAL_VAR_INIT(admin_ooc_colour, "#b82e00")
 		return
 
 	if(!(prefs.toggles & PREFTOGGLE_CHAT_OOC))
-		to_chat(src, "<span class='danger'>You have OOC muted.</span>")
+		to_chat(src, span_danger("You have OOC muted."))
 		return
 
 	if(!check_rights(R_ADMIN|R_MOD,0))
 		if(!CONFIG_GET(flag/ooc_allowed))
-			to_chat(src, "<span class='danger'>OOC is globally muted.</span>")
+			to_chat(src, span_danger("OOC is globally muted."))
 			return
 		if(handle_spam_prevention(msg, MUTE_OOC, OOC_COOLDOWN))
 			return
 		if(findtext(msg, "byond://"))
-			to_chat(src, "<B>Advertising other servers is not allowed.</B>")
+			to_chat(src, "<b>Advertising other servers is not allowed.</b>")
 			log_admin("[key_name_log(src)] has attempted to advertise in OOC: [msg]")
 			message_admins("[key_name_admin(src)] has attempted to advertise in OOC: [msg]")
 			return
 		if(findtext(msg, "https://") || findtext(msg, "http://"))
 			if(!findtext(msg, "ss220.space"))
-				to_chat(src, "<B>Advertising other sites is not allowed.</B>")
+				to_chat(src, "<b>Advertising other sites is not allowed.</b>")
 				log_admin("[key_name_log(src)] has attempted to advertise in OOC: [msg]")
 				message_admins("[key_name_admin(src)] has attempted to advertise in OOC: [msg]")
 				return
@@ -69,10 +70,12 @@ GLOBAL_VAR_INIT(admin_ooc_colour, "#b82e00")
 				display_colour = src.prefs.ooccolor
 			else
 				display_colour = GLOB.admin_ooc_colour
+		else if(check_rights(R_VIEWRUNTIMES, 0))
+			display_colour = GLOB.devs_ooc_colour
 
 	if(prefs.unlock_content)
 		if(display_colour == GLOB.normal_ooc_colour)
-			if((prefs.toggles & PREFTOGGLE_MEMBER_PUBLIC))
+			if(prefs.toggles & PREFTOGGLE_MEMBER_PUBLIC)
 				display_colour = GLOB.member_ooc_colour
 
 	for(var/client/C in GLOB.clients)
@@ -85,7 +88,7 @@ GLOBAL_VAR_INIT(admin_ooc_colour, "#b82e00")
 					display_name = "[bicon(byond)][display_name]"
 
 			if(donator_level > 0)
-				if((prefs.toggles & PREFTOGGLE_DONATOR_PUBLIC))
+				if(prefs.toggles & PREFTOGGLE_DONATOR_PUBLIC)
 					var/icon/donator = icon('icons/ooc_tag_16x.png')
 					display_name = "[bicon(donator)][display_name]"
 
@@ -97,29 +100,27 @@ GLOBAL_VAR_INIT(admin_ooc_colour, "#b82e00")
 						display_name = holder.fakekey
 
 			if(!CONFIG_GET(flag/disable_ooc_emoji))
-				msg = "<span class='emoji_enabled'>[msg]</span>"
-
-			to_chat(C, "<font color='[display_colour]'><span class='ooc'><span class='prefix'>OOC:</span> <EM>[display_name]:</EM> <span class='message'>[msg]</span></span></font>")
-
+				msg = span_emojienabled("[msg]")
+			to_chat(C, span_ooc("<span style='color:[display_colour];'>[span_prefix("OOC: ")]<em>[display_name]:</em> [span_message(msg)]</span>"))
 /proc/toggle_ooc()
 	CONFIG_SET(flag/ooc_allowed, !CONFIG_GET(flag/ooc_allowed))
 	if(CONFIG_GET(flag/ooc_allowed))
-		to_chat(world, "<B>The OOC channel has been globally enabled!</B>")
+		to_chat(world, "<b>The OOC channel has been globally enabled!</b>")
 		log_admin("OOC was toggled on automatically.")
 		message_admins("OOC has been toggled on automatically.")
 	else
-		to_chat(world, "<B>The OOC channel has been globally disabled!</B>")
+		to_chat(world, "<b>The OOC channel has been globally disabled!</b>")
 		log_admin("OOC was toggled off automatically.")
 		message_admins("OOC has been toggled off automatically.")
 
-/proc/auto_toggle_ooc(var/on)
+/proc/auto_toggle_ooc(on)
 	if(CONFIG_GET(flag/auto_toggle_ooc_during_round) && CONFIG_GET(flag/ooc_allowed) != on)
 		toggle_ooc()
 
 /client/verb/looc(msg = "" as text)
 	set name = "LOOC"
 	set desc = "Local OOC, seen only by those in view."
-	set category = "OOC"
+	set category = STATPANEL_OOC
 
 	if(!mob)
 		return
@@ -146,20 +147,20 @@ GLOBAL_VAR_INIT(admin_ooc_colour, "#b82e00")
 		return
 
 	if(!(prefs.toggles & PREFTOGGLE_CHAT_LOOC))
-		to_chat(src, "<span class='danger'>You have LOOC muted.</span>")
+		to_chat(src, span_danger("You have LOOC muted."))
 		return
 
 	if(!check_rights(R_ADMIN|R_MOD,0))
 		if(handle_spam_prevention(msg, MUTE_OOC, OOC_COOLDOWN))
 			return
 		if(findtext(msg, "byond://"))
-			to_chat(src, "<B>Advertising other servers is not allowed.</B>")
+			to_chat(src, "<b>Advertising other servers is not allowed.</b>")
 			log_admin("[key_name_log(src)] has attempted to advertise in LOOC: [msg]")
 			message_admins("[key_name_admin(src)] has attempted to advertise in LOOC: [msg]")
 			return
 		if(findtext(msg, "https://") || findtext(msg, "http://"))
 			if(!findtext(msg, "ss220.space"))
-				to_chat(src, "<B>Advertising other sites is not allowed.</B>")
+				to_chat(src, "<b>Advertising other sites is not allowed.</b>")
 				log_admin("[key_name_log(src)] has attempted to advertise in OOC: [msg]")
 				message_admins("[key_name_admin(src)] has attempted to advertise in OOC: [msg]")
 				return
@@ -169,7 +170,7 @@ GLOBAL_VAR_INIT(admin_ooc_colour, "#b82e00")
 	add_ooc_logs(src, msg, TRUE)
 
 	var/mob/source = mob.get_looc_source()
-	var/list/heard = get_mobs_in_view(7, source)
+	var/list/heard = get_hearers_in_view(7, source)
 
 	var/display_name = key
 	if(holder && holder.fakekey)
@@ -206,7 +207,7 @@ GLOBAL_VAR_INIT(admin_ooc_colour, "#b82e00")
 					prefix = "(R)"
 
 			if(send)
-				to_chat(target, "<span class='ooc'><span class='looc'>LOOC<span class='prefix'>[prefix]: </span><EM>[display_name][admin_stuff]:</EM> <span class='message'>[msg]</span></span></span>")
+				to_chat(target, span_ooc(span_looc("LOOC[span_prefix("[prefix]: ")]<em>[display_name][admin_stuff]:</em> [span_message(msg)]")))
 
 /mob/proc/get_looc_source()
 	return src

@@ -6,7 +6,6 @@
 	icon_state = "prize_counter-on"
 	density = TRUE
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 40
 	var/tickets = 0
 
@@ -89,62 +88,6 @@
 		return
 
 	var/dat = {"
-<html>
-	<meta charset="UTF-8">
-	<head>
-		<title>Arcade Ticket Exchange</title>
-		<style type="text/css">
-* {
-	font-family:sans-serif;
-	font-size:x-small;
-}
-html {
-	background:#333;
-	color:#999;
-}
-
-table {background:#303030;border:1px solid #262626;}
-
-caption {text-align:left;}
-
-.button {
-	color:#cfcfcf;
-	text-decoration:none;
-	font-weight:bold;
-	text-align:center;
-	width:75px;
-	padding:21px;
-	box-sizing:border-box;
-	background:none;
-	border:none;
-	display: inline-block;
-}
-.button:hover {color:#ffffff;}
-
-a {
-	color:#cfcfcf;
-	text-decoration:none;
-	font-weight:bold;
-}
-a:hover {color:#ffffff;}
-
-p {margin:0;}
-
-tr.dark {background:#303030;}
-
-tr.light {background:#3f3f3f;}
-
-td,th {padding:15px;border-bottom:1px solid #262626;}
-
-th.cost{padding:0px;border-left:1px solid #262626;}
-
-th.cost.affordable {background:green;}
-
-th.cost.toomuch {background:maroon;}
-
-		</style>
-	</head>
-	<body>
 	<p style="float:right"><b>Tickets: [tickets]</b> | <a href='byond://?src=[UID()];eject=1'>Eject Tickets</a></p>
 	<h1>Arcade Ticket Exchange</h1>
 	<p>
@@ -188,10 +131,12 @@ th.cost.toomuch {background:maroon;}
 
 	dat += {"
 		</tbody>
-	</table>
-	</body>
-</html>"}
-	user << browse(dat, "window=prize_counter;size=440x600;can_resize=0")
+	</table>"}
+	var/datum/browser/popup = new(user, "prize_counter", "Arcade Ticket Exchange", 440, 600)
+	popup.set_content(dat)
+	popup.set_window_options("can_resize=0;")
+	popup.add_stylesheet("prize_counter", 'html/css/prize_counter.css')
+	popup.open(FALSE)
 	onclose(user, "prize_counter")
 	return
 
@@ -212,9 +157,9 @@ th.cost.toomuch {background:maroon;}
 			updateUsrDialog()
 			return
 		if(!GLOB.global_prizes.PlaceOrder(src, itemID))
-			to_chat(usr, "<span class='warning'>Unable to complete the exchange.</span>")
+			to_chat(usr, span_warning("Unable to complete the exchange."))
 		else
-			to_chat(usr, "<span class='notice'>You've successfully purchased the item.</span>")
+			to_chat(usr, span_notice("You've successfully purchased the item."))
 
 	interact(usr)
 	return

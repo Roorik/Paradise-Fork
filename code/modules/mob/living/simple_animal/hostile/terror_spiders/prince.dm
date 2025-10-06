@@ -11,14 +11,6 @@
 /mob/living/simple_animal/hostile/poison/terror_spider/prince
 	name = "Prince of Terror"
 	desc = "Огромный, ужасающий паук. Похоже, он уничтожает всё, что видит. Его шкура кажется непробиваемой, и на нём видны шрамы многих сражений."
-	ru_names = list(
-		NOMINATIVE = "Принц Ужаса",
-		GENITIVE = "Принца Ужаса",
-		DATIVE = "Принцу Ужаса",
-		ACCUSATIVE = "Принца Ужаса",
-		INSTRUMENTAL = "Принцем Ужаса",
-		PREPOSITIONAL = "Принце Ужаса",
-	)
 	ai_target_method = TS_DAMAGE_BRUTE
 	icon_state = "terror_allblack"
 	icon_living = "terror_allblack"
@@ -51,6 +43,16 @@
 	move_resist = MOVE_FORCE_STRONG // no more pushing a several hundred if not thousand pound spider
 	tts_seed = "Alduin"
 
+/mob/living/simple_animal/hostile/poison/terror_spider/prince/get_ru_names()
+	return list(
+		NOMINATIVE = "Принц Ужаса",
+		GENITIVE = "Принца Ужаса",
+		DATIVE = "Принцу Ужаса",
+		ACCUSATIVE = "Принца Ужаса",
+		INSTRUMENTAL = "Принцем Ужаса",
+		PREPOSITIONAL = "Принце Ужаса",
+	)
+
 /mob/living/simple_animal/hostile/poison/terror_spider/prince/death(gibbed)
 	if(can_die() && !hasdied && spider_uo71)
 		UnlockBlastDoors("UO71_SciStorage")
@@ -64,7 +66,7 @@
 				return FALSE
 			L.adjustBruteLoss(25)
 			L.Weaken(2 SECONDS)
-			playsound(src, 'sound/creatures/terrorspiders/rip.ogg', 100, 1)
+			playsound(src, 'sound/creatures/terrorspiders/rip.ogg', 100, TRUE)
 			var/obj/item/organ/external/NB = pick(L.bodyparts)
 			visible_message(span_warning("[capitalize(declent_ru(NOMINATIVE))] отрывает [NB.declent_ru(ACCUSATIVE)] [L.declent_ru(GENITIVE)] своими острыми, как бритва, челюстями!"))
 			NB.droplimb()  //dismemberment

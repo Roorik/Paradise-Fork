@@ -59,8 +59,10 @@
 	var/miming = 0 // Mime's vow of silence
 	var/list/antag_datums
 
-	var/antag_hud_icon_state = null //this mind's ANTAG_HUD should have this icon_state
-	var/datum/atom_hud/antag/antag_hud = null //this mind's antag HUD
+	/// this mind's ANTAG_HUD should have this icon_state
+	var/antag_hud_icon_state = null
+	/// this mind's antag HUD
+	var/datum/atom_hud/antag/antag_hud = null
 	var/datum/mindslaves/som //stands for slave or master...hush..
 	var/damnation_type = 0
 	var/datum/mind/soulOwner //who owns the soul.  Under normal circumstances, this will point to src
@@ -82,9 +84,12 @@
 
 	var/list/learned_recipes //List of learned recipe TYPES.
 
-	var/ambition_limit = 6 //Лимит амбиций
-
 	var/list/curses
+
+	var/madeby_sentience_potion = FALSE
+
+	///a list of objectives that a player with this job could complete for space credit rewards
+	var/list/job_objectives = list()
 
 
 /datum/mind/New(new_key)
@@ -171,6 +176,7 @@
 
 	if(martial_art)
 		for(var/datum/martial_art/MA in known_martial_arts)
+			MA.reset_combos(old_current)
 			MA.remove(current)
 			if(old_current)
 				MA.remove_martial_art_verbs(old_current)
@@ -195,7 +201,7 @@
 
 
 /datum/mind/proc/store_memory(new_text)
-	memory += "[new_text]<BR>"
+	memory += "[new_text]<br>"
 
 
 /datum/mind/proc/wipe_memory()
@@ -205,7 +211,7 @@
 /datum/mind/proc/show_memory(mob/recipient, window = TRUE)
 	if(!recipient)
 		recipient = current
-	var/output = {"<!DOCTYPE html><meta charset="UTF-8"><B>[name]'s Memories:</B><HR>"}
+	var/output = {"<b>[name]'s Memories:</b><hr>"}
 	output += memory
 
 	var/antag_datum_objectives = FALSE
@@ -215,37 +221,22 @@
 			antag_datum_objectives = TRUE
 
 	if(LAZYLEN(objectives) || antag_datum_objectives)
-		output += "<HR><B>Objectives:</B><BR>"
+		output += "<hr><b>Objectives:</b><br>"
 		output += gen_objective_text()
 
 	if(LAZYLEN(job_objectives))
-		output += "<HR><B>Job Objectives:</B><UL>"
+		output += "<hr><b>Job Objectives:</b><ul>"
 
 		var/obj_count = 1
 		for(var/datum/job_objective/objective in job_objectives)
-			output += "<LI><B>Task #[obj_count]</B>: [objective.get_description()]</LI>"
+			output += "<li><b>Task #[obj_count]</b>: [objective.get_description()]</li>"
 			obj_count++
-		output += "</UL>"
-
-	if(iscarbon(current))
-		// Кнопки для амбиций и их отображение
-		output += "<HR><B>Амбиции:</B><UL>"
-		if(LAZYLEN(ambition_objectives))
-
-			var/amb_count = 1
-			for(var/datum/ambition_objective/objective in ambition_objectives)
-				output += "<LI><B>Амбиция #[amb_count]</B>: [objective.description]</LI>"
-				output += "<a href='byond://?src=[UID()];amb_delete=\ref[objective]'>Удалить</a> " // Удалить амбицию
-				output += "<a href='byond://?src=[UID()];amb_completed=\ref[objective]'>" // Определить завершенность амбиции
-				output += "<font color=[objective.completed ? "green" : "red"]>[objective.completed ? "Передумать" : "Выполнить"]</font>"
-				output += "</a>"
-				output += "<br>"
-				amb_count++
-		output += "<a href='byond://?src=[UID()];amb_add=1'>Добавить амбицию</a><br><br>"
-		output += "</UL>"
+		output += "</ul>"
 
 	if(window)
-		recipient << browse(output, "window=memory")
+		var/datum/browser/popup = new(recipient, "memory", "[name]'s Memories")
+		popup.set_content(output)
+		popup.open(FALSE)
 	else
 		to_chat(recipient, "<i>[output]</i>")
 
@@ -448,16 +439,12 @@
 
 /datum/mind/proc/memory_edit_nuclear(mob/living/carbon/human/H)
 	. = _memory_edit_header("nuclear")
-	if(src in SSticker.mode.syndicates)
-		. += "<b><font color='red'>OPERATIVE</b></font>|<a href='byond://?src=[UID()];nuclear=clear'>no</a>"
+	if(has_antag_datum(/datum/antagonist/nuclear_operative))
+		. += "<b>[span_red("OPERATIVE")]|<a href='byond://?src=[UID()];nuclear=clear'>no</a>"
 		. += "<br><a href='byond://?src=[UID()];nuclear=lair'>To shuttle</a>, <a href='byond://?src=[UID()];common=undress'>undress</a>, <a href='byond://?src=[UID()];nuclear=dressup'>dress up</a>."
-		var/code
-		for(var/obj/machinery/nuclearbomb/bombue in GLOB.machines)
-			if(length(bombue.r_code) <= 5 && bombue.r_code != "LOLNO" && bombue.r_code != "ADMIN")
-				code = bombue.r_code
-				break
+		var/code = GLOB.nuke_codes[/obj/machinery/nuclearbomb/syndicate]
 		if(code)
-			. += " Code is [code]. <a href='byond://?src=[UID()];nuclear=tellcode'>tell the code.</a>"
+			. += "Syndicate Code is [code]."
 	else
 		. += "<a href='byond://?src=[UID()];nuclear=nuclear'>operative</a>|<b>NO</b>"
 
@@ -501,16 +488,16 @@
 
 /datum/mind/proc/memory_edit_devil(mob/living/H)
 	. = _memory_edit_header("devil", list("devilagents"))
-	if(src in SSticker.mode.devils)
-		var/datum/antagonist/devil/devilinfo = has_antag_datum(/datum/antagonist/devil)
-		if(!devilinfo)
-			. += "<b>No devilinfo found! Yell at a coder!</b>"
-		else
-			. += "<a href='byond://?src=[UID()];devil=devil'>DEVIL</a>|sintouched|<a href='byond://?src=[UID()];devil=clear'>no</a>"
-	else if(src in SSticker.mode.sintouched)
-		. += "devil|<b>SINTOUCHED</b>|<a href='byond://?src=[UID()];devil=clear'>no</a>"
+	var/datum/antagonist/devil/devilinfo = has_antag_datum(/datum/antagonist/devil)
+	if(devilinfo)
+		. += "<b>[span_red("DEVIL")]</b>|<a href='byond://?src=[UID()];devil=clear'>no</a>"
+		. += "<br><a href='byond://?src=[UID()];devil=panel'>Devil panel</a>"
+		. += "<br><a href='byond://?src=[UID()];devil=rank'>Increase rank</a>"
+
+	else if(has_antag_datum(/datum/antagonist/sintouched))
+		. += "<b>[span_red("SINTOUCHED")]</b>|<a href='byond://?src=[UID()];devil=clear'>no</a>"
 	else
-		. += "<a href='byond://?src=[UID()];devil=devil'>devil</a>|<a href='byond://?src=[UID()];devil=sintouched'>sintouched</a>|<b>NO</b>"
+		. += "<a href='byond://?src=[UID()];devil=devil'>devil</a>|<a href='byond://?src=[UID()];devil=sintouched'>sintouched</a>"
 
 	. += _memory_edit_role_enabled(ROLE_DEVIL)
 
@@ -582,23 +569,23 @@
 	// Contractor
 	. += "<br><b><i>contractor</i></b>: "
 	var/datum/antagonist/contractor/C = has_antag_datum(/datum/antagonist/contractor)
-	if(C)
+	if(traitor_datum?.contractor_pending)
 		var/status
-		if(C.contractor_uplink) // Offer accepted
+		if(C?.contractor_uplink) // Offer accepted
 			status = "<b><font color='red'>CONTRACTOR</font></b>"
-		else if(world.time >= C.offer_deadline)
+		else if(world.time >= traitor_datum.contractor_pending.offer_deadline)
 			status = "<b><font color='darkorange'>CONTRACTOR (EXPIRED)</font></b>"
 		else
 			status = "<b><font color='orange'>CONTRACTOR (PENDING)</font></b>"
 		. += "[status]|<a href='byond://?src=[UID()];contractor=clear'>no</a>"
 		// List all their contracts
-		if(C.contractor_uplink)
+		if(C?.contractor_uplink)
 			. += "<br><b>Contracts:</b>"
 			if(C.contractor_uplink.hub.contracts)
 				var/count = 1
 				for(var/co in C.contractor_uplink.hub.contracts)
 					var/datum/syndicate_contract/CO = co
-					. += "<br><B>Contract #[count++]</B>: "
+					. += "<br><b>Contract #[count++]</b>: "
 					. += "<a href='byond://?src=[UID()];cuid=[CO.UID()];contractor=target'><b>[CO.contract.target?.name || "Invalid target!"]</b></a>|"
 					. += "<a href='byond://?src=[UID()];cuid=[CO.UID()];contractor=locations'>locations</a>|"
 					. += "<a href='byond://?src=[UID()];cuid=[CO.UID()];contractor=other'>more</a>|"
@@ -690,7 +677,7 @@
 	. = ""
 	if(ishuman(current) && ((src in SSticker.mode.head_revolutionaries) || \
 		(has_antag_datum(/datum/antagonist/traitor)) || \
-		(src in SSticker.mode.syndicates)))
+		(has_antag_datum(/datum/antagonist/nuclear_operative))))
 		. = "Uplink: <a href='byond://?src=[UID()];common=uplink'>give</a>"
 		var/obj/item/uplink/hidden/suplink = find_syndicate_uplink()
 		var/crystals
@@ -723,8 +710,8 @@
 		"cult",
 		"clockwork",
 		"wizard",
-		"changeling", 	// "traitorchan", "thiefchan", "changelingthief",
-		"vampire", 		// "traitorvamp", "thiefvamp", "vampirethief",
+		"changeling",	// "traitorchan", "thiefchan", "changelingthief",
+		"vampire",		// "traitorvamp", "thiefvamp", "vampirethief",
 		"nuclear",
 		"traitor",
 		"ninja",
@@ -871,11 +858,6 @@
 	onclose(usr, "edit_memory[src]")
 
 /datum/mind/Topic(href, href_list)
-	//проверяем на амбиции, после чего прерываем выполнение, иначе он залезет в админский антаг-панель
-	var/ambition_func = ambition_topic(href, href_list)
-	if (ambition_func)
-		return
-
 	if(!check_rights(R_ADMIN))
 		return
 
@@ -1175,7 +1157,7 @@
 					new_objective = objective
 				var/datum/objective/steal/steal = new_objective
 				if(!steal.select_target())
-					to_chat(usr, "<span class='warning'>Цель не обнаружена. Выберите другую или создайте её.</span>")
+					to_chat(usr, span_warning("Цель не обнаружена. Выберите другую или создайте её."))
 					return
 
 			if("thief hard")
@@ -1186,7 +1168,7 @@
 					new_objective = objective
 				var/datum/objective/steal/hard/steal = new_objective
 				if(!steal.select_target())
-					to_chat(usr, "<span class='warning'>Цель не обнаружена. Выберите другую или создайте её.</span>")
+					to_chat(usr, span_warning("Цель не обнаружена. Выберите другую или создайте её."))
 					return
 
 			if("thief medium")
@@ -1197,7 +1179,7 @@
 					new_objective = objective
 				var/datum/objective/steal/medium/steal = new_objective
 				if(!steal.select_target())
-					to_chat(usr, "<span class='warning'>Цель не обнаружена. Выберите другую или создайте её.</span>")
+					to_chat(usr, span_warning("Цель не обнаружена. Выберите другую или создайте её."))
 					return
 
 			if("thief collect")
@@ -1208,7 +1190,7 @@
 					new_objective = objective
 				var/datum/objective/steal/collect/steal = new_objective
 				if(!steal.select_target())
-					to_chat(usr, "<span class='warning'>Цель не обнаружена. Выберите другую или создайте её.</span>")
+					to_chat(usr, span_warning("Цель не обнаружена. Выберите другую или создайте её."))
 					return
 
 			if("thief pet")
@@ -1219,7 +1201,7 @@
 					new_objective = objective
 				var/datum/objective/steal/animal/steal = new_objective
 				if(!steal.select_target())
-					to_chat(usr, "<span class='warning'>Цель не обнаружена. Выберите другую или создайте её.</span>")
+					to_chat(usr, span_warning("Цель не обнаружена. Выберите другую или создайте её."))
 					return
 
 			if("thief structure")
@@ -1230,7 +1212,7 @@
 					new_objective = objective
 				var/datum/objective/steal/structure/steal = new_objective
 				if(!steal.select_target())
-					to_chat(usr, "<span class='warning'>Цель не обнаружена. Выберите другую или создайте её.</span>")
+					to_chat(usr, span_warning("Цель не обнаружена. Выберите другую или создайте её."))
 					return
 
 			if("get money")
@@ -1242,8 +1224,8 @@
 					input_sum = tgui_input_number(usr, "Введите необходимую денежную сумму:", "Денежная Сумма", max_value = INFINITY)
 				else
 					accounts_procent = tgui_input_number(usr, "Введите необходимый процентаж суммы со всех аккаунтов (1-100), иначе будет 60%:", "Процентаж", min_value = 1, max_value = 100)
-					if(!accounts_procent)
-						accounts_procent = initial(accounts_procent)
+					if(isnull(accounts_procent) || accounts_procent < 0)
+						return
 				money_objective.owner = src
 				money_objective.new_cash(input_sum, accounts_procent)
 
@@ -1346,14 +1328,14 @@
 				for(var/obj/item/implant/mindshield/ert/I in H.contents)
 					if(I && I.implanted)
 						qdel(I)
-				to_chat(H, "<span class='notice'><Font size =3><B>Your ert mindshield implant has been deactivated.</B></FONT></span>")
+				to_chat(H, span_notice(span_fontsize3("<b>Your ert mindshield implant has been deactivated.</b>")))
 				log_admin("[key_name(usr)] has deactivated [key_name(current)]'s ert mindshield implant")
 				message_admins("[key_name_admin(usr)] has deactivated [key_name_admin(current)]'s ert mindshield implant")
 			if("remove")
 				for(var/obj/item/implant/mindshield/I in H.contents)
 					if(I && I.implanted)
 						qdel(I)
-				to_chat(H, "<span class='notice'><Font size =3><B>Your mindshield implant has been deactivated.</B></FONT></span>")
+				to_chat(H, span_notice(span_fontsize3("<b>Your mindshield implant has been deactivated.</b>")))
 				log_admin("[key_name(usr)] has deactivated [key_name(current)]'s mindshield implant")
 				message_admins("[key_name_admin(usr)] has deactivated [key_name_admin(current)]'s mindshield implant")
 			if("add")
@@ -1363,7 +1345,7 @@
 				log_admin("[key_name(usr)] has given [key_name(current)] a mindshield implant")
 				message_admins("[key_name_admin(usr)] has given [key_name_admin(current)] a mindshield implant")
 
-				to_chat(H, "<span class='warning'><Font size =3><B>You somehow have become the recepient of a mindshield transplant, and it just activated!</B></FONT></span>")
+				to_chat(H, span_warning(span_fontsize3("<b>You somehow have become the recepient of a mindshield transplant, and it just activated!</b>")))
 				if(src in SSticker.mode.revolutionaries)
 					SSticker.mode.remove_revolutionary(src)
 			if("ertadd")
@@ -1373,7 +1355,7 @@
 				log_admin("[key_name(usr)] has given [key_name(current)] a ert mindshield implant")
 				message_admins("[key_name_admin(usr)] has given [key_name_admin(current)] a ert mindshield implant")
 
-				to_chat(H, "<span class='warning'><Font size =3><B>You somehow have become the recepient of a ert mindshield transplant, and it just activated!</B></FONT></span>")
+				to_chat(H, span_warning(span_fontsize3("<b>You somehow have become the recepient of a ert mindshield transplant, and it just activated!</b>")))
 				if(src in SSticker.mode.revolutionaries)
 					SSticker.mode.remove_revolutionary(src)
 
@@ -1391,15 +1373,15 @@
 						qdel(C)
 					SSticker.mode.head_revolutionaries -= src
 					SSticker.mode.update_rev_icons_removed(src)
-					to_chat(current, "<span class='warning'><FONT size = 3><B>Revolution has been disappointed of your leadership traits! You are a regular revolutionary now!</B></FONT></span>")
+					to_chat(current, span_warning(span_fontsize3("<b>Revolution has been disappointed of your leadership traits! You are a regular revolutionary now!</b>")))
 				else if(!(src in SSticker.mode.revolutionaries))
-					to_chat(current, "<span class='warning'><FONT size = 3> You are now a revolutionary! Follow orders given by revolution leaders. Do not harm your fellow freedom fighters. You can identify your comrades by the red \"R\" icons, and your leaders by the blue \"R\" icons.</FONT></span>")
+					to_chat(current, span_warning(span_fontsize3(" You are now a revolutionary! Follow orders given by revolution leaders. Do not harm your fellow freedom fighters. You can identify your comrades by the red \"R\" icons, and your leaders by the blue \"R\" icons.")))
 				else
 					return
 				SSticker.mode.revolutionaries += src
 				SSticker.mode.update_rev_icons_added(src)
 				special_role = SPECIAL_ROLE_REV
-				SEND_SOUND(current, 'sound/ambience/antag/revolutionary_tide.ogg')
+				SEND_SOUND(current, sound('sound/ambience/antag/revolutionary_tide.ogg'))
 				log_admin("[key_name(usr)] has rev'd [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has rev'd [key_name_admin(current)]")
 				current.create_log(MISC_LOG, "[current] was made into a revolutionary by [key_name_admin(usr)]")
@@ -1421,7 +1403,7 @@
 				if(!recruit_action)
 					recruit_action = new
 					recruit_action.Grant(src.current)
-				SEND_SOUND(current, 'sound/ambience/antag/revolutionary_tide.ogg')
+				SEND_SOUND(current, sound('sound/ambience/antag/revolutionary_tide.ogg'))
 				log_admin("[key_name(usr)] has head-rev'd [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has head-rev'd [key_name_admin(current)]")
 				current.create_log(MISC_LOG, "[current] was made into a head revolutionary by [key_name_admin(usr)]")
@@ -1450,17 +1432,17 @@
 				if(!(src in SSticker.mode.cult))
 					to_chat(current, CULT_GREETING)
 					SSticker.mode.add_cultist(src)
-					to_chat(current, "<span class='cultitalic'>Assist your new compatriots in their dark dealings. Their goal is yours, and yours is theirs. You serve [SSticker.cultdat.entity_title2] above all else. Bring It back.</span>")
+					to_chat(current, span_cultitalic("Assist your new compatriots in their dark dealings. Their goal is yours, and yours is theirs. You serve [SSticker.cultdat.entity_title2] above all else. Bring It back."))
 					log_and_message_admins("[key_name(usr)] has culted [key_name(current)]")
 			if("dagger")
 				var/mob/living/carbon/human/H = current
 				if(!SSticker.mode.cult_give_item(/obj/item/melee/cultblade/dagger, H))
-					to_chat(usr, "<span class='warning'>Spawning dagger failed!</span>")
+					to_chat(usr, span_warning("Spawning dagger failed!"))
 				log_and_message_admins("[key_name(usr)] has equipped [key_name(current)] with a cult dagger")
 			if("runedmetal")
 				var/mob/living/carbon/human/H = current
 				if(!SSticker.mode.cult_give_item(/obj/item/stack/sheet/runed_metal/ten, H))
-					to_chat(usr, "<span class='warning'>Spawning runed metal failed!</span>")
+					to_chat(usr, span_warning("Spawning runed metal failed!"))
 				log_and_message_admins("[key_name(usr)] has equipped [key_name(current)] with 10 runed metal sheets")
 
 	else if(href_list["clock"])
@@ -1473,17 +1455,17 @@
 				if(!(src in SSticker.mode.clockwork_cult))
 					to_chat(current, CLOCK_GREETING)
 					SSticker.mode.add_clocker(src)
-					to_chat(current, "<span class='clockitalic'>Assist your new compatriots in their dark dealings. Their goal is yours, and yours is theirs. You serve Ratvar above all else. Bring It back.</span>")
+					to_chat(current, span_clockitalic("Assist your new compatriots in their dark dealings. Their goal is yours, and yours is theirs. You serve Ratvar above all else. Bring It back."))
 					log_and_message_admins("[key_name(usr)] has clocked [key_name(current)]")
 			if("clockslab")
 				var/mob/living/carbon/human/H = current
 				if(!SSticker.mode.clock_give_item(/obj/item/clockwork/clockslab, H))
-					to_chat(usr, "<span class='warning'>Spawning Clock slab failed!</span>")
+					to_chat(usr, span_warning("Spawning Clock slab failed!"))
 				log_and_message_admins("[key_name(usr)] has equipped [key_name(current)] with a clock slab")
 			if("brassmetal")
 				var/mob/living/carbon/human/H = current
 				if(!SSticker.mode.clock_give_item(/obj/item/stack/sheet/brass/ten, H))
-					to_chat(usr, "<span class='warning'>Spawning brass metal failed!</span>")
+					to_chat(usr, span_warning("Spawning brass metal failed!"))
 				log_and_message_admins("[key_name(usr)] has equipped [key_name(current)] with 10 brass metal sheets")
 	else if(href_list["siliclock"])
 		switch(href_list["siliclock"])
@@ -1498,13 +1480,13 @@
 			if("clockrobot")
 				if(!(src in SSticker.mode.clockwork_cult))
 					current.ratvar_act(TRUE)
-					to_chat(current, "<span class='clockitalic'>Assist your new compatriots in their brass dealings. Their goal is yours, and yours is theirs. You serve Ratvar above all else. Bring It back.</span>")
+					to_chat(current, span_clockitalic("Assist your new compatriots in their brass dealings. Their goal is yours, and yours is theirs. You serve Ratvar above all else. Bring It back."))
 					log_and_message_admins("[key_name(usr)] has clocked [key_name(current)]")
 			if("clockai")
 				var/mob/living/silicon/ai/ai = current
 				if(!(src in SSticker.mode.clockwork_cult))
 					ai.ratvar_act(TRUE)
-					to_chat(current, "<span class='clockitalic'>Assist your new compatriots in their brass dealings. Their goal is yours, and yours is theirs. You serve Ratvar above all else. Bring It back.</span>")
+					to_chat(current, span_clockitalic("Assist your new compatriots in their brass dealings. Their goal is yours, and yours is theirs. You serve Ratvar above all else. Bring It back."))
 					log_and_message_admins("[key_name(usr)] has clocked [key_name(current)]")
 
 
@@ -1513,7 +1495,7 @@
 		switch(href_list["wizard"])
 			if("clear")
 				remove_wizard_role()
-				to_chat(current, "<span class='userdanger'><FONT size = 3>You have been brainwashed! You are no longer a wizard!</FONT></span>")
+				to_chat(current, span_userdanger(span_fontsize3("You have been brainwashed! You are no longer a wizard!")))
 				log_admin("[key_name(usr)] has de-wizarded [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has de-wizarded [key_name_admin(current)]")
 				if(src in SSticker.mode.apprentices)
@@ -1522,7 +1504,7 @@
 					current.spellremove(current)
 					current.faction = list("Station")
 					SSticker.mode.update_wiz_icons_removed(src)
-					to_chat(current, "<span class='userdanger'><FONT size = 3>You have been brainwashed! You are no longer a apprentice wizard!</FONT></span>")
+					to_chat(current, span_userdanger(span_fontsize3("You have been brainwashed! You are no longer a apprentice wizard!")))
 					log_admin("[key_name(usr)] has de-apprentice-wizarded [key_name(current)]")
 					message_admins("[key_name_admin(usr)] has de-apprentice-wizarded [key_name_admin(current)]")
 			if("wizard")
@@ -1531,8 +1513,8 @@
 					special_role = SPECIAL_ROLE_WIZARD
 					//ticker.mode.learn_basic_spells(current)
 					SSticker.mode.update_wiz_icons_added(src)
-					SEND_SOUND(current, 'sound/ambience/antag/ragesmages.ogg')
-					to_chat(current, "<span class='danger'>You are a Space Wizard!</span>")
+					SEND_SOUND(current, sound('sound/ambience/antag/ragesmages.ogg'))
+					to_chat(current, span_danger("You are a Space Wizard!"))
 					current.faction = list("wizard")
 					log_admin("[key_name(usr)] has wizarded [key_name(current)]")
 					message_admins("[key_name_admin(usr)] has wizarded [key_name_admin(current)]")
@@ -1541,8 +1523,8 @@
 					SSticker.mode.apprentices += src
 					special_role = SPECIAL_ROLE_WIZARD_APPRENTICE
 					SSticker.mode.update_wiz_icons_added(src)
-					SEND_SOUND(current, 'sound/ambience/antag/ragesmages.ogg')
-					to_chat(current, "<span class='danger'>You are a Apprentice of Space Wizard!</span>")
+					SEND_SOUND(current, sound('sound/ambience/antag/ragesmages.ogg'))
+					to_chat(current, span_danger("You are a Apprentice of Space Wizard!"))
 					current.faction = list("wizard")
 					log_admin("[key_name(usr)] has apprentice-wizarded [key_name(current)]")
 					message_admins("[key_name_admin(usr)] has apprentice-wizarded [key_name_admin(current)]")
@@ -1566,16 +1548,16 @@
 			if("autoobjectives")
 				if(src in SSticker.mode.wizards)
 					SSticker.mode.forge_wizard_objectives(src)
-					to_chat(usr, "<span class='notice'>The objectives for wizard [key] have been generated. You can edit them and announce manually.</span>")
+					to_chat(usr, span_notice("The objectives for wizard [key] have been generated. You can edit them and announce manually."))
 					log_admin("[key_name(usr)] has automatically forged wizard objectives for [key_name(current)]")
 					message_admins("[key_name_admin(usr)] has automatically forged wizard objectives for [key_name_admin(current)]")
 				else if(src in SSticker.mode.apprentices)
-					if (SSticker.mode.wizards.len)
+					if(SSticker.mode.wizards.len)
 						var/datum/mind/wizard = pick(SSticker.mode.wizards)
 						SSticker.mode.forge_wizard_apprentice_objectives(wizard, src)
 					else
 						SSticker.mode.forge_wizard_objectives(src)
-					to_chat(usr, "<span class='notice'>The objectives for wizard apprentice [key] have been generated. You can edit them and announce manually.</span>")
+					to_chat(usr, span_notice("The objectives for wizard apprentice [key] have been generated. You can edit them and announce manually."))
 					log_admin("[key_name(usr)] has automatically forged wizard apprentice objectives for [key_name(current)]")
 					message_admins("[key_name_admin(usr)] has automatically forged wizard apprentice objectives for [key_name_admin(current)]")
 
@@ -1593,22 +1575,22 @@
 					var/datum/antagonist/changeling/cling = new()
 					cling.give_objectives = FALSE
 					add_antag_datum(cling)
-					to_chat(usr, "<span class='notice'>Changeling [key] has no objectives. You can add custom ones or generate random set by using <b>Randomize!</b> button.</span>")
-					to_chat(current, "<span class='biggerdanger'>Your powers have awoken. A flash of memory returns to us... we are a changeling!</span>")
+					to_chat(usr, span_notice("Changeling [key] has no objectives. You can add custom ones or generate random set by using <b>Randomize!</b> button."))
+					to_chat(current, span_biggerdanger("Your powers have awoken. A flash of memory returns to us... we are a changeling!"))
 					log_admin("[key_name(usr)] has changelinged [key_name(current)]")
 					message_admins("[key_name_admin(usr)] has changelinged [key_name_admin(current)]")
 
 			if("autoobjectives")
 				var/datum/antagonist/changeling/cling = has_antag_datum(/datum/antagonist/changeling)
 				cling.give_objectives()
-				to_chat(usr, "<span class='notice'>The objectives for changeling [key] have been generated. You can edit them and announce manually.</span>")
+				to_chat(usr, span_notice("The objectives for changeling [key] have been generated. You can edit them and announce manually."))
 				log_admin("[key_name(usr)] has automatically forged objectives for [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has automatically forged objectives for [key_name_admin(current)]")
 
 			if("initialdna")
 				var/datum/antagonist/changeling/cling = has_antag_datum(/datum/antagonist/changeling)
 				if(!cling || !length(cling.absorbed_dna))
-					to_chat(usr, "<span class='warning'>Resetting DNA failed!</span>")
+					to_chat(usr, span_warning("Resetting DNA failed!"))
 				else
 					current.dna = cling.absorbed_dna[1]
 					current.real_name = current.dna.real_name
@@ -1624,7 +1606,7 @@
 					return
 
 				remove_vampire_role()
-				to_chat(current, "<FONT color='red' size = 3><B>Вы ослабли и потеряли свои силы! Вы больше не вампир и теперь останетесь в своей текущей форме!</B></FONT>")
+				to_chat(current, span_fontsize3(span_red("<b>Вы ослабли и потеряли свои силы! Вы больше не вампир и теперь останетесь в своей текущей форме!</b>")))
 				log_admin("[key_name(usr)] has de-vampired [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has de-vampired [key_name_admin(current)]")
 
@@ -1647,7 +1629,7 @@
 				vamp.give_objectives = FALSE
 				add_antag_datum(vamp)
 				to_chat(usr, span_notice("У вампира [key] отсутствуют цели. Вы можете добавить их вручную или сгенерировать случайный набор, кнопкой <b>Randomize!</b>"))
-				to_chat(current, "<B><font color='red'>Ваши силы пробудились. Ваша жажда крови растет... Вы вампир!</font></B>")
+				to_chat(current, "<b><font color='red'>Ваши силы пробудились. Ваша жажда крови растет... Вы вампир!</font></b>")
 				log_admin("[key_name(usr)] has vampired [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has vampired [key_name_admin(current)]")
 
@@ -1826,65 +1808,31 @@
 					message_admins("[key_name_admin(usr)] has de-vampthralled [key_name_admin(current)]")
 
 	else if(href_list["nuclear"])
-		var/mob/living/carbon/human/H = current
 
 		switch(href_list["nuclear"])
 			if("clear")
 				remove_syndicate_role()
-				to_chat(current, "<span class='warning'><FONT size = 3><B>You have been brainwashed! You are no longer a syndicate operative!</B></FONT></span>")
+				to_chat(current, span_warning(span_fontsize3("<b>You have been brainwashed! You are no longer a syndicate operative!</b>")))
 				log_admin("[key_name(usr)] has de-nuke op'd [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has de-nuke op'd [key_name_admin(current)]")
+
 			if("nuclear")
-				if(!(src in SSticker.mode.syndicates))
-					SSticker.mode.syndicates += src
-					SSticker.mode.update_synd_icons_added(src)
-					if(SSticker.mode.syndicates.len==1)
-						SSticker.mode.prepare_syndicate_leader(src)
-					else
-						current.real_name = "[syndicate_name()] Operative #[SSticker.mode.syndicates.len-1]"
-					special_role = SPECIAL_ROLE_NUKEOPS
-					to_chat(current, "<span class='notice'>You are a [syndicate_name()] agent!</span>")
-					SSticker.mode.forge_syndicate_objectives(src)
-					SSticker.mode.greet_syndicate(src)
-					log_admin("[key_name(usr)] has nuke op'd [key_name(current)]")
-					message_admins("[key_name_admin(usr)] has nuke op'd [key_name_admin(current)]")
+				var/datum/team/nuclear_team/team = (GLOB.antagonist_teams[/datum/team/nuclear_team])? GLOB.antagonist_teams[/datum/team/nuclear_team] : new /datum/team/nuclear_team
+				team.add_member(src)
+				log_admin("[key_name(usr)] has nuke op'd [key_name(current)]")
+				message_admins("[key_name_admin(usr)] has nuke op'd [key_name_admin(current)]")
+
 			if("lair")
-				current.forceMove(get_turf(locate("landmark*Syndicate-Spawn")))
+				current.forceMove(get_turf(safepick(GLOB.nukespawn)))
 				log_admin("[key_name(usr)] has moved [key_name(current)] to the nuclear operative spawn")
 				message_admins("[key_name_admin(usr)] has moved [key_name_admin(current)] to the nuclear operative spawn")
-			if("dressup")
-				qdel(H.belt)
-				qdel(H.back)
-				qdel(H.l_ear)
-				qdel(H.r_ear)
-				qdel(H.gloves)
-				qdel(H.head)
-				qdel(H.shoes)
-				qdel(H.wear_id)
-				qdel(H.wear_pda)
-				qdel(H.wear_suit)
-				qdel(H.w_uniform)
 
-				if(!SSticker.mode.equip_syndicate(current))
-					to_chat(usr, "<span class='warning'>Equipping a syndicate failed!</span>")
-					return
-				SSticker.mode.update_syndicate_id(current.mind, SSticker.mode.syndicates.len == 1)
+			if("dressup")
+				var/datum/antagonist/nuclear_operative/datum = has_antag_datum(/datum/antagonist/nuclear_operative)
+				datum.equip()
 				log_admin("[key_name(usr)] has equipped [key_name(current)] as a nuclear operative")
 				message_admins("[key_name_admin(usr)] has equipped [key_name_admin(current)] as a nuclear operative")
 
-			if("tellcode")
-				var/code
-				for(var/obj/machinery/nuclearbomb/bombue in GLOB.machines)
-					if(length(bombue.r_code) <= 5 && bombue.r_code != "LOLNO" && bombue.r_code != "ADMIN")
-						code = bombue.r_code
-						break
-				if(code)
-					store_memory("<B>Syndicate Nuclear Bomb Code</B>: [code]", 0, 0)
-					to_chat(current, "The nuclear authorization code is: <B>[code]</B>")
-					log_admin("[key_name(usr)] has given [key_name(current)] the nuclear authorization code")
-					message_admins("[key_name_admin(usr)] has given [key_name_admin(current)] the nuclear authorization code")
-				else
-					to_chat(usr, "<span class='warning'>No valid nuke found!</span>")
 
 	else if(href_list["space_dragon"])
 		switch(href_list["space_dragon"])
@@ -1931,6 +1879,7 @@
 					log_admin("[key_name(usr)] has de-sintouch'ed [current].")
 
 				remove_devil_role()
+
 			if("devil")
 				if(has_antag_datum(/datum/antagonist/devil))
 					return
@@ -1938,6 +1887,19 @@
 				add_antag_datum(/datum/antagonist/devil)
 				message_admins("[key_name_admin(usr)] has devil'ed [current].")
 				log_admin("[key_name(usr)] has devil'ed [current].")
+
+			if("rank")
+				var/datum/antagonist/devil/devil = has_antag_datum(/datum/antagonist/devil)
+
+				if(!devil)
+					return
+
+				if(!devil.rank.next_rank_type)
+					return
+
+				devil.init_new_rank(devil.rank.next_rank_type, TRUE)
+				log_and_message_admins("increased the rank of the devil to [current]")
+
 			if("sintouched")
 				if(has_antag_datum(/datum/antagonist/sintouched))
 					return
@@ -1945,6 +1907,14 @@
 				add_antag_datum(/datum/antagonist/sintouched)
 				message_admins("[key_name_admin(usr)] has sintouch'ed [current].")
 				log_admin("[key_name(usr)] has sintouch'ed [current].")
+
+			if("panel")
+				var/datum/antagonist/devil/devil = has_antag_datum(/datum/antagonist/devil)
+
+				if(!devil)
+					return
+
+				devil.ui_interact(usr)
 
 	else if(href_list["traitor"])
 		switch(href_list["traitor"])
@@ -1955,7 +1925,7 @@
 
 				traitor_datum.silent = TRUE
 				remove_antag_datum(traitor_datum)
-				to_chat(current, "<span class='warning'><FONT size = 3><B>You have been brainwashed! You are no longer a traitor!</B></FONT></span>")
+				to_chat(current, span_warning(span_fontsize3("<b>You have been brainwashed! You are no longer a traitor!</b>")))
 				log_admin("[key_name(usr)] has de-traitored [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has de-traitored [key_name_admin(current)]")
 
@@ -1974,7 +1944,7 @@
 					return
 
 				traitor_datum.give_objectives()
-				to_chat(usr, "<span class='notice'>The objectives for traitor [key] have been generated. You can edit them and announce manually.</span>")
+				to_chat(usr, span_notice("The objectives for traitor [key] have been generated. You can edit them and announce manually."))
 				log_admin("[key_name(usr)] has automatically forged objectives for [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has automatically forged objectives for [key_name_admin(current)]")
 
@@ -1986,7 +1956,7 @@
 					return
 
 				remove_antag_datum(malf_datum)
-				to_chat(current, "<span class='warning'><FONT size = 3><B>Unknown hackers have brought your systems back to normal, you are no longer malfunctioning!</B></FONT></span>")
+				to_chat(current, span_warning(span_fontsize3("<b>Unknown hackers have brought your systems back to normal, you are no longer malfunctioning!</b>")))
 				log_admin("[key_name(usr)] has de-malfAIed [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has de-malfAIed [key_name_admin(current)]")
 				SSticker?.score?.save_silicon_laws(current, usr, additional_info = "admin removed malf AI", log_all_laws = TRUE)
@@ -2008,13 +1978,14 @@
 					return
 
 				malf_datum.give_objectives()
-				to_chat(usr, "<span class='notice'>The objectives for malf AI [key] have been generated. You can edit them and announce manually.</span>")
+				to_chat(usr, span_notice("The objectives for malf AI [key] have been generated. You can edit them and announce manually."))
 				log_admin("[key_name(usr)] has automatically forged objectives for [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has automatically forged objectives for [key_name_admin(current)]")
 
 	else if(href_list["contractor"])
 		var/datum/antagonist/contractor/C = has_antag_datum(/datum/antagonist/contractor)
 		var/datum/contractor_hub/H = C && C.contractor_uplink?.hub
+		var/datum/antagonist/traitor/traitor = has_antag_datum(/datum/antagonist/traitor)
 		switch(href_list["contractor"])
 			if("clear")
 				remove_contractor_role()
@@ -2022,11 +1993,9 @@
 				message_admins("[key_name_admin(usr)] has de-contractored [key_name_admin(current)]")
 
 			if("contractor")
-				if(has_antag_datum(/datum/antagonist/contractor))
+				if(C || traitor.contractor_pending)
 					return
-				var/datum/antagonist/contractor/contractor_datum = new()
-				contractor_datum.is_admin_forced = TRUE
-				add_antag_datum(contractor_datum)
+				traitor.contractor_pending = new(src, TRUE)
 				// Notify
 				log_admin("[key_name(usr)] has contractored [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has contractored [key_name_admin(current)]")
@@ -2097,8 +2066,8 @@
 					return
 				// Update
 				var/datum/data/record/R = find_record("name", target.name, GLOB.data_core.general)
-				var/name = R?.fields["name"] || target.name || "Unknown"
-				var/rank = R?.fields["rank"] || target.assigned_role || "Unknown"
+				var/name = R?.fields["name"] || target.name || UNKNOWN_STATUS_RUS
+				var/rank = R?.fields["rank"] || target.assigned_role || UNKNOWN_STATUS_RUS
 				CO.contract.target = target
 				CO.target_name = "[name], the [rank]"
 				if(R?.fields["photo"])
@@ -2249,8 +2218,8 @@
 				thief_datum.give_objectives = FALSE
 				thief_datum.give_kit = FALSE
 				add_antag_datum(thief_datum)
-				SEND_SOUND(current, 'sound/ambience/antag/thiefalert.ogg')
-				to_chat(current, "<B><font color='red'>Мои [ishuman(current) ? "руки" : "лапы"] так и чешутся чего-нибудь прикарманить!</font></B>")
+				SEND_SOUND(current, sound('sound/ambience/antag/thiefalert.ogg'))
+				to_chat(current, "<b><font color='red'>Мои [ishuman(current) ? "руки" : "лапы"] так и чешутся чего-нибудь прикарманить!</font></b>")
 				log_admin("[key_name(usr)] has thiefed [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has thiefed [key_name_admin(current)]")
 
@@ -2260,7 +2229,7 @@
 					return
 
 				thief_datum.give_objectives()
-				to_chat(usr, "<span class='notice'>The objectives for thief [key] have been generated. You can edit them and announce manually.</span>")
+				to_chat(usr, span_notice("The objectives for thief [key] have been generated. You can edit them and announce manually."))
 				log_admin("[key_name(usr)] has automatically forged objectives for [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has automatically forged objectives for [key_name_admin(current)]")
 
@@ -2286,21 +2255,20 @@
 				remove_shadow_role()
 			if("shadowling")
 				if(!ishuman(current))
-					to_chat(usr, "<span class='warning'>This only works on humans!</span>")
+					to_chat(usr, span_warning("This only works on humans!"))
 					return
 				SSticker.mode.shadows += src
 				special_role = SPECIAL_ROLE_SHADOWLING
 				SSticker.mode.recount_required_thralls()
-				to_chat(current, "<span class='shadowling'><b>Something stirs deep in your mind. A red light floods your vision, and slowly you remember. Though your human disguise has served you well, the \
-				time is nigh to cast it off and enter your true form. You have disguised yourself amongst the humans, but you are not one of them. You are a shadowling, and you are to ascend at all costs.\
-				</b></span>")
+				to_chat(current, span_shadowling("<b>Что-то всплывает в глубинах вашего разума. Ваш взгляд заливает красным свечением, и вы медленно вспоминаете. Ваша маскировка под гуманоида прекрасно вам послужила, но \
+												время отбросить её и вернуться к своей истинной форме. Вы замаскировались под гуманоида, но вы не один из них. Вы — тенеморф, и вы должны возвыситься любой ценой.</b>"))
 				SSticker.mode.finalize_shadowling(src)
 				SSticker.mode.update_shadow_icons_added(src)
 				log_admin("[key_name(usr)] has shadowlinged [key_name(current)]")
 				message_admins("[key_name_admin(usr)] has shadowlinged [key_name_admin(current)]")
 			if("thrall")
 				if(!ishuman(current))
-					to_chat(usr, "<span class='warning'>This only works on humans!</span>")
+					to_chat(usr, span_warning("This only works on humans!"))
 					return
 				SSticker.mode.add_thrall(src)
 				message_admins("[key_name_admin(usr)] has thralled [current].")
@@ -2313,14 +2281,14 @@
 				//ticker.mode.update_abductor_icons_removed(src)
 			if("abductor")
 				if(!ishuman(current))
-					to_chat(usr, "<span class='warning'>This only works on humans!</span>")
+					to_chat(usr, span_warning("This only works on humans!"))
 					return
 				make_Abductor()
 				log_admin("[key_name(usr)] turned [current] into abductor.")
 				SSticker.mode.update_abductor_icons_added(src)
 			if("equip")
 				if(!ishuman(current))
-					to_chat(usr, "<span class='warning'>This only works on humans!</span>")
+					to_chat(usr, span_warning("This only works on humans!"))
 					return
 
 				var/mob/living/carbon/human/H = current
@@ -2484,7 +2452,7 @@
 				blob_overmind.is_infinity = !blob_overmind.is_infinity
 				log_admin("[key_name(usr)] make blob points [blob_overmind.is_infinity? "infinity" : "not infinity"] to [key_name(current)]")
 				message_admins("[key_name_admin(usr)] make blob points [blob_overmind.is_infinity? "infinity" : "not infinity"] to [key_name_admin(current)]")
-			
+
 			if("select_strain")
 				if(!isblobovermind(src))
 					return
@@ -2496,7 +2464,7 @@
 					blob_overmind.set_strain(strain)
 					log_admin("[key_name(usr)] changed the strain to [strain] for [key_name(current)]")
 					message_admins("[key_name_admin(usr)] changed the strain to [strain] for [key_name_admin(current)]")
-	
+
 	else if(href_list["terror"])
 		switch(href_list["terror"])
 			if("datumise")
@@ -2505,7 +2473,7 @@
 				var/mob/living/simple_animal/hostile/poison/terror_spider/spider = current
 				spider.add_datum_if_not_exist()
 				log_and_message_admins("has made [key_name(current)] into a \"Terror Spider\"")
-	
+
 	else if(href_list["xenomorph"])
 		switch(href_list["xenomorph"])
 			if("datumise")
@@ -2604,10 +2572,11 @@
 	antag.owner = src
 	LAZYADD(antag_datums, antag)
 
-	antag.create_team(team)
-	var/datum/team/antag_team = antag.get_team()
-	if(antag_team)
-		antag_team.add_member(src)
+	if(team)
+		antag.create_team(team)
+		var/datum/team/antag_team = antag.get_team()
+		if(antag_team)
+			antag_team.add_member(src)
 
 	ASSERT(antag.owner && antag.owner.current)
 	antag.on_gain()
@@ -2646,13 +2615,13 @@
 /datum/mind/proc/remove_revolutionary_role()
 	if(src in SSticker.mode.revolutionaries)
 		SSticker.mode.revolutionaries -= src
-		to_chat(current, span_warning("<FONT size = 3><B>You have been brainwashed! You are no longer a revolutionary!</B></FONT>"))
+		to_chat(current, span_warning(span_fontsize3("<b>You have been brainwashed! You are no longer a revolutionary!</b>")))
 		SSticker.mode.update_rev_icons_removed(src)
 		special_role = null
 
 	if(src in SSticker.mode.head_revolutionaries)
 		SSticker.mode.head_revolutionaries -= src
-		to_chat(current, span_warning("<FONT size = 3><B>You have been brainwashed! You are no longer a head revolutionary!</B></FONT>"))
+		to_chat(current, span_warning(span_fontsize3("<b>You have been brainwashed! You are no longer a head revolutionary!</b>")))
 		SSticker.mode.update_rev_icons_removed(src)
 		special_role = null
 
@@ -2701,13 +2670,7 @@
 
 
 /datum/mind/proc/remove_syndicate_role()
-	if(src in SSticker.mode.syndicates)
-		SSticker.mode.syndicates -= src
-		SSticker.mode.update_synd_icons_removed(src)
-		special_role = null
-		for(var/datum/objective/nuclear/O in objectives)
-			objectives-=O
-			qdel(O)
+	remove_antag_datum(/datum/antagonist/nuclear_operative)
 
 /datum/mind/proc/remove_event_role()
 	if(src in SSticker.mode.eventmiscs)
@@ -2725,13 +2688,15 @@
 
 /datum/mind/proc/remove_contractor_role()
 	var/datum/antagonist/contractor/contractor_datum = has_antag_datum(/datum/antagonist/contractor)
-	if(!contractor_datum)
+	var/datum/antagonist/traitor/traitor_datum = has_antag_datum(/datum/antagonist/traitor)
+
+	if(!contractor_datum && !traitor_datum?.contractor_pending)
 		return
 
-	contractor_datum.silent = TRUE
-	if(contractor_datum.contractor_uplink && !contractor_datum.is_admin_forced)
+	if(contractor_datum?.contractor_uplink && !traitor_datum.contractor_pending.is_admin_forced)
 		SSticker?.mode?.contractor_accepted--
 	remove_antag_datum(/datum/antagonist/contractor)
+	traitor_datum.contractor_pending = null
 
 
 /datum/mind/proc/remove_traitor_role()
@@ -2810,7 +2775,7 @@
 		return
 	var/list/text = list()
 	if(title)
-		text.Add("<span class='notice'>Your current objectives:</span>")
+		text.Add(span_notice("Your current objectives:"))
 	text.Add(gen_objective_text())
 	return text
 
@@ -2819,6 +2784,10 @@
 	var/datum/antagonist/traitor/traitor_datum = has_antag_datum(/datum/antagonist/traitor)
 	if(traitor_datum)
 		return traitor_datum.hidden_uplink
+
+	var/datum/antagonist/nuclear_operative/nuclear_datum = has_antag_datum(/datum/antagonist/nuclear_operative)
+	if(nuclear_datum)
+		return nuclear_datum.uplink
 
 	// We will return first found uplink in mob contents if its not a traitor
 	var/list/uplinks = current?.collect_all_atoms_of_type(/obj/item/uplink/hidden)
@@ -2837,6 +2806,10 @@
 	if(traitor_datum?.hidden_uplink == uplink)
 		traitor_datum.hidden_uplink = null
 
+	var/datum/antagonist/nuclear_operative/nuclear_datum = has_antag_datum(/datum/antagonist/nuclear_operative)
+	if(nuclear_datum)
+		return nuclear_datum.uplink = null
+
 	qdel(uplink)
 
 
@@ -2854,37 +2827,6 @@
 	if(!isvampire(src))
 		add_antag_datum(/datum/antagonist/vampire/new_vampire)
 
-
-/datum/mind/proc/make_Nuke()
-	if(!(src in SSticker.mode.syndicates))
-		SSticker.mode.syndicates += src
-		SSticker.mode.update_synd_icons_added(src)
-		if(SSticker.mode.syndicates.len==1)
-			SSticker.mode.prepare_syndicate_leader(src)
-		else
-			current.real_name = "[syndicate_name()] Operative #[SSticker.mode.syndicates.len-1]"
-		special_role = SPECIAL_ROLE_NUKEOPS
-		assigned_role = SPECIAL_ROLE_NUKEOPS
-		to_chat(current, "<span class='notice'>You are a [syndicate_name()] agent!</span>")
-		SSticker.mode.forge_syndicate_objectives(src)
-		SSticker.mode.greet_syndicate(src)
-
-		current.forceMove(get_turf(locate("landmark*Syndicate-Spawn")))
-
-		var/mob/living/carbon/human/H = current
-		qdel(H.belt)
-		qdel(H.back)
-		qdel(H.l_ear)
-		qdel(H.r_ear)
-		qdel(H.gloves)
-		qdel(H.head)
-		qdel(H.shoes)
-		qdel(H.wear_id)
-		qdel(H.wear_pda)
-		qdel(H.wear_suit)
-		qdel(H.w_uniform)
-
-		SSticker.mode.equip_syndicate(current)
 
 
 /datum/mind/proc/make_Wizard()
@@ -3013,6 +2955,21 @@
 			LAZYREMOVE(spell_list, spell)
 			qdel(spell)
 
+/datum/mind/proc/deactivate_spell(obj/effect/proc_holder/spell/instance_or_path)
+	if(!ispath(instance_or_path))
+		instance_or_path = instance_or_path.type
+
+	var/obj/effect/proc_holder/spell/spell = LAZYIN(spell_list, locate(instance_or_path))
+
+	if(!spell)
+		return FALSE
+
+	LAZYREMOVE(spell_list, spell)
+
+	spell.action.Remove(current)
+
+	return TRUE
+
 
 /datum/mind/proc/transfer_actions(mob/living/new_character, mob/living/old_current)
 	if(old_current && old_current.actions)
@@ -3037,8 +2994,7 @@
 		if(exception)
 			continue
 		if(spell.cooldown_handler)
-			spell.cooldown_handler.recharge_duration = delay
-			INVOKE_ASYNC(spell.cooldown_handler, TYPE_PROC_REF(/datum/spell_cooldown, start_recharge))
+			INVOKE_ASYNC(spell.cooldown_handler, TYPE_PROC_REF(/datum/spell_cooldown, start_recharge), delay)
 		spell.updateButtonIcon()
 
 /datum/mind/proc/get_ghost(even_if_they_cant_reenter)
@@ -3060,7 +3016,7 @@
 	zealot_master = missionary
 
 	// Give the new zealot their mindslave datum with a custom greeting.
-	var/greeting = "You're now a loyal zealot of [missionary.name]!</B> You now must lay down your life to protect [missionary.p_them()] and assist in [missionary.p_their()] goals at any cost."
+	var/greeting = "You're now a loyal zealot of [missionary.name]!</b> You now must lay down your life to protect [missionary.p_them()] and assist in [missionary.p_their()] goals at any cost."
 	add_antag_datum(new /datum/antagonist/mindslave(missionary.mind, greeting))
 
 	var/obj/item/clothing/under/jumpsuit = null
@@ -3069,7 +3025,7 @@
 		if(H.w_uniform)
 			jumpsuit = H.w_uniform
 			jumpsuit.color = team_color
-			H.update_inv_w_uniform()
+			H.update_worn_undersuit()
 
 	add_attack_logs(missionary, current, "Converted to a zealot for [convert_duration/600] minutes")
 	add_conversion_logs(current, "became a mindslave for [convert_duration/600] minutes. Master: [key_name_log(missionary)]")
@@ -3089,7 +3045,7 @@
 		jumpsuit.color = initial(jumpsuit.color)		//reset the jumpsuit no matter where our mind is
 		if(ishuman(current))							//but only try updating us if we are still a human type since it is a human proc
 			var/mob/living/carbon/human/H = current
-			H.update_inv_w_uniform()
+			H.update_worn_undersuit()
 
 	to_chat(current, span_warning("<b>You seem to have forgotten the events of the past 10 minutes or so, and your head aches a bit as if someone beat it savagely with a stick.</b>"))
 	to_chat(current, span_warning("<b>This means you don't remember who you were working for or what you were doing.</b>"))
@@ -3097,6 +3053,10 @@
 
 /datum/mind/proc/is_revivable() //Note, this ONLY checks the mind.
 	if(damnation_type)
+		return FALSE
+	if(!hasSoul)
+		return FALSE
+	if(soulOwner != src)
 		return FALSE
 	return TRUE
 

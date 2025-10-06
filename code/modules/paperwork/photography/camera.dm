@@ -3,7 +3,6 @@
  */
 /obj/item/camera
 	name = "camera"
-	icon = 'icons/obj/items.dmi'
 	desc = "A polaroid camera. 10 photos left."
 	icon_state = "camera"
 	item_state = "camera"
@@ -264,7 +263,7 @@
 		'sound/hallucinations/veryfar_noise.ogg',
 		'sound/hallucinations/wail.ogg',
 	)
-	SEND_SOUND(user, pick(creepyasssounds))
+	SEND_SOUND(user, sound(pick(creepyasssounds)))
 
 
 /*

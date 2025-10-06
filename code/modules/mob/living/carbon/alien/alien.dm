@@ -4,7 +4,7 @@
 /mob/living/carbon/alien
 	name = "alien"
 	voice_name = "alien"
-	speak_emote = list("hisses")
+	speak_emote = list("шипит")
 	tts_seed = "Ladyvashj"
 	bubble_icon = "alien"
 	icon = 'icons/mob/alien.dmi'
@@ -15,10 +15,10 @@
 	var/nightvision_enabled = FALSE
 	nightvision = 4
 
-	verb_say = "hisses"
-	verb_ask = "hisses curiously"
-	verb_exclaim = "roars"
-	verb_yell = "roars"
+	verb_say = "шипит"
+	verb_ask = "вопросительно шипит"
+	verb_exclaim = "рычит"
+	verb_yell = "ревёт"
 
 	var/obj/item/card/id/wear_id = null // Fix for station bounced radios -- Skie
 	var/has_fine_manipulation = FALSE
@@ -70,11 +70,15 @@
 	if(caste_movement_delay)
 		update_alien_speed()
 
+/mob/living/carbon/alien/Initialize(mapload)
+	. = ..()
+	GLOB.aliens_list += src
 
 /mob/living/carbon/alien/Destroy()
 	if(night_vision_action)
 		night_vision_action.Remove(src)
 		night_vision_action = null
+	GLOB.aliens_list -= src
 	return ..()
 
 /mob/living/carbon/alien/proc/update_datum()
@@ -102,8 +106,8 @@
 /mob/living/carbon/alien/get_status_tab_items()
 	var/list/status_tab_data = ..()
 	. = status_tab_data
-	status_tab_data[++status_tab_data.len] = list("Intent:", "[a_intent]")
-	status_tab_data[++status_tab_data.len] = list("Move Mode:", "[m_intent]")
+	status_tab_data[++status_tab_data.len] = list("Намерение:", "[a_intent]")
+	status_tab_data[++status_tab_data.len] = list("Режим передвижения:", "[m_intent]")
 	if(can_evolve)
 		status_tab_data[++status_tab_data.len] = list("Evolution progress:", "[evolution_points]/[max_evolution_points]")
 
@@ -113,10 +117,10 @@
 		return default_language
 	return GLOB.all_languages[LANGUAGE_XENOS]
 
-/mob/living/carbon/alien/say_quote(var/message, var/datum/language/speaking = null)
+/mob/living/carbon/alien/say_quote(message, datum/language/speaking = null)
 	var/ending = copytext(message, length(message))
 
-	if(speaking && (speaking.name != "Galactic Common")) 						//this is so adminbooze xenos speaking common have their custom verbs,
+	if(speaking && (speaking.name != "Galactic Common"))						//this is so adminbooze xenos speaking common have their custom verbs,
 		return genderize_decode(src, speaking.get_spoken_verb(ending))          //and use normal verbs for their own languages and non-common languages
 	else
 		return ..()
@@ -151,8 +155,7 @@
 /mob/living/carbon/alien/check_eye_prot()
 	return FLASH_PROTECTION_WELDER
 
-/mob/living/carbon/alien/handle_environment(var/datum/gas_mixture/environment)
-
+/mob/living/carbon/alien/handle_environment(datum/gas_mixture/environment)
 	if(!environment)
 		return
 
@@ -260,7 +263,7 @@
 		update_pipe_vision()
 
 
-/mob/living/carbon/alien/assess_threat(var/mob/living/simple_animal/bot/secbot/judgebot, var/lasercolor)
+/mob/living/carbon/alien/assess_threat(mob/living/simple_animal/bot/secbot/judgebot, lasercolor)
 	if(judgebot.emagged == 2)
 		return 10 //Everyone is a criminal!
 	var/threatcount = 0

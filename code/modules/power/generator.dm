@@ -4,7 +4,6 @@
 	icon_state = "teg"
 	anchored = FALSE
 	density = TRUE
-	use_power = NO_POWER_USE
 
 	var/obj/machinery/atmospherics/binary/circulator/cold_circ
 	var/obj/machinery/atmospherics/binary/circulator/hot_circ
@@ -16,9 +15,10 @@
 	var/lastgenlev = -1
 	var/lastcirc = "00"
 
-/obj/machinery/power/generator/New()
-	..()
+/obj/machinery/power/generator/Initialize(mapload)
+	. = ..()
 	update_appearance(UPDATE_DESC|UPDATE_OVERLAYS)
+	connect()
 
 /obj/machinery/power/generator/update_desc(updates = ALL)
 	. = ..()
@@ -35,10 +35,6 @@
 		hot_circ.generator = null
 	if(powernet)
 		disconnect_from_network()
-
-/obj/machinery/power/generator/Initialize()
-	. = ..()
-	connect()
 
 /obj/machinery/power/generator/proc/connect()
 	connect_to_network()
@@ -158,7 +154,7 @@
 
 /obj/machinery/power/generator/attack_hand(mob/user)
 	if(..())
-		user << browse(null, "window=teg")
+		close_window(user, "teg")
 		return
 	interact(user)
 
@@ -179,7 +175,7 @@
 		cold_dir = NORTH
 		hot_dir = SOUTH
 	connect()
-	to_chat(user, "<span class='notice'>You reverse the generator's circulator settings. The cold circulator is now on the [dir2text(cold_dir)] side, and the heat circulator is now on the [dir2text(hot_dir)] side.</span>")
+	to_chat(user, span_notice("You reverse the generator's circulator settings. The cold circulator is now on the [dir2text(cold_dir)] side, and the heat circulator is now on the [dir2text(hot_dir)] side."))
 	update_appearance(UPDATE_DESC)
 
 /obj/machinery/power/generator/wrench_act(mob/user, obj/item/I)
@@ -192,13 +188,13 @@
 		power_change()
 	else
 		connect()
-	to_chat(user, "<span class='notice'>You [anchored ? "secure" : "unsecure"] the bolts holding [src] to the floor.</span>")
+	to_chat(user, span_notice("You [anchored ? "secure" : "unsecure"] the bolts holding [src] to the floor."))
 
 /obj/machinery/power/generator/proc/get_menu(include_link = 1)
 	var/t = ""
 	if(!powernet)
-		t += "<span class='bad'>Unable to connect to the power network!</span>"
-		t += "<BR><a href='byond://?src=[UID()];check=1'>Retry</A>"
+		t += span_bad("Unable to connect to the power network!")
+		t += "<br><a href='byond://?src=[UID()];check=1'>Retry</a>"
 	else if(cold_circ && hot_circ)
 		var/datum/gas_mixture/cold_circ_air1 = cold_circ.get_outlet_air()
 		var/datum/gas_mixture/cold_circ_air2 = cold_circ.get_inlet_air()
@@ -209,22 +205,22 @@
 
 		t += "Output: [round(lastgen)] W"
 
-		t += "<BR>"
+		t += "<br>"
 
-		t += "<B><font color='blue'>Cold loop</font></B><BR>"
-		t += "Temperature Inlet: [round(cold_circ_air2.temperature, 0.1)] K / Outlet: [round(cold_circ_air1.temperature, 0.1)] K<BR>"
-		t += "Pressure Inlet: [round(cold_circ_air2.return_pressure(), 0.1)] kPa /  Outlet: [round(cold_circ_air1.return_pressure(), 0.1)] kPa<BR>"
+		t += "<b><font color='blue'>Cold loop</font></b><br>"
+		t += "Temperature Inlet: [round(cold_circ_air2.temperature, 0.1)] K / Outlet: [round(cold_circ_air1.temperature, 0.1)] K<br>"
+		t += "Pressure Inlet: [round(cold_circ_air2.return_pressure(), 0.1)] kPa /  Outlet: [round(cold_circ_air1.return_pressure(), 0.1)] kPa<br>"
 
-		t += "<B><font color='red'>Hot loop</font></B><BR>"
-		t += "Temperature Inlet: [round(hot_circ_air2.temperature, 0.1)] K / Outlet: [round(hot_circ_air1.temperature, 0.1)] K<BR>"
-		t += "Pressure Inlet: [round(hot_circ_air2.return_pressure(), 0.1)] kPa / Outlet: [round(hot_circ_air1.return_pressure(), 0.1)] kPa<BR>"
+		t += "<b><font color='red'>Hot loop</font></b><br>"
+		t += "Temperature Inlet: [round(hot_circ_air2.temperature, 0.1)] K / Outlet: [round(hot_circ_air1.temperature, 0.1)] K<br>"
+		t += "Pressure Inlet: [round(hot_circ_air2.return_pressure(), 0.1)] kPa / Outlet: [round(hot_circ_air1.return_pressure(), 0.1)] kPa<br>"
 
 		t += "</div>"
 	else
-		t += "<span class='bad'>Unable to locate all parts!</span>"
-		t += "<BR><a href='byond://?src=[UID()];check=1'>Retry</A>"
+		t += span_bad("Unable to locate all parts!")
+		t += "<br><a href='byond://?src=[UID()];check=1'>Retry</a>"
 	if(include_link)
-		t += "<BR><a href='byond://?src=[UID()];close=1'>Close</A>"
+		t += "<br><a href='byond://?src=[UID()];close=1'>Close</a>"
 
 	return t
 
@@ -239,11 +235,11 @@
 /obj/machinery/power/generator/Topic(href, href_list)
 	if(..())
 		return 0
-	if( href_list["close"] )
-		usr << browse(null, "window=teg")
+	if(href_list["close"])
+		close_window(usr, "teg")
 		usr.unset_machine()
 		return 0
-	if( href_list["check"] )
+	if(href_list["check"])
 		if(!powernet || !cold_circ || !hot_circ)
 			connect()
 	return 1

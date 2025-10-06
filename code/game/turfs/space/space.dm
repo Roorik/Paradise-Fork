@@ -7,6 +7,8 @@
 	thermal_conductivity = OPEN_HEAT_TRANSFER_COEFFICIENT
 	heat_capacity = HEAT_CAPACITY_VACUUM
 
+	flags = NO_SCREENTIPS
+
 	plane = PLANE_SPACE
 	layer = SPACE_LAYER
 	light_power = 0.25
@@ -29,7 +31,6 @@
 
 	//when this be added to vis_contents of something it be associated with something on clicking,
 	//important for visualisation of turf in openspace and interraction with openspace that show you turf.
-	vis_flags = VIS_INHERIT_ID
 
 /turf/space/Initialize(mapload)
 	SHOULD_CALL_PARENT(FALSE)
@@ -54,7 +55,7 @@
 		// queueing compile, cloning appearance, etc etc etc that is not necessary here.
 		overlays += GLOB.fullbright_overlays[GET_TURF_PLANE_OFFSET(src) + 1]
 
-	if (light_power && light_range)
+	if(light_power && light_range)
 		update_light()
 
 	if(opacity)
@@ -63,7 +64,8 @@
 	return INITIALIZE_HINT_NORMAL
 
 /turf/space/ComponentInitialize()
-	. = ..()
+	if(!is_station_level(z))
+		return
 	AddComponent(/datum/component/blob_turf_consuming, 4)
 
 /turf/space/BeforeChange()
@@ -180,7 +182,7 @@
 	var/arrived_is_mob = isliving(arrived)
 	var/mob/living/arrived_mob = arrived
 	if(arrived_is_mob && (arrived_mob.mind in GLOB.taipan_players_active))
-		to_chat(arrived_mob, span_info("Вы вернулись в ваш родной скрытый от чужих глаз сектор..."))
+		to_chat(arrived_mob, span_notice("Вы вернулись в ваш родной скрытый от чужих глаз сектор..."))
 		return destination_z
 	// if we are not from taipan's crew, then we cannot get there until there is enought players on Taipan
 	if(length(GLOB.taipan_players_active) < TAIPAN_PLAYER_LIMIT)
@@ -242,7 +244,7 @@
 			A.z = target_z
 			A.x = world.maxx - 2
 			spawn (0)
-				if((A && A.loc))
+				if(A && A.loc)
 					A.loc.Entered(A)
 	else if(src.x >= world.maxx)
 		if(istype(A, /obj/effect/meteor))
@@ -267,7 +269,7 @@
 			A.z = target_z
 			A.x = 3
 			spawn (0)
-				if((A && A.loc))
+				if(A && A.loc)
 					A.loc.Entered(A)
 	else if(src.y <= 1)
 		if(istype(A, /obj/effect/meteor))
@@ -291,7 +293,7 @@
 			A.z = target_z
 			A.y = world.maxy - 2
 			spawn (0)
-				if((A && A.loc))
+				if(A && A.loc)
 					A.loc.Entered(A)
 
 	else if(src.y >= world.maxy)
@@ -316,7 +318,7 @@
 			A.z = target_z
 			A.y = 3
 			spawn (0)
-				if((A && A.loc))
+				if(A && A.loc)
 					A.loc.Entered(A)
 	return
 
@@ -365,12 +367,12 @@
 		return RCD_NO_ACT
 	if(our_rcd.useResource(1, user))
 		to_chat(user, "Building Floor...")
-		playsound(get_turf(our_rcd), our_rcd.usesound, 50, 1)
+		playsound(get_turf(our_rcd), our_rcd.usesound, 50, TRUE)
 		add_attack_logs(user, src, "Constructed floor with RCD")
 		ChangeTurf(our_rcd.floor_type)
 		return RCD_ACT_SUCCESSFULL
 	to_chat(user, span_warning("ERROR! Not enough matter in unit to construct this floor!"))
-	playsound(get_turf(our_rcd), 'sound/machines/click.ogg', 50, 1)
+	playsound(get_turf(our_rcd), 'sound/machines/click.ogg', 50, TRUE)
 	return RCD_ACT_FAILED
 
 /turf/space/get_smooth_underlay_icon(mutable_appearance/underlay_appearance, turf/asking_turf, adjacency_dir)

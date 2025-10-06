@@ -4,33 +4,37 @@ SUBSYSTEM_DEF(radio)
 	ss_id = "radio"
 
 	var/list/radiochannels = list(
-	"Common"		= PUB_FREQ,
-	"Science"		= SCI_FREQ,
-	"Command"		= COMM_FREQ,
-	"Procedure"		= PROC_FREQ,
-	"Medical"		= MED_FREQ,
-	"Engineering"	= ENG_FREQ,
-	"Security" 		= SEC_FREQ,
-	"Response Team" = ERT_FREQ,
-	"Special Ops" 	= DTH_FREQ,
-	"Syndicate" 	= SYND_FREQ,
-	"SyndTaipan" 	= SYND_TAIPAN_FREQ,
-	"SyndTeam" 		= SYNDTEAM_FREQ,
-	"Soviet"		= SOV_FREQ,
-	"Supply" 		= SUP_FREQ,
-	"Service" 		= SRV_FREQ,
-	"AI Private"	= AI_FREQ,
-	"Medical(I)"	= MED_I_FREQ,
-	"Security(I)"	= SEC_I_FREQ,
-	"Spy Spider"	= SPY_SPIDER_FREQ,
-	"Spider Clan"	= NINJA_FREQ,
-	"Alpha wave"	= EVENT_ALPHA_FREQ,
-	"Beta wave"		= EVENT_BETA_FREQ,
-	"Gamma wave"	= EVENT_GAMMA_FREQ
+	"Общий"					= PUB_FREQ,
+	"Наука"					= SCI_FREQ,
+	"Командование"			= COMM_FREQ,
+	"Юриспруденция"			= PROC_FREQ,
+	"Медицина"				= MED_FREQ,
+	"Инженерия"				= ENG_FREQ,
+	"Безопасность"			= SEC_FREQ,
+	"Заключенные"			= PRS_FREQ,
+	"ОБР"					= ERT_FREQ,
+	"ССО"					= DTH_FREQ,
+	"Синдикат"				= SYND_FREQ,
+	"СиндиТайпан"			= SYND_TAIPAN_FREQ,
+	"СиндиДОС"				= SYNDTEAM_FREQ,
+	"СССП"					= SOV_FREQ,
+	"Снабжение"			= SUP_FREQ,
+	"Обслуживание"			= SRV_FREQ,
+	"ИИ"					= AI_FREQ,
+	"Медицина (ИТК)"		= MED_I_FREQ,
+	"Безопасность (ИТК)"	= SEC_I_FREQ,
+	"Жучок"					= SPY_SPIDER_FREQ,
+	"Клан Паука"			= NINJA_FREQ,
+	"Альфа частота"			= EVENT_ALPHA_FREQ,
+	"Бета частота"			= EVENT_BETA_FREQ,
+	"Гамма частота"			= EVENT_GAMMA_FREQ,
+	"Команда 1"				= T1_FREQ,
+	"Команда 2"				= T2_FREQ,
+	"Команда 3"				= T3_FREQ
 	)
 	var/list/CENT_FREQS = list(ERT_FREQ, DTH_FREQ)
 	var/list/ANTAG_FREQS = list(SYND_FREQ, SYNDTEAM_FREQ, SYND_TAIPAN_FREQ)
-	var/list/DEPT_FREQS = list(AI_FREQ, COMM_FREQ, ENG_FREQ, MED_FREQ, SEC_FREQ, SCI_FREQ, SRV_FREQ, SUP_FREQ, PROC_FREQ)
+	var/list/DEPT_FREQS = list(AI_FREQ, COMM_FREQ, ENG_FREQ, MED_FREQ, SEC_FREQ, PRS_FREQ, SCI_FREQ, SRV_FREQ, SUP_FREQ, PROC_FREQ, T1_FREQ, T2_FREQ, T3_FREQ)
 	var/list/syndicate_blacklist = list(SPY_SPIDER_FREQ, EVENT_ALPHA_FREQ, EVENT_BETA_FREQ, EVENT_GAMMA_FREQ)	//list of frequencies syndicate headset can't hear
 	var/list/datum/radio_frequency/frequencies = list()
 
@@ -59,6 +63,8 @@ SUBSYSTEM_DEF(radio)
 			return "airadio"
 		if(SEC_FREQ)
 			return "secradio"
+		if(PRS_FREQ)
+			return "prisradio"
 		if(ENG_FREQ)
 			return "engradio"
 		if(SCI_FREQ)
@@ -83,6 +89,12 @@ SUBSYSTEM_DEF(radio)
 			return "event_beta"
 		if(EVENT_GAMMA_FREQ)
 			return "event_gamma"
+		if(T1_FREQ)
+			return "t1radio"
+		if(T2_FREQ)
+			return "t2radio"
+		if(T3_FREQ)
+			return "t3radio"
 
 	// If the above switch somehow failed. And it needs the SSradio. part otherwise it fails to compile
 	if(frequency in DEPT_FREQS)
@@ -92,7 +104,7 @@ SUBSYSTEM_DEF(radio)
 	return "radio"
 
 
-/datum/controller/subsystem/radio/proc/add_object(obj/device as obj, var/new_frequency as num, var/filter = null as text|null)
+/datum/controller/subsystem/radio/proc/add_object(obj/device, new_frequency, filter = null)
 	var/f_text = num2text(new_frequency)
 	var/datum/radio_frequency/frequency = frequencies[f_text]
 
@@ -102,22 +114,33 @@ SUBSYSTEM_DEF(radio)
 		frequencies[f_text] = frequency
 
 	frequency.add_listener(device, filter)
+	add_radio(device, new_frequency)
 	return frequency
 
 /datum/controller/subsystem/radio/proc/remove_object(obj/device, old_frequency)
 	var/f_text = num2text(old_frequency)
-	var/datum/radio_frequency/frequency = frequencies[f_text]
+	return remove_object_str_freq(device, f_text)
 
-	if(frequency)
-		frequency.remove_listener(device)
+/datum/controller/subsystem/radio/proc/remove_object_str_freq(obj/device, old_frequency)
+	var/datum/radio_frequency/frequency = frequencies[old_frequency]
+	if(!frequency)
+		return 1
 
-		if(frequency.devices.len == 0)
-			qdel(frequency)
-			frequencies -= f_text
+	frequency.remove_listener(device)
+	remove_radio(device, old_frequency)
+	if(frequency.devices.len != 0)
+		return 1
 
+	qdel(frequency)
+	frequencies -= old_frequency
 	return 1
 
-/datum/controller/subsystem/radio/proc/return_frequency(var/new_frequency as num)
+/datum/controller/subsystem/radio/proc/remove_object_all(obj/device)
+	for(var/frequency in frequencies)
+		remove_object_str_freq(device, frequency)
+
+
+/datum/controller/subsystem/radio/proc/return_frequency(new_frequency as num)
 	var/f_text = num2text(new_frequency)
 	var/datum/radio_frequency/frequency = frequencies[f_text]
 

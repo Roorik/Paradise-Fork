@@ -5,7 +5,6 @@ GLOBAL_LIST_EMPTY(active_video_cameras)
  */
 /obj/item/videocam
 	name = "video camera"
-	icon = 'icons/obj/items.dmi'
 	desc = "video camera that can send live feed to the entertainment network."
 	icon_state = "videocam"
 	item_state = "videocam"
@@ -36,7 +35,7 @@ GLOBAL_LIST_EMPTY(active_video_cameras)
 	else
 		GLOB.active_video_cameras -= src
 
-	for(var/obj/machinery/computer/security/telescreen/entertainment/TV in GLOB.machines)
+	for(var/obj/machinery/computer/security/telescreen/entertainment/TV in SSmachines.get_by_type(/obj/machinery/computer/security/telescreen/entertainment))
 		TV.update_icon(UPDATE_OVERLAYS)
 
 /obj/item/videocam/proc/camera_state(mob/living/carbon/user)
@@ -66,17 +65,16 @@ GLOBAL_LIST_EMPTY(active_video_cameras)
 	if(camera && on)
 		if(get_dist(src, M) <= canhear_range)
 			talk_into(M, msg)
-		for(var/obj/machinery/computer/security/telescreen/T in GLOB.machines)
-			if(T.watchers[M] == camera)
+		for(var/obj/machinery/computer/security/telescreen/T in SSmachines.get_by_type(/obj/machinery/computer/security/telescreen))
+			if(T.concurrent_users[M] == camera)
 				T.atom_say(msg)
 
 /obj/item/videocam/hear_message(mob/M, msg)
 	if(camera && on)
-		for(var/obj/machinery/computer/security/telescreen/T in GLOB.machines)
-			if(T.watchers[M] == camera)
+		for(var/obj/machinery/computer/security/telescreen/T in SSmachines.get_by_type(/obj/machinery/computer/security/telescreen))
+			if(T.concurrent_users[M] == camera)
 				T.atom_say(msg)
 
 /obj/item/videocam/advanced
 	name = "advanced video camera"
 	desc = "This video camera allows you to send live feeds even when attached to a belt."
-	slot_flags = ITEM_SLOT_BELT

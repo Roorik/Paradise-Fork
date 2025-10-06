@@ -21,10 +21,9 @@
 	icon = 'icons/obj/stationobjs.dmi'
 	icon_state = "signpost2"
 	anchored = TRUE
-	density = FALSE
 
 /obj/structure/respawner
-	name = "\improper Long-Distance Cloning Machine"
+	name = "Long-Distance Cloning Machine"
 	desc = "Top-of-the-line Nanotrasen technology allows for cloning of crew members from off-station upon bluespace request."
 	icon = 'icons/obj/objects.dmi'
 	icon_state = "borgcharger1(old)"
@@ -48,7 +47,7 @@
 			if(new_outfit == "Naked")
 				selected_outfit = null
 				return
-			selected_outfit = new_outfit
+			selected_outfit = new new_outfit
 			return
 
 	var/response = tgui_alert(user, "Вы уверены, что хотите появиться здесь?\n(Если вы сделаете это, вас нельзя будет клонировать!)", "Возродиться?", list("Да", "Нет"))
@@ -57,6 +56,8 @@
 		log_admin("[key_name_log(user)] was incarnated by a respawner machine.")
 		message_admins("[key_name_admin(user)] was incarnated by a respawner machine.")
 		var/mob/living/carbon/human/new_human = user.incarnate_ghost(use_old_mind)
+		if(selected_outfit)
+			selected_outfit.equip(new_human)
 		new_human.mind.offstation_role = TRUE // To prevent them being an antag objective
 
 /obj/structure/respawner/old_mind
@@ -76,7 +77,7 @@
 	var/atom/attack_atom
 
 
-/obj/structure/ghost_beacon/Initialize()
+/obj/structure/ghost_beacon/Initialize(mapload)
 	. = ..()
 	last_ghost_alert = world.time
 	attack_atom = src
@@ -98,7 +99,7 @@
 /obj/structure/ghost_beacon/attack_hand(mob/user)
 	if(!is_admin(user))
 		return
-	to_chat(user, "<span class='notice'>You [active ? "disable" : "enable"] \the [src].</span>")
+	to_chat(user, span_notice("You [active ? "disable" : "enable"] \the [src]."))
 	if(active)
 		STOP_PROCESSING(SSobj, src)
 	else

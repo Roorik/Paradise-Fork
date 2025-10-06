@@ -6,10 +6,7 @@
 	desc = "A huge pipe segment used for constructing disposal systems."
 	icon = 'icons/obj/pipes_and_stuff/not_atmos/disposal.dmi'
 	icon_state = "conpipe-s"
-	anchored = FALSE
-	density = FALSE
 	pressure_resistance = 5 * ONE_ATMOSPHERE
-	level = 2
 	max_integrity = 200
 	set_dir_on_move = FALSE
 	/// What disposals type we are representing
@@ -106,13 +103,13 @@
 
 /obj/structure/disposalconstruct/examine(mob/user)
 	. = ..()
-	. += span_info("<b>Alt-Click</b> to rotate it, <b>Alt-Shift-Click</b> to flip it.")
+	. += span_notice("<b>Alt-Click</b> to rotate it, <b>Alt-Shift-Click</b> to flip it.")
 
 
 // flip and rotate verbs
 /obj/structure/disposalconstruct/verb/rotate_verb()
-	set category = "Object"
-	set name = "Rotate Pipe"
+	set category = STATPANEL_OBJECT
+	set name = "Повернуть трубу"
 	set src in view(1)
 	rotate(usr)
 
@@ -138,8 +135,8 @@
 
 
 /obj/structure/disposalconstruct/verb/flip_verb()
-	set category = "Object"
-	set name = "Flip Pipe"
+	set category = STATPANEL_OBJECT
+	set name = "Перевернуть трубу"
 	set src in view(1)
 	flip(usr)
 

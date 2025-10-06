@@ -2,8 +2,8 @@
 	name = "organ"
 	gender = MALE
 	icon = 'icons/obj/surgery.dmi'
-	pickup_sound = 'sound/items/handling/flesh_pickup.ogg'
-	drop_sound = 'sound/items/handling/flesh_drop.ogg'
+	pickup_sound = 'sound/items/handling/pickup/flesh_pickup.ogg'
+	drop_sound = 'sound/items/handling/drop/flesh_drop.ogg'
 	germ_level = 0
 	var/dead_icon
 	/// Current organ holder
@@ -23,6 +23,11 @@
 	var/min_internal_bleeding_damage = 30
 	/// Basically organ max health.
 	var/max_damage
+
+	/// Current bleeding amount
+	var/bleeding_amount = 0
+	/// Maximum of bleeding amount for this organ
+	var/max_bleeding_amount = 0
 
 	/// Defined body zone of parent organ.
 	var/parent_organ_zone = BODY_ZONE_CHEST
@@ -137,6 +142,7 @@
 		return FALSE
 
 	damage = max_damage
+	bleeding_amount = 0
 	status |= ORGAN_DEAD
 	STOP_PROCESSING(SSobj, src)
 
@@ -314,7 +320,7 @@
 
 
 //Adds autopsy data for used_weapon.
-/obj/item/organ/proc/add_autopsy_data(used_weapon = "Неизвестно", damage)
+/obj/item/organ/proc/add_autopsy_data(used_weapon = UNKNOWN_STATUS_RUS, damage)
 	LAZYINITLIST(autopsy_data)
 
 	var/datum/autopsy_data/weapon_data = autopsy_data[used_weapon]
@@ -447,7 +453,7 @@
 		status = data["status"]
 	if(islist(data["dna"]))
 		// The only thing the official proc does is
-	 	//instantiate the list and call this proc
+		//instantiate the list and call this proc
 		dna.deserialize(data["dna"])
 		..()
 

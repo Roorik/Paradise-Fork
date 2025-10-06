@@ -1,12 +1,3 @@
-#define THEFT_FLAG_HIGHRISK 	1
-#define THEFT_FLAG_UNIQUE 		2
-#define THEFT_FLAG_HARD 		3
-#define THEFT_FLAG_MEDIUM 		4
-#define THEFT_FLAG_STRUCTURE	5
-#define THEFT_FLAG_ANIMAL		6
-#define THEFT_FLAG_COLLECT 		7
-
-
 GLOBAL_LIST_EMPTY(all_objectives)
 
 /// Stores objective [names][/datum/objective/var/name] as list keys, and their corresponding typepaths as list values.
@@ -89,8 +80,8 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 	if(possible_target.current.stat == DEAD)
 		return TARGET_INVALID_DEAD
 
-	if(!possible_target.key || !possible_target.current?.ckey)
-		return TARGET_INVALID_NOCKEY
+	//if(!possible_target.key || !possible_target.current?.ckey)
+		//return TARGET_INVALID_NOCKEY
 
 	if(possible_target.current)
 		var/turf/current_location = get_turf(possible_target.current)
@@ -138,8 +129,8 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 
 
 /**
-  * Called when the objective's target goes to cryo.
-  */
+ * Called when the objective's target goes to cryo.
+ */
 /datum/objective/proc/on_target_cryo()
 	if(!check_cryo)
 		return
@@ -152,13 +143,13 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 
 /datum/objective/proc/alarm_changes()
 	for(var/datum/mind/user in get_owners())
-		to_chat(user.current, span_userdanger("<BR>Вы чувствуете, что ваша цель больше не находится в пределах досягаемости. Время для плана [pick("A","B","C","D","X","Y","Z")]. Цели обновлены!"))
-		SEND_SOUND(user.current, 'sound/ambience/alarm4.ogg')
+		to_chat(user.current, span_userdanger("<br>Вы чувствуете, что ваша цель больше не находится в пределах досягаемости. Время для плана [pick("A","B","C","D","X","Y","Z")]. Цели обновлены!"))
+		SEND_SOUND(user.current, sound('sound/ambience/alarm4.ogg'))
 
 
 /**
-  * Called a tick after when the objective's target goes to cryo.
-  */
+ * Called a tick after when the objective's target goes to cryo.
+ */
 /datum/objective/proc/post_target_cryo(list/owners)
 
 	find_target(existing_targets_blacklist())
@@ -325,7 +316,6 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 /datum/objective/debrain //I want braaaainssss
 	name = "Debrain"
 	antag_menu_name = "Украсть мозг"
-	martyr_compatible = FALSE
 
 
 /datum/objective/debrain/is_invalid_target(datum/mind/possible_target)
@@ -338,15 +328,15 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 
 
 /datum/objective/debrain/find_target(list/target_blacklist)
-    ..()
-    if(target?.current)
-        var/obj/item/organ/internal/brains = target.current.get_organ_slot(INTERNAL_ORGAN_BRAIN)
-        explanation_text = "Украсть [brains.declent_ru(ACCUSATIVE)] у [target.current.real_name], [target.assigned_role]."
-        if(!(target in SSticker.mode.victims))
-            SSticker.mode.victims.Add(target)
-    else
-        explanation_text = "Свободная цель"
-    return target
+	..()
+	if(target?.current)
+		var/obj/item/organ/internal/brains = target.current.get_organ_slot(INTERNAL_ORGAN_BRAIN)
+		explanation_text = "Украсть [brains.declent_ru(ACCUSATIVE)] у [target.current.real_name], [target.assigned_role]."
+		if(!(target in SSticker.mode.victims))
+			SSticker.mode.victims.Add(target)
+	else
+		explanation_text = "Свободная цель"
+	return target
 
 
 /datum/objective/debrain/check_completion()
@@ -540,7 +530,7 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 	if(owner?.current)
 		SEND_SOUND(owner.current, sound('sound/ambience/alarm4.ogg'))
 		owner.remove_antag_datum(/datum/antagonist/mindslave)
-		to_chat(owner.current, "<BR>[span_userdanger("Вы замечаете, что ваш хозяин вошёл в криогенное хранилище и возвращаетесь к своему обычному состоянию.")]")
+		to_chat(owner.current, "<br>[span_userdanger("Вы замечаете, что ваш хозяин вошёл в криогенное хранилище и возвращаетесь к своему обычному состоянию.")]")
 		log_admin("[key_name(owner.current)]'s mindslave master has cryo'd, and is no longer a mindslave.")
 		message_admins("[key_name_admin(owner.current)]'s mindslave master has cryo'd, and is no longer a mindslave.") //Since they were on antag hud earlier, this feels important to log
 		qdel(src)
@@ -551,7 +541,6 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 /datum/objective/hijack
 	name = "Hijack"
 	antag_menu_name = "Угон шаттла"
-	martyr_compatible = FALSE //Technically you won't get both anyway.
 	explanation_text = "Угоните шаттл, эвакуировавшись без лояльного Nanotrasen экипажа на борту, будучи свободным. \
 	Агенты Синдикта, другие враги Nanotrasen, борги, питомцы, и заложники в наручниках/связывающих устройствах могут быть на шаттле живыми."
 	needs_target = FALSE
@@ -572,7 +561,6 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 	name = "Hijack (with clones)"
 	antag_menu_name = "Угон шаттла (с клонами)"
 	explanation_text = "Захватите шаттл, убедившись, что сбежите только вы (или ваши копии)."
-	martyr_compatible = FALSE
 	needs_target = FALSE
 
 
@@ -767,6 +755,43 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 	return FALSE
 
 
+/datum/objective/prison_escape
+	name = "Prison Escape"
+	antag_menu_name = "Сбежать из тюрьмы"
+	explanation_text = "Сбежать из тюрьмы и улететь на шаттле или эвакуационном челноке живым и свободным."
+	needs_target = FALSE
+
+/datum/objective/prison_escape/check_completion()
+	var/list/owners = get_owners()
+
+	for(var/datum/mind/player as anything in owners)
+		// These are mandatory conditions, they should come before the freebie conditions below.
+		if(QDELETED(player.current) || player.current.stat == DEAD || is_special_dead(player.current))
+			return FALSE
+
+	if(SSticker.force_ending) // This one isn't their fault, so lets just assume good faith.
+		return TRUE
+
+	if(SSticker.mode.station_was_nuked) // If they escaped the blast somehow, let them win.
+		return TRUE
+
+	if(!EMERGENCY_ESCAPED_OR_ENDGAMED)
+		return FALSE
+
+	for(var/datum/mind/player as anything in owners)
+		// Fails traitors if they are in the security area
+		var/area/location = get_area(player.current)
+		if(istype(location, /area/security))
+			return FALSE
+
+		// Fails traitors if they are in the shuttle brig
+		var/turf/turf = get_turf(player.current)
+		if(istype(turf, /turf/simulated/floor/shuttle/objective_check) || istype(turf, /turf/simulated/floor/mineral/plastitanium/red/brig))
+			return FALSE
+
+	return TRUE
+
+
 /datum/objective/die
 	name = "Glorious Death"
 	antag_menu_name = "Умереть славной смертью"
@@ -815,7 +840,6 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 	name = "Steal Item"
 	antag_menu_name = "Украсть предмет"
 	var/datum/theft_objective/steal_target
-	martyr_compatible = FALSE
 	var/type_theft_flag = THEFT_FLAG_HIGHRISK
 
 
@@ -848,7 +872,7 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 
 		var/has_invalid_owner = FALSE
 		for(var/datum/mind/player in get_owners())
-			if((player.assigned_role in new_theft_objective.protected_jobs))
+			if(player.assigned_role in new_theft_objective.protected_jobs)
 				has_invalid_owner = TRUE
 				break
 
@@ -894,7 +918,7 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 		var/tmp_obj = new O.typepath
 		var/custom_name = tmp_obj:name
 		qdel(tmp_obj)
-		O.name = sanitize(tgui_input_text("Введите название цели:", "Цель", custom_name, MAX_NAME_LEN))
+		O.name = sanitize(tgui_input_text(usr, "Введите название цели:", "Цель", custom_name, MAX_NAME_LEN))
 		if(!O.name)
 			return FALSE
 		steal_target = O
@@ -923,7 +947,7 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 		var/mob/living/carbon/human/human_owner = player.current
 		var/where = human_owner.equip_in_one_of_slots(item, slots)
 		if(where)
-			to_chat(human_owner, "<br><br><span class='info'>В вашем [where] находится коробка с <b>предметами и инструкциями</b>, которые помогут вам в воровстве.</span><br>")
+			to_chat(human_owner, span_notice("<br><br>В вашем [where] находится коробка с [span_bold("предметами и инструкциями")], которые помогут вам в воровстве.<br>"))
 		else
 			to_chat(human_owner, span_userdanger("К сожалению, вам не удалось получить набор для кражи. Это очень плохо, и вам следует немедленно обратиться за помощью к администраторам (нажмите F1)."))
 			message_admins("[ADMIN_LOOKUPFLW(human_owner)] Failed to spawn with their [item_path] theft kit.")
@@ -954,12 +978,11 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 
 
 /datum/objective/steal/exchange
-	martyr_compatible = FALSE
 	needs_target = FALSE
 	antag_menu_name = "Заполучить"
 
 
-/datum/objective/steal/exchange/proc/set_faction(var/faction,var/otheragent)
+/datum/objective/steal/exchange/proc/set_faction(faction, otheragent)
 	target = otheragent
 	var/datum/theft_objective/unique/targetinfo
 	if(faction == "red")
@@ -973,7 +996,7 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 /datum/objective/steal/exchange/backstab
 	antag_menu_name = "Сохранить"
 
-/datum/objective/steal/exchange/backstab/set_faction(var/faction)
+/datum/objective/steal/exchange/backstab/set_faction(faction)
 	var/datum/theft_objective/unique/targetinfo
 	if(faction == "red")
 		targetinfo = new /datum/theft_objective/unique/docs_red
@@ -1243,7 +1266,6 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 		return FALSE
 
 /datum/objective/heist/loot
-	needs_target = FALSE
 
 /datum/objective/heist/loot/choose_target()
 	var/loot = "объект"
@@ -1317,7 +1339,6 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 	return FALSE
 
 /datum/objective/heist/salvage
-	needs_target = FALSE
 	antag_menu_name = "Добыть материалы"
 
 /datum/objective/heist/salvage/choose_target()
@@ -1388,7 +1409,6 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 /datum/objective/heist/inviolate_crew
 	antag_menu_name = "Не бросать своих"
 	explanation_text = "Не бросайте ни одного вокса, живого или мёртвого.."
-	needs_target = FALSE
 
 /datum/objective/heist/inviolate_crew/check_completion()
 	var/datum/game_mode/heist/H = SSticker.mode
@@ -1399,7 +1419,6 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 /datum/objective/heist/inviolate_death
 	antag_menu_name = "Ненасилие"
 	explanation_text = "Следуйте Ненасилию. Минимизируйте смерть и потерю ресурсов."
-	needs_target = FALSE
 
 /datum/objective/heist/inviolate_death/check_completion()
 	return TRUE
@@ -1540,7 +1559,6 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 
 /datum/objective/protect/ninja
 	name = "Ninja's Protect"
-	antag_menu_name = "Защитить"
 	var/list/killers_objectives = list()
 	var/list/killers = list()
 
@@ -1637,8 +1655,8 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 
 	var/list/owners = get_owners()
 	for(var/datum/mind/user in owners)
-		to_chat(owner.current, span_userdanger("<BR>Вы чувствуете, что ваша цель больше не находится в пределах досягаемости. Время для плана [pick("A","B","C","D","X","Y","Z")]. Цели обновлены!"))
-		SEND_SOUND(owner.current, 'sound/ambience/alarm4.ogg')
+		to_chat(owner.current, span_userdanger("<br>Вы чувствуете, что ваша цель больше не находится в пределах досягаемости. Время для плана [pick("A","B","C","D","X","Y","Z")]. Цели обновлены!"))
+		SEND_SOUND(owner.current, sound('sound/ambience/alarm4.ogg'))
 
 	if(!completed)
 		target = null
@@ -1796,7 +1814,7 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 
 /datum/objective/blob_critical_mass/check_completion()
 	if(!completed)
-		completed = needed_critical_mass <= critical_mass && GLOB.security_level < SEC_LEVEL_DELTA
+		completed = needed_critical_mass <= critical_mass && SSsecurity_level.get_current_level_as_number() < SEC_LEVEL_DELTA
 	return ..()
 
 
@@ -1820,3 +1838,8 @@ GLOBAL_LIST_EMPTY(admin_objective_list)
 	if(!resolved_overmind)
 		return FALSE
 	return resolved_overmind.stat != DEAD
+
+/datum/objective/xeno_genocide
+	name = "Геноцид разумной жизни"
+	needs_target = FALSE
+	explanation_text = "Убивайте всех, кто не является ксеноморфом. Утопите станцию в крови!"

@@ -4,7 +4,12 @@
 
 /datum/event/blob/announce(false_alarm)
 	if(false_alarm)
-		GLOB.event_announcement.Announce("Подтверждена вспышка биологической угрозы 5-го уровня на борту [station_name()]. Весь персонал обязан локализовать угрозу.", "ВНИМАНИЕ: БИОЛОГИЧЕСКАЯ УГРОЗА.", 'sound/AI/outbreak5.ogg')
+		GLOB.major_announcement.announce(
+			message = "Подтверждена вспышка биологической угрозы 5-го уровня на борту [station_name()]. Весь персонал обязан локализовать угрозу.",
+			new_title = ANNOUNCE_BIOHAZARD_RU,
+			new_sound = 'sound/effects/siren-spooky.ogg',
+			new_sound2 = 'sound/AI/outbreak_blob.ogg'
+		)
 
 /datum/event/blob/start()
 	processing = FALSE //so it won't fire again in next tick

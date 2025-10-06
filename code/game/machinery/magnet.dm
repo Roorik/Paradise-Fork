@@ -21,7 +21,6 @@
 	level = 1		// underfloor
 	layer = WIRE_LAYER+0.001
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 50
 	/// Radio frequency
 	var/freq = AIRLOCK_FREQ
@@ -44,7 +43,7 @@
 
 
 /obj/machinery/magnetic_module/Initialize(mapload)
-	..()
+	. = ..()
 	var/turf/T = loc
 	if(!T.transparent_floor)
 		hide(T.intact)
@@ -54,14 +53,15 @@
 
 	INVOKE_ASYNC(src, PROC_REF(magnetic_process))
 
+/obj/machinery/magnetic_module/Destroy()
+	SSradio.remove_object(src, freq)  // i have zero idea what the hell is going on
+	return ..()
 
-	// update the invisibility and icon
+// update the invisibility and icon
 /obj/machinery/magnetic_module/hide(intact)
 	invisibility = intact ? INVISIBILITY_MAXIMUM : 0
 	update_icon(UPDATE_ICON_STATE)
 
-
-	// update the icon_state
 /obj/machinery/magnetic_module/update_icon_state()
 	// if invisible, set icon to faded version
 	// in case of being revealed by T-scanner
@@ -191,7 +191,6 @@
 	icon_state = "airlock_control_standby"
 	density = TRUE
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 45
 	frequency = AIRLOCK_FREQ
 	var/code = 0
@@ -231,21 +230,20 @@
 /obj/machinery/magnetic_controller/LateInitialize()
 	..()
 	if(autolink)
-		// GLOB.machines is populated in /machinery/Initialize
+		// SSmachines  is populated in /machinery/Initialize
 		// so linkage gets delayed until that one finished.
 		link_magnets()
 
 
 /obj/machinery/magnetic_controller/Destroy()
-	if(SSradio)
-		SSradio.remove_object(src, frequency)
+	SSradio.remove_object(src, frequency)
 	radio_connection = null
 	return ..()
 
 
 /obj/machinery/magnetic_controller/proc/link_magnets()
 	magnets = list()
-	for(var/obj/machinery/magnetic_module/module in GLOB.machines)
+	for(var/obj/machinery/magnetic_module/module in SSmachines.get_by_type(/obj/machinery/magnetic_module))
 		if(module.freq == frequency && module.code == code)
 			magnets += module
 			RegisterSignal(module, COMSIG_QDELETING, PROC_REF(on_magnet_del), TRUE)
@@ -257,10 +255,8 @@
 
 
 /obj/machinery/magnetic_controller/process()
-	if(!length(magnets) && autolink)
-		for(var/obj/machinery/magnetic_module/module in GLOB.machines)
-			if(module.freq == frequency && module.code == code)
-				magnets += module
+	if(length(magnets) == 0 && autolink)
+		link_magnets()
 
 
 /obj/machinery/magnetic_controller/attack_ai(mob/user as mob)
@@ -271,7 +267,7 @@
 	if(stat & (BROKEN|NOPOWER))
 		return
 	user.set_machine(src)
-	var/dat = {"<meta charset="UTF-8"><B>Magnetic Control Console</B><BR><BR>"}
+	var/dat = {"<b>Magnetic Control Console</b><br><br>"}
 	if(!autolink)
 		dat += {"
 		Frequency: <a href='byond://?src=[UID()];operation=setfreq'>[frequency]</a><br>
@@ -293,7 +289,9 @@
 	dat += "Moving: <a href='byond://?src=[UID()];operation=togglemoving'>[moving ? "Enabled":"Disabled"]</a>"
 
 
-	user << browse(dat, "window=magnet;size=400x500")
+	var/datum/browser/popup = new(user, "magnet", "Magnetic Control Console", 400, 500)
+	popup.set_content(dat)
+	popup.open(TRUE)
 	onclose(user, "magnet")
 
 
@@ -344,7 +342,7 @@
 				if(speed <= 0)
 					speed = 1
 			if("setpath")
-				var/newpath = sanitize(copytext_char(input(usr, "Please define a new path!",,path) as text|null,1,MAX_MESSAGE_LEN))
+				var/newpath = tgui_input_text(usr, "Please define a new path!",,path, max_length = MAX_MESSAGE_LEN)
 				if(newpath && newpath != "")
 					moving = FALSE // stop moving
 					path = newpath

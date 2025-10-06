@@ -17,7 +17,7 @@
 
 /datum/action/changeling/headslug/sting_action(mob/user)
 
-	explosion(get_turf(user), 0, 0, 2, 0, silent = TRUE)
+	explosion(get_turf(user), devastation_range = 0, heavy_impact_range = 0, light_impact_range = 2, flash_range = 0, silent = TRUE)
 
 	for(var/mob/living/carbon/human/victim in range(2, user))
 		to_chat(victim, span_userdanger("You are blinded by a shower of blood!"))
@@ -55,6 +55,6 @@
 		crab.origin.active = TRUE
 		crab.origin.transfer_to(crab)
 		to_chat(crab, span_warning("You burst out of the remains of your former body in a shower of gore!"))
-		to_chat(crab, span_changeling("Our eggs can be laid in any dead humanoid, but not in small ones. Use <B>Alt-Click</B> on the valid mob and keep calm for 5 seconds."))
+		to_chat(crab, span_changeling("Our eggs can be laid in any dead humanoid, but not in small ones. Use <b>Alt-Click</b> on the valid mob and keep calm for 5 seconds."))
 		to_chat(crab, span_notice("Though this form shall perish after laying the egg, our true self shall be reborn in time."))
 

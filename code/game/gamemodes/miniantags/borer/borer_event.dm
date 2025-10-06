@@ -12,7 +12,11 @@
 
 /datum/event/borer_infestation/announce(false_alarm)
 	if(successSpawn || false_alarm)
-		GLOB.command_announcement.Announce("Обнаружены неопознанные формы жизни на борту [station_name()]. Обезопасьте все наружные входы и выходы, включая вентиляцию и вытяжки.", "ВНИМАНИЕ: НЕОПОЗНАННЫЕ ФОРМЫ ЖИЗНИ.", new_sound = 'sound/AI/aliens.ogg')
+		GLOB.major_announcement.announce(
+			message = "Обнаружены неопознанные формы жизни на борту [station_name()]. Обезопасьте все наружные входы и выходы, включая вентиляцию и вытяжки.",
+			new_title = ANNOUNCE_UNID_LIFEFORMS_RU,
+			new_sound = 'sound/AI/aliens.ogg'
+		)
 	else
 		log_and_message_admins("Warning: Could not spawn any mobs for event Borer Infestation")
 

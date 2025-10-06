@@ -20,8 +20,8 @@ It can charge at its target, and also heavily damaging anything directly hit in 
 If at half health it will start to charge from all sides with clones.
 
 When Bubblegum dies, it leaves behind a chest that contains:
- 1. A H.E.C.K. mining suit
- 2. A spellblade that can slice off limbs at range
+	1. A H.E.C.K. mining suit
+	2. A spellblade that can slice off limbs at range
 
 Difficulty: Hard
 
@@ -29,18 +29,16 @@ Difficulty: Hard
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum
 	name = "bubblegum"
-	desc = "In what passes for a heirarchy among slaughter demons, this one is king."
+	desc = "В иерархии демонов резни, он – король."
 	health = 2500
 	maxHealth = 2500
 	attacktext = "кромсает"
 	attack_sound = 'sound/misc/demon_attack1.ogg'
 	icon_state = "bubblegum"
 	icon_living = "bubblegum"
-	icon_dead = ""
-	friendly = "stares down"
+	friendly = "пристально смотрит"
 	icon = 'icons/mob/lavaland/96x96megafauna.dmi'
-	speak_emote = list("gurgles")
-	tts_seed = "Mannoroth"
+	speak_emote = list("рычит")
 	armour_penetration = 40
 	melee_damage_lower = 40
 	melee_damage_upper = 40
@@ -69,21 +67,26 @@ Difficulty: Hard
 	var/maximum_enraged_healing = 500
 	/// Enraged healing recived
 	var/enraged_healing = 0
-	internal_type = /obj/item/gps/internal/bubblegum
 	medal_type = BOSS_MEDAL_BUBBLEGUM
 	score_type = BUBBLEGUM_SCORE
-	deathmessage = "sinks into a pool of blood, fleeing the battle. You've won, for now... "
+	deathmessage = "погружается в лужу крови, покидая битву. Вы победили... на сей раз."
 	death_sound = 'sound/misc/enter_blood.ogg'
-	attack_action_types = list(/datum/action/innate/megafauna_attack/triple_charge,
-							   /datum/action/innate/megafauna_attack/hallucination_charge,
-							   /datum/action/innate/megafauna_attack/hallucination_surround,
-							   /datum/action/innate/megafauna_attack/blood_warp)
+	attack_action_types = list(
+		/datum/action/innate/megafauna_attack/triple_charge,
+		/datum/action/innate/megafauna_attack/hallucination_charge,
+		/datum/action/innate/megafauna_attack/hallucination_surround,
+		/datum/action/innate/megafauna_attack/blood_warp
+	)
 
-/obj/item/gps/internal/bubblegum
-	icon_state = null
-	gpstag = "Mysterious Signal"
-	desc = "You're not quite sure how a signal can be bloody."
-	invisibility = INVISIBILITY_ABSTRACT
+/mob/living/simple_animal/hostile/megafauna/bubblegum/get_ru_names()
+	return list(
+		NOMINATIVE = "Бубльгум",
+		GENITIVE = "Бубльгума",
+		DATIVE = "Бубльгуму",
+		ACCUSATIVE = "Бубльгума",
+		INSTRUMENTAL = "Бубльгумом",
+		PREPOSITIONAL = "Бубльгуме"
+	)
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/Initialize(mapload)
 	. = ..()
@@ -96,31 +99,31 @@ Difficulty: Hard
 	AddElement(/datum/element/simple_flying)
 
 /datum/action/innate/megafauna_attack/triple_charge
-	name = "Triple Charge"
+	name = "Тройной заряд"
 	icon_icon = 'icons/mob/actions/actions.dmi'
 	button_icon_state = "sniper_zoom"
-	chosen_message = "<span class='colossus'>You are now triple charging at the target you click on.</span>"
+	chosen_message = span_colossus("Вы трижды атакуете цель, на которую нажмёте.")
 	chosen_attack_num = 1
 
 /datum/action/innate/megafauna_attack/hallucination_charge
-	name = "Hallucination Charge"
+	name = "Заряд галлюцинаций"
 	icon_icon = 'icons/effects/bubblegum.dmi'
 	button_icon_state = "smack ya one"
-	chosen_message = "<span class='colossus'>You are now charging with hallucinations at the target you click on.</span>"
+	chosen_message = span_colossus("Вы атакуете цель, на которую нажмёте, с галлюцинациями.")
 	chosen_attack_num = 2
 
 /datum/action/innate/megafauna_attack/hallucination_surround
-	name = "Surround Target"
+	name = "Окружение цели"
 	icon_icon = 'icons/turf/walls/wall.dmi'
 	button_icon_state = "wall"
-	chosen_message = "<span class='colossus'>You are now surrounding the target you click on with hallucinations.</span>"
+	chosen_message = span_colossus("Вы окружаете цель, на которую нажмёте, с галлюцинациями.")
 	chosen_attack_num = 3
 
 /datum/action/innate/megafauna_attack/blood_warp
-	name = "Blood Warp"
+	name = "Кровавый варп"
 	icon_icon = 'icons/effects/blood.dmi'
 	button_icon_state = "floor1"
-	chosen_message = "<span class='colossus'>You are now warping to blood around your clicked position.</span>"
+	chosen_message = span_colossus("Вы телепортируетесь к крови вокруг выбранной позиции.")
 	chosen_attack_num = 4
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/enrage()
@@ -136,7 +139,7 @@ Difficulty: Hard
 	crusher_loot = list(/obj/effect/decal/cleanable/blood/gibs/bubblegum)
 	RegisterSignal(src, COMSIG_HOSTILE_FOUND_TARGET, PROC_REF(i_see_you))
 	for(var/mob/living/carbon/human/H in range(18)) //suprise motherfucker bubblegum wakes up fast
-		to_chat(H, "<span class='colossus'><b>You DARE to insult my body with these constructs? I curse you as you curse ME!</b></span>")
+		to_chat(H, span_colossus("<b>Ты СМЕЕШЬ оскорблять моё тело этими конструкциями? Я проклинаю тебя, как ты проклинаешь МЕНЯ!</b>"))
 		FindTarget(list(H)) //From down town with the pile driver
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/unrage()
@@ -161,7 +164,7 @@ Difficulty: Hard
 	if(second_life)
 		var/area/A = get_area(src)
 		for(var/mob/M in A)
-			to_chat(M, "<span class='colossus'><b>YOU FUCK... I... I'll... get you later. Enjoy the last few days of your life...</b></span>")
+			to_chat(M, span_colossus("<b>ТЫ СУКА... Я... Я... до тебя доберусь. Наслаждайся последними днями своей жизни...</b>"))
 		new /obj/effect/bubblegum_exit(get_turf(src))
 	return ..()
 
@@ -354,10 +357,10 @@ Difficulty: Hard
 	SLEEP_CHECK_DEATH(src, 4)
 	for(var/mob/living/L in T)
 		if(!faction_check_mob(L))
-			to_chat(L, "<span class='userdanger'>[src] rends you!</span>")
+			to_chat(L, span_userdanger("[declent_ru(NOMINATIVE)] разрывает вас!"))
 			playsound(T, attack_sound, 100, TRUE, -1)
 			var/limb_to_hit = L.get_organ(pick(BODY_ZONE_HEAD, BODY_ZONE_CHEST, BODY_ZONE_R_ARM, BODY_ZONE_L_ARM, BODY_ZONE_R_LEG, BODY_ZONE_L_LEG, BODY_ZONE_TAIL, BODY_ZONE_WING))
-			L.apply_damage(second_life ? 20 : 10, BRUTE, limb_to_hit, L.run_armor_check(limb_to_hit, "melee", null, null, armour_penetration))
+			L.apply_damage(second_life ? 20 : 10, BRUTE, limb_to_hit, L.run_armor_check(limb_to_hit, MELEE, null, null, armour_penetration))
 	SLEEP_CHECK_DEATH(src, 3)
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/proc/bloodgrab(turf/T, handedness)
@@ -371,7 +374,7 @@ Difficulty: Hard
 	for(var/mob/living/L in T)
 		if(!faction_check_mob(L))
 			if(L.stat != CONSCIOUS)
-				to_chat(L, "<span class='userdanger'>[src] drags you through the blood!</span>")
+				to_chat(L, span_userdanger("[declent_ru(NOMINATIVE)] тащит вас через кровь!"))
 				playsound(T, 'sound/misc/enter_blood.ogg', 100, TRUE, -1)
 				var/turf/targetturf = get_step(src, dir)
 				L.forceMove(targetturf)
@@ -381,7 +384,8 @@ Difficulty: Hard
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/proc/hit_up_narsi()
 	SetRecoveryTime(20)
-	visible_message("<span class='colossus'><b>[pick("[SSticker.cultdat.entity_name], I call on YOU for one of MY favours you owe me!", "[SSticker.cultdat.entity_title1], I call on you for some support...", "Let us see how you like the minions of [SSticker.cultdat.entity_title2]!", "Oh, [SSticker.cultdat.entity_title3] join me in RENDING THIS WHELP APART!")]</b></span>")
+	visible_message(
+	span_colossus("<b>[pick("[SSticker.cultdat.entity_name], я взываю к ТЕБЕ для одной услуги, которую ты мне должен!","[SSticker.cultdat.entity_title1], я взываю к тебе за поддержкой...","Давай посмотрим, как тебе понравятся приспешники [SSticker.cultdat.entity_title2]!","О, [SSticker.cultdat.entity_title3] присоединись ко мне, чтобы РАЗОРВАТЬ ЭТОГО ЩЕНКА НА ЧАСТИ!")]</b>"))
 	var/list/turfs = list()
 	var/constructs = 0
 	for(var/turf/T in view(6, target))
@@ -428,11 +432,11 @@ Difficulty: Hard
 		shuffle_inplace(pools)
 		found_bloodpool = pick(pools)
 	if(found_bloodpool)
-		visible_message("<span class='danger'>[src] sinks into the blood...</span>")
+		visible_message(span_danger("[declent_ru(NOMINATIVE)] погружается в кровь..."))
 		playsound(get_turf(src), 'sound/misc/enter_blood.ogg', 100, TRUE, -1)
 		forceMove(get_turf(found_bloodpool))
 		playsound(get_turf(src), 'sound/misc/exit_blood.ogg', 100, TRUE, -1)
-		visible_message("<span class='danger'>And springs back out!</span>")
+		visible_message(span_danger("И выпрыгивает обратно!"))
 		blood_enrage()
 		return TRUE
 	return FALSE
@@ -541,9 +545,18 @@ Difficulty: Hard
 
 /obj/effect/decal/cleanable/blood/gibs/bubblegum
 	name = "thick blood"
-	desc = "Thick, splattered blood."
+	desc = "Густая, разбрызганная кровь."
 	random_icon_states = list("gib3", "gib5", "gib6")
-	bloodiness = 20
+
+/obj/effect/decal/cleanable/blood/gibs/bubblegum/get_ru_names()
+	return list(
+		NOMINATIVE = "густая кровь",
+		GENITIVE = "густой крови",
+		DATIVE = "густой крови",
+		ACCUSATIVE = "густую кровь",
+		INSTRUMENTAL = "густой кровью",
+		PREPOSITIONAL = "густой крови"
+	)
 
 /obj/effect/decal/cleanable/blood/gibs/bubblegum/can_bloodcrawl_in()
 	return TRUE
@@ -560,14 +573,15 @@ Difficulty: Hard
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/bullet_act(obj/projectile/P)
 	if(BUBBLEGUM_IS_ENRAGED)
-		visible_message(span_danger("[src] deflects the projectile; [p_they()] can't be hit with ranged weapons while enraged!"), span_userdanger("You deflect the projectile!"), projectile_message = TRUE)
+		visible_message(span_danger("[declent_ru(NOMINATIVE)] отражает снаряд; его нельзя поразить дальнобойным оружием, когда он в ярости!"), span_userdanger("Вы отражаете снаряд!"), projectile_message = TRUE)
 		playsound(src, pick('sound/weapons/bulletflyby.ogg', 'sound/weapons/bulletflyby2.ogg', 'sound/weapons/bulletflyby3.ogg'), 300, TRUE)
 		return
 	..()
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/ex_act(severity, target)
-	if(severity >= EXPLODE_LIGHT)
+	if(severity <= EXPLODE_LIGHT)
 		return
+
 	severity = EXPLODE_LIGHT // puny mortals
 	return ..()
 
@@ -607,7 +621,7 @@ Difficulty: Hard
 		return .
 	var/mob/living/bumped_living = bumped_atom
 	var/turf/living_turf = get_turf(bumped_living)
-	bumped_living.visible_message("<span class='danger'>[src] slams into [bumped_living]!</span>", "<span class='userdanger'>[src] tramples you into the ground!</span>")
+	bumped_living.visible_message(span_danger("[capitalize(declent_ru(NOMINATIVE))] врезается в [bumped_living.declent_ru(ACCUSATIVE)]!"), span_userdanger("[capitalize(declent_ru(NOMINATIVE))] втаптывает вас в землю!"))
 	forceMove(living_turf)
 	bumped_living.apply_damage(istype(src, /mob/living/simple_animal/hostile/megafauna/bubblegum/hallucination) ? 15 : 30, BRUTE)
 	playsound(living_turf, 'sound/effects/meteorimpact.ogg', 100, TRUE)
@@ -650,18 +664,27 @@ Difficulty: Hard
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/hallucination
 	name = "bubblegum's hallucination"
-	desc = "Is that really just a hallucination?"
+	desc = "Погодите, это реально просто галлюцинация?"
 	health = 1
 	maxHealth = 1
 	alpha = 127.5
 	crusher_loot = null
 	medal_type = null
 	score_type = null
-	deathmessage = "Explodes into a pool of blood!"
+	deathmessage = "Взрывается в лужу крови!"
 	death_sound = 'sound/effects/splat.ogg'
 	true_spawn = FALSE
 	loot = list(/obj/effect/decal/cleanable/blood/gibs/bubblegum)
 
+/mob/living/simple_animal/hostile/megafauna/bubblegum/hallucination/get_ru_names()
+	return list(
+		NOMINATIVE = "галлюцинация Бубльгума",
+		GENITIVE = "галлюцинации Бубльгума",
+		DATIVE = "галлюцинации Бубльгума",
+		ACCUSATIVE = "галлюцинацию Бубльгума",
+		INSTRUMENTAL = "галлюцинацией Бубльгума",
+		PREPOSITIONAL = "галлюцинации Бубльгума"
+	)
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/hallucination/Initialize(mapload)
 	. = ..()
@@ -707,7 +730,7 @@ Difficulty: Hard
 	return
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/round_2
-	desc = "Oh they are PISSED. And quite injured too..."
+	desc = "О, он просто В БЕШЕНСТВЕ. И довольно сильно ранен..."
 	health = 750
 	maxHealth = 750
 	armour_penetration = 75
@@ -718,7 +741,6 @@ Difficulty: Hard
 	projectilesound = 'sound/effects/splat.ogg'
 	deathmessage = null
 	death_sound = 'sound/hallucinations/veryfar_noise.ogg'
-	ranged = TRUE
 	ranged_cooldown_time = 10
 	enraged_loot = /obj/item/disk/fauna_research/bubblegum
 
@@ -729,5 +751,9 @@ Difficulty: Hard
 		break
 	RegisterSignal(src, COMSIG_HOSTILE_FOUND_TARGET, PROC_REF(i_see_you))
 	for(var/mob/living/carbon/human/H in range(20))
-		to_chat(H, "<span class='colossus'><b>MY HANDS WILL RELISH ENDING YOU... HERE AND NOW!</b></span>")
+		to_chat(H, span_colossus("<b>МОИ РУКИ НАСЛАДЯТСЯ, РАЗРЫВАЯ ТЕБЯ... ПРЯМО ЗДЕСЬ И СЕЙЧАС!</b>"))
 		FindTarget(list(H))
+
+#undef BUBBLEGUM_SMASH
+#undef BUBBLEGUM_CAN_ENRAGE
+#undef BUBBLEGUM_IS_ENRAGED

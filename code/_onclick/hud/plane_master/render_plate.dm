@@ -17,6 +17,22 @@
 	/// If we render into a critical plane master, or not
 	var/critical_target = FALSE
 
+/client/proc/on_render_plane_relay_qdeleted(atom/movable/render_plane_relay/source)
+	SIGNAL_HANDLER
+	if(!istype(source))
+		return
+	screen.RemoveAll(source)
+	UnregisterSignal(source, COMSIG_QDELETING)
+
+/client/proc/register_render_plane_relay(atom/movable/render_plane_relay/relay)
+	if(!istype(relay))
+		return
+	var/exist_check = (relay in screen)
+	screen += relay
+	if(exist_check)
+		return
+	RegisterSignal(relay, COMSIG_QDELETING, PROC_REF(on_render_plane_relay_qdeleted), override = TRUE)
+
 /**
  * ## Rendering plate
  *
@@ -77,6 +93,10 @@
 	plane = RENDER_PLANE_GAME
 	render_relay_planes = list(RENDER_PLANE_MASTER)
 
+/atom/movable/screen/plane_master/rendering_plate/game_plate/Initialize(mapload, datum/hud/hud_owner)
+	. = ..()
+	add_filter("displace", 1, displacement_map_filter(render_source = OFFSET_RENDER_TARGET(GRAVITY_PULSE_RENDER_TARGET, offset), size = 10))
+
 // Blackness renders weird when you view down openspace, because of transforms and borders and such
 // This is a consequence of not using lummy's grouped transparency, but I couldn't get that to work without totally fucking up
 // Sight flags, and shooting vis_contents usage to the moon. So we're doin it different.
@@ -86,7 +106,6 @@
 	documentation = "The master rendering plate from the offset below ours will be mirrored onto this plane. That way we achive a \"stack\" effect.\
 		<br>This plane exists to uplayer the master rendering plate to the correct spot in our z layer's rendering order"
 	plane = RENDER_PLANE_TRANSPARENT
-	appearance_flags = PLANE_MASTER
 
 /atom/movable/screen/plane_master/rendering_plate/transparent/Initialize(mapload, datum/hud/hud_owner, datum/plane_master_group/home, offset)
 	. = ..()
@@ -99,8 +118,6 @@
 	name = "Game world plate"
 	documentation = "Contains most of the objects in the world. Mobs, machines, etc. Note the drop shadow, it gives a very nice depth effect."
 	plane = RENDER_PLANE_GAME_WORLD
-	appearance_flags = PLANE_MASTER //should use client color
-	blend_mode = BLEND_OVERLAY
 
 /atom/movable/screen/plane_master/rendering_plate/game_world/show_to(mob/mymob)
 	. = ..()
@@ -281,7 +298,7 @@
 	// Relays are sometimes generated early, before huds have a mob to display stuff to
 	// That's what this is for
 	if(show_to)
-		show_to.screen += relay
+		show_to.register_render_plane_relay(relay)
 	if(offsetting_flags & OFFSET_RELAYS_MATCH_HIGHEST && home.our_hud)
 		offset_relay(relay, home.our_hud.current_plane_offset)
 	return relay

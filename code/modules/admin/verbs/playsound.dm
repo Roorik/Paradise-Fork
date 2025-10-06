@@ -1,7 +1,7 @@
 GLOBAL_LIST_EMPTY(sounds_cache)
 
 /client/proc/stop_global_admin_sounds()
-	set category = "Admin.Sounds"
+	set category = STATPANEL_ADMIN_SOUNDS
 	set name = "Stop Global Admin Sounds"
 	if(!check_rights(R_SOUNDS))
 		return
@@ -13,7 +13,7 @@ GLOBAL_LIST_EMPTY(sounds_cache)
 		M << awful_sound
 
 /client/proc/play_sound(S as sound)
-	set category = "Admin.Sounds"
+	set category = STATPANEL_ADMIN_SOUNDS
 	set name = "Play Global Sound"
 	if(!check_rights(R_SOUNDS))	return
 
@@ -35,21 +35,21 @@ GLOBAL_LIST_EMPTY(sounds_cache)
 			uploaded_sound.volume = 100 * M.client.prefs.get_channel_volume(CHANNEL_ADMIN)
 			SEND_SOUND(M, uploaded_sound)
 
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Play Global Sound") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Play Global Sound")
 
 
 /client/proc/play_local_sound(S as sound)
-	set category = "Admin.Sounds"
+	set category = STATPANEL_ADMIN_SOUNDS
 	set name = "Play Local Sound"
 	if(!check_rights(R_SOUNDS))	return
 
 	log_and_message_admins("played a local sound [S]")
-	playsound(get_turf(src.mob), S, 50, 0, 0)
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Play Local Sound") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	playsound(get_turf(src.mob), S, 50, FALSE, 0)
+	BLACKBOX_LOG_ADMIN_VERB("Play Local Sound")
 
 
 /client/proc/play_web_sound()
-	set category = "Admin.Sounds"
+	set category = STATPANEL_ADMIN_SOUNDS
 	set name = "Play Internet Sound"
 	if(!check_rights(R_SOUNDS))
 		return
@@ -95,24 +95,37 @@ GLOBAL_LIST_EMPTY(sounds_cache)
 					var/webpage_url = title
 					if(data["webpage_url"])
 						webpage_url = "<a href=\"[data["webpage_url"]]\">[title]</a>"
-					music_extra_data["start"] = data["start_time"]
-					music_extra_data["end"] = data["end_time"]
+					var/mus_len = data["duration"] * 1 SECONDS
+					music_extra_data["duration"] = DisplayTimeText(mus_len)
+					SSticker.music_available = REALTIMEOFDAY + mus_len
 					music_extra_data["link"] = data["webpage_url"]
-					music_extra_data["title"] = data["title"]
-					if(data["duration"])
-						var/mus_len = data["duration"] SECONDS
-						if(data["start_time"])
-							mus_len -= data["start_time"] SECONDS
-						if(data["end_time"])
-							mus_len -= (data["duration"] SECONDS - data["end_time"] SECONDS)
-						SSticker.music_available = REALTIMEOFDAY + mus_len
+					music_extra_data["artist"] = data["artist"]
+					music_extra_data["upload_date"] = data["upload_date"]
+					music_extra_data["album"] = data["album"]
 
-					var/res = tgui_alert(usr, "Show the title of and link to this song to the players?\n[title]",, list("No", "Yes", "Cancel"))
+					var/res = tgui_alert(usr, "Показать игрокам название и ссылку?\n[title]",, list("Нет", "Да", "Отмена"))
 					switch(res)
-						if("Yes")
-							to_chat(world, span_boldannounceooc("Сейчас играет: [webpage_url]"))
-						if("Cancel")
+						if("Да")
+							music_extra_data["title"] = data["title"]
+						if("Нет")
+							music_extra_data["link"] = "Song Link Hidden"
+							music_extra_data["title"] = "Song Title Hidden"
+							music_extra_data["artist"] = "Song Artist Hidden"
+							music_extra_data["upload_date"] = "Song Upload Date Hidden"
+							music_extra_data["album"] = "Song Album Hidden"
+						if("Отмена")
 							return
+
+					var/anon = tgui_alert(usr, "Показывать, кто запустил?", "Указывать себя?", list("Нет", "Да", "Отмена"))
+					switch(anon)
+						if("Yes")
+							if(res == "Yes")
+								to_chat(world, span_boldannounceooc("[src] запустил: [webpage_url]"), confidential = TRUE)
+							else
+								to_chat(world, span_boldannounceooc("[src] запустил музыку"), confidential = TRUE)
+						if("No")
+							if(res == "Yes")
+								to_chat(world, span_boldannounceooc("Запущено админом: [webpage_url]"), confidential = TRUE)
 
 					SSblackbox.record_feedback("nested tally", "played_url", 1, list("[ckey]", "[web_sound_input]"))
 					log_admin("[key_name(src)] played web sound: [web_sound_input]")
@@ -137,7 +150,7 @@ GLOBAL_LIST_EMPTY(sounds_cache)
 		else
 			var/url = web_sound_url
 			switch(CONFIG_GET(string/asset_transport))
-				if ("webroot")
+				if("webroot")
 					var/datum/asset/music/my_asset
 					if(GLOB.cached_songs[web_sound_path])
 						my_asset = GLOB.cached_songs[web_sound_path]
@@ -152,24 +165,24 @@ GLOBAL_LIST_EMPTY(sounds_cache)
 				if(C.prefs.sound & SOUND_MIDI)
 					C.tgui_panel?.play_music(url, music_extra_data)
 
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Play Internet Sound")
+	BLACKBOX_LOG_ADMIN_VERB("Play Internet Sound")
 
 /client/proc/play_server_sound()
-	set category = "Admin.Sounds"
+	set category = STATPANEL_ADMIN_SOUNDS
 	set name = "Play Server Sound"
 	if(!check_rights(R_SOUNDS))	return
 
-	var/list/sounds = file2list("sound/serversound_list.txt")
+	var/list/sounds = world.file2list("sound/serversound_list.txt")
 	sounds += GLOB.sounds_cache
 
-	var/melody = input(usr, "Select a sound from the server to play", "Server sound list") as null|anything in sounds
+	var/melody = tgui_input_list(usr, "Select a sound from the server to play", "Server sound list", sounds)
 	if(!melody)	return
 
 	play_sound(melody)
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Play Server Sound") //If you are copy-pasting this, ensure the 2nd paramter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Play Server Sound")
 
 /client/proc/play_intercomm_sound()
-	set category = "Admin.Sounds"
+	set category = STATPANEL_ADMIN_SOUNDS
 	set name = "Play Sound via Intercomms"
 	set desc = "Plays a sound at every intercomm on the station z level. Works best with small sounds."
 	if(!check_rights(R_SOUNDS))	return
@@ -177,10 +190,10 @@ GLOBAL_LIST_EMPTY(sounds_cache)
 	var/A = alert(usr, "This will play a sound at every intercomm, are you sure you want to continue? This works best with short sounds, beware.","Warning","Yep","Nope")
 	if(A != "Yep")	return
 
-	var/list/sounds = file2list("sound/serversound_list.txt")
+	var/list/sounds = world.file2list("sound/serversound_list.txt")
 	sounds += GLOB.sounds_cache
 
-	var/melody = input(usr, "Select a sound from the server to play", "Server sound list") as null|anything in sounds
+	var/melody = tgui_input_list(usr, "Select a sound from the server to play", "Server sound list", sounds)
 	if(!melody)	return
 
 	var/cvol = 35
@@ -205,12 +218,12 @@ GLOBAL_LIST_EMPTY(sounds_cache)
 		var/obj/item/radio/intercom/I = O
 		if(!is_station_level(I.z) && !ignore_z)
 			continue
-		if(!I.on && !ignore_power)
+		if(!I.is_on() && !ignore_power)
 			continue
 		playsound(I, melody, cvol)
 
 /client/proc/play_direct_mob_sound(S as sound, mob/M)
-	set category = "Admin.Sounds"
+	set category = STATPANEL_ADMIN_SOUNDS
 	set name = "Play Direct Mob Sound"
 	if(!check_rights(R_SOUNDS))
 		return

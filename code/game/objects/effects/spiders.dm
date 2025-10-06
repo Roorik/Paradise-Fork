@@ -5,7 +5,6 @@
 	gender = FEMALE
 	icon = 'icons/effects/effects.dmi'
 	anchored = TRUE
-	density = FALSE
 	max_integrity = 15
 	var/mob/living/carbon/human/master_commander = null
 	var/new_mind_memory = "Я свободный паук."
@@ -16,7 +15,7 @@
 
 
 /obj/structure/spider/run_obj_armor(damage_amount, damage_type, damage_flag = 0, attack_dir)
-	if(damage_flag == "melee")
+	if(damage_flag == MELEE)
 		switch(damage_type)
 			if(BURN)
 				damage_amount *= 2
@@ -84,7 +83,7 @@
 			var/obj/structure/spider/spiderling/S = new /obj/structure/spider/spiderling(loc)
 			S.faction = faction.Copy()
 			S.master_commander = master_commander
-			S.new_mind_memory = master_commander ? "<B>Мой хозяин [master_commander.name], выполню [genderize_ru(master_commander.gender, "его", "её", "этого", "их")] цели любой ценой!</B>" : new_mind_memory
+			S.new_mind_memory = master_commander ? "<b>Мой хозяин [master_commander.name], выполню [genderize_ru(master_commander.gender, "его", "её", "этого", "их")] цели любой ценой!</b>" : new_mind_memory
 			if(player_spiders)
 				S.player_spiders = 1
 		qdel(src)
@@ -122,13 +121,13 @@
 /obj/structure/spider/spiderling/attack_hand(mob/living/user)
 	. = ..()
 	if(ishuman(user))
-		if (user.a_intent == INTENT_HELP)
-			visible_message("<span class='notice'>Вы пощекотали брюшко [src.name].</span>", "<span class='notice'>[user.name] пощекотал[genderize_ru(user.gender,"","а","о","и")] брюшко [src.name].</span>")
-			playsound(loc, 'sound/weapons/thudswoosh.ogg', 50, 1, -1)
+		if(user.a_intent == INTENT_HELP)
+			visible_message(span_notice("Вы пощекотали брюшко [src.name]."), span_notice("[user.name] пощекотал[genderize_ru(user.gender,"","а","о","и")] брюшко [src.name]."))
+			playsound(loc, 'sound/weapons/thudswoosh.ogg', 50, TRUE, -1)
 		else
 			user.changeNext_move(CLICK_CD_MELEE)
 			user.do_attack_animation(src, user.dna.species.unarmed.animation_type)
-			playsound(src.loc, user.dna.species.unarmed.attack_sound, 25, 1, -1)
+			playsound(src.loc, user.dna.species.unarmed.attack_sound, 25, TRUE, -1)
 			attack_generic(user, max_integrity/3)
 
 
@@ -147,8 +146,8 @@
 				return
 			var/obj/machinery/atmospherics/unary/vent_pump/exit_vent = pick(vents)
 			if(prob(50))
-				visible_message("<B>[src] scrambles into the ventilation ducts!</B>", \
-								"<span class='notice'>You hear something squeezing through the ventilation ducts.</span>")
+				visible_message("<b>[src] scrambles into the ventilation ducts!</b>", \
+								span_notice("You hear something squeezing through the ventilation ducts."))
 
 			spawn(rand(20,60))
 				loc = exit_vent
@@ -161,7 +160,7 @@
 						return
 
 					if(prob(50))
-						audible_message("<span class='notice'>You hear something squeezing through the ventilation ducts.</span>")
+						audible_message(span_notice("You hear something squeezing through the ventilation ducts."))
 					sleep(travel_time)
 
 					if(!exit_vent || exit_vent.welded)
@@ -177,7 +176,7 @@
 
 	else if(prob(33))
 		if(random_skitter() && prob(40))
-			visible_message("<span class='notice'>[src] skitters[pick(" away"," around","")].</span>")
+			visible_message(span_notice("[src] skitters[pick(" away"," around","")]."))
 	else if(prob(10))
 		//ventcrawl!
 		for(var/obj/machinery/atmospherics/unary/vent_pump/v in view(7,src))
@@ -210,7 +209,7 @@
 						if(C)
 							S.key = C.key
 							if(S.master_commander)
-								to_chat(S, "<span class='biggerdanger'>You are a spider who is loyal to [S.master_commander], obey [S.master_commander]'s every order and assist [S.master_commander.p_them()] in completing [S.master_commander.p_their()] goals at any cost.</span>")
+								to_chat(S, span_biggerdanger("You are a spider who is loyal to [S.master_commander], obey [S.master_commander]'s every order and assist [S.master_commander.p_them()] in completing [S.master_commander.p_their()] goals at any cost."))
 							add_game_logs("was made giant spider, master: [S.master_commander ? S.master_commander : "None"]")
 			qdel(src)
 
@@ -228,8 +227,8 @@
 
 /obj/structure/spider/spiderling/decompile_act(obj/item/matter_decompiler/C, mob/user)
 	if(!isdrone(user))
-		user.visible_message("<span class='notice'>[user] sucks [src] into its decompiler. There's a horrible crunching noise.</span>", \
-		"<span class='warning'>It's a bit of a struggle, but you manage to suck [user] into your decompiler. It makes a series of visceral crunching noises.</span>")
+		user.visible_message(span_notice("[user] sucks [src] into its decompiler. There's a horrible crunching noise."), \
+								span_warning("It's a bit of a struggle, but you manage to suck [user] into your decompiler. It makes a series of visceral crunching noises."))
 		C.stored_comms["wood"] += 2
 		C.stored_comms["glass"] += 2
 		qdel(src)
@@ -239,9 +238,7 @@
 /obj/effect/decal/cleanable/spiderling_remains
 	name = "spiderling remains"
 	desc = "Green squishy mess."
-	icon = 'icons/effects/effects.dmi'
 	icon_state = "greenshatter"
-	anchored = TRUE
 
 /obj/structure/spider/cocoon
 	name = "cocoon"
@@ -254,7 +251,7 @@
 	icon_state = pick("cocoon1","cocoon2","cocoon3")
 
 /obj/structure/spider/cocoon/Destroy()
-	visible_message("<span class='danger'>[src] splits open.</span>")
+	visible_message(span_danger("[src] splits open."))
 	for(var/atom/movable/A in contents)
 		A.forceMove(loc)
 	return ..()

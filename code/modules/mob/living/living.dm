@@ -1,9 +1,9 @@
-/mob/living/Initialize()
+/mob/living/Initialize(mapload)
 	. = ..()
 	AddElement(/datum/element/movetype_handler)
 	register_init_signals()
 	var/datum/atom_hud/data/human/medical/advanced/medhud = GLOB.huds[DATA_HUD_MEDICAL_ADVANCED]
-	medhud.add_to_hud(src)
+	medhud.add_atom_to_hud(src)
 	faction += "\ref[src]"
 	determine_move_and_pull_forces()
 	gravity_setup()
@@ -120,16 +120,17 @@
 
 	// If you are incapped, you probably can't brace yourself
 	var/can_help_themselves = !incapacitated(INC_IGNORE_RESTRAINED)
-	if(levels <= 1 && can_help_themselves)
+	if(can_help_themselves)
 		var/obj/item/organ/external/wing/bodypart_wing = get_organ(BODY_ZONE_WING)
 		if(bodypart_wing && !bodypart_wing.has_fracture()) // wings can soften
 			visible_message(
-				span_notice("[src] makes a hard landing on [impacted_turf] but remains unharmed from the fall."),
-				span_notice("You brace for the fall. You make a hard landing on [impacted_turf], but remain unharmed."),
+				span_notice("[capitalize(declent_ru(NOMINATIVE))] жёстко приземля[pluralize_ru(gender,"ется","ются")] на [impacted_turf.declent_ru(ACCUSATIVE)], но оста[pluralize_ru(src.gender,"ётся","ются")] невредим[genderize_ru(src.gender,"","а","о","ы")] после падения."),
+				span_notice("Вы жёство приземляетесь на [impacted_turf.declent_ru(ACCUSATIVE)], но остаётесь невредимы."),
 			)
-			AdjustWeakened((levels * 4 SECONDS))
+			AdjustKnockdown(levels * (4 SECONDS))
 			return . | ZIMPACT_NO_MESSAGE
-	var/incoming_damage = (levels * 5) ** 1.5
+
+	var/incoming_damage = 25 + (levels - 1) * 50
 	var/cat = iscat(src)
 	var/functional_legs = TRUE
 	var/skip_weaken = FALSE
@@ -139,19 +140,20 @@
 			if(leg.has_fracture())
 				functional_legs = FALSE
 				break
-	if(((istajaran(src) && functional_legs) || cat) && body_position != LYING_DOWN && can_help_themselves)
+	// cat check, work only for 1 level fall
+	if(levels <= 1 && ((istajaran(src) && functional_legs) || cat) && body_position != LYING_DOWN && can_help_themselves)
 		. |= ZIMPACT_NO_MESSAGE|ZIMPACT_NO_SPIN
 		skip_weaken = TRUE
 		if(cat || HAS_TRAIT(src, TRAIT_DWARF)) // lil' bounce kittens
 			visible_message(
-				span_notice("[src] makes a hard landing on [impacted_turf], but lands safely on [p_their()] feet!"),
-				span_notice("You make a hard landing on [impacted_turf], but land safely on your feet!"),
+				span_notice("[capitalize(declent_ru(NOMINATIVE))] жёстко приземля[pluralize_ru(gender,"ется","ются")] на [impacted_turf.declent_ru(ACCUSATIVE)], и вскакива[pluralize_ru(src.gender,"ет","ют")] на ноги!"),
+				span_notice("Вы жёстко приземляетесь на [impacted_turf.declent_ru(ACCUSATIVE)], и вскакиваете на ноги!"),
 			)
 			return .
 		incoming_damage *= 1.2 // at least no stuns
 		visible_message(
-			span_danger("[src] makes a hard landing on [impacted_turf], landing on [p_their()] feet painfully!"),
-			span_userdanger("You make a hard landing on [impacted_turf], and instinctively land on your feet - still painfully!"),
+			span_danger("[capitalize(declent_ru(NOMINATIVE))] жёстко приземля[pluralize_ru(gender,"ется","ются")] на [impacted_turf.declent_ru(ACCUSATIVE)] и болезненно вста[pluralize_ru(src.gender,"ёт","ют")] на ноги!"),
+			span_userdanger("Вы грубо приземляетесь на [impacted_turf.declent_ru(ACCUSATIVE)]] и рефлекторно встаёте на ноги — это больно!"),
 		)
 
 	if(body_position != LYING_DOWN)
@@ -160,13 +162,20 @@
 		apply_damage(damage_for_each_leg, BRUTE, BODY_ZONE_R_LEG)
 		apply_damage(damage_for_each_leg, BRUTE, BODY_ZONE_PRECISE_L_FOOT)
 		apply_damage(damage_for_each_leg, BRUTE, BODY_ZONE_PRECISE_R_FOOT)
-
 	else
 		apply_damage(incoming_damage, BRUTE)
 
-	if(!skip_weaken)
+	if(skip_weaken)
+		return
+
+	if(levels > 1)
+		if(prob(50))
+			emote("scream") //for fun
 		AdjustWeakened(levels * 5 SECONDS)
-	return .
+		return
+	// fall to 1 level
+	AdjustKnockdown(5 SECONDS)
+	return . |= ZIMPACT_NO_SPIN
 
 
 // Generic Bump(). Override MobBump() and ObjBump() instead of this.
@@ -198,8 +207,8 @@
 		bumped_mob.Weaken(1 SECONDS)
 		bumped_mob.take_organ_damage(rand(5, 10))
 		visible_message(
-			span_danger("[name] вреза[pluralize_ru(gender,"ет","ют")]ся в [bumped_mob.name], сбивая друг друга с ног!"),
-			span_userdanger("Вы жестко врезаетесь в [bumped_mob.name]!"),
+			span_danger("[name] вреза[pluralize_ru(gender,"ет","ют")]ся в [bumped_mob.declent_ru(ACCUSATIVE)], сбивая друг друга с ног!"),
+			span_userdanger("Вы жестко врезаетесь в [bumped_mob.declent_ru(ACCUSATIVE)]!"),
 		)
 		playsound(src, 'sound/weapons/punch1.ogg', 50, TRUE)
 		return TRUE
@@ -219,12 +228,12 @@
 
 	if(bumped_mob.pulledby && bumped_mob.pulledby != src && HAS_TRAIT(bumped_mob, TRAIT_RESTRAINED))
 		if(!(world.time % 5))
-			to_chat(src, span_warning("[bumped_mob] is restrained, you cannot push past!"))
+			to_chat(src, span_warning("[bumped_mob.declent_ru(NOMINATIVE)] сопротивляется, вы не можете пройти!"))
 		return TRUE
 
 	if(isliving(bumped_mob.pulling) && HAS_TRAIT(bumped_mob.pulling, TRAIT_RESTRAINED))
 		if(!(world.time % 5))
-			to_chat(src, span_warning("[bumped_mob] is restrained, you cannot push past!"))
+			to_chat(src, span_warning("[bumped_mob.declent_ru(NOMINATIVE)] сопротивляется, вы не можете пройти!"))
 		return TRUE
 
 	if(moving_diagonally) //no mob swap during diagonal moves.
@@ -247,12 +256,12 @@
 		if(bumped_mob.pulledby == src && !too_strong)
 			mob_swap = TRUE
 		// can't swap or push mobs in neck grab
-		else if( \
+		else if(\
 			(bumped_mob.pulling && bumped_mob.grab_state >= GRAB_NECK) || \
 			(bumped_mob.pulledby && bumped_mob.pulledby.grab_state >= GRAB_NECK))
 			return TRUE
 		// restrained people act if they were on 'help' intent to prevent a person being pulled from being separated from their puller
-		else if( \
+		else if(\
 			((HAS_TRAIT(bumped_mob, TRAIT_RESTRAINED) && !too_strong) || bumped_mob.a_intent == INTENT_HELP) && \
 			(HAS_TRAIT(src, TRAIT_RESTRAINED) || a_intent == INTENT_HELP))
 			mob_swap = TRUE
@@ -305,8 +314,8 @@
 		Weaken(1 SECONDS)
 		take_organ_damage(rand(5, 10))
 		visible_message(
-			span_danger("[name] вреза[pluralize_ru(gender,"ет","ют")]ся в [object.name]!"),
-			span_userdanger("Вы жестко врезаетесь в [object.name]!"),
+			span_danger("[name] вреза[pluralize_ru(gender,"ет","ют")]ся в [object.declent_ru(ACCUSATIVE)]!"),
+			span_userdanger("Вы жестко врезаетесь в [object.declent_ru(ACCUSATIVE)]!"),
 		)
 		playsound(src, 'sound/weapons/punch1.ogg', 50, TRUE)
 
@@ -424,7 +433,7 @@
 		CRASH("Missing target arg for can_perform_action")
 
 	if(stat != CONSCIOUS)
-		to_chat(src, span_warning("You are not conscious enough for this action!"))
+		to_chat(src, span_warning("Вы ещё не совсем осознаёте происходящее!"))
 		return FALSE
 
 	if(!(action_bitflags & BYPASS_INCAPACITATED)) // should be interaction_flags_atom, but we haven't implemented yet and won't
@@ -435,56 +444,56 @@
 			ignore_flags |= INC_IGNORE_GRABBED
 
 		if(incapacitated(ignore_flags))
-			to_chat(src, span_warning("You are incapacitated at the moment!"))
+			to_chat(src, span_warning("Вы сейчас недееспособны!"))
 			return FALSE
 
 	// If the MOBILITY_UI bitflag is not set it indicates the mob's hands are cutoff, blocked, or handcuffed
 	// Note - AI's and borgs have the MOBILITY_UI bitflag set even though they don't have hands
 	// Also if it is not set, the mob could be incapcitated, knocked out, unconscious, asleep, EMP'd, etc.
 	if(!(mobility_flags & MOBILITY_UI) && !(action_bitflags & ALLOW_RESTING))
-		to_chat(src, span_warning("You don't have the mobility for this!"))
+		to_chat(src, span_warning("Вы недостаточно подвижны для этого!"))
 		return FALSE
 
 	// NEED_HANDS is already checked by MOBILITY_UI for humans so this is for silicons
-	if((action_bitflags & NEED_HANDS))
+	if(action_bitflags & NEED_HANDS)
 		if(HAS_TRAIT(src, TRAIT_HANDS_BLOCKED))
-			to_chat(src, span_warning("You hands are blocked for this action!"))
+			to_chat(src, span_warning("Ваши руки заблокированы для этого действия!"))
 			return FALSE
 		if(!usable_hands) // almost redundant if it weren't for mobs
-			to_chat(src, span_warning("You don't have the hands for this action!"))
+			to_chat(src, span_warning("У вас нет рук для этого действия!"))
 			return FALSE
 
 	if(!(action_bitflags & ALLOW_PAI) && ispAI(src))
-		to_chat(src, span_warning("Your holochasis does not allow you to do this!"))
+		to_chat(src, span_warning("Ваш голокорпус не позволяет это сделать!"))
 		return FALSE
 
 	if(!(action_bitflags & BYPASS_ADJACENCY) && ((action_bitflags & NOT_INSIDE_TARGET) || !Adjacent(target)))
 		if(has_unlimited_silicon_privilege && !ispAI(src))
 			if(!(action_bitflags & ALLOW_SILICON_REACH)) // silicons can ignore range checks (except pAIs)
 				if(!(action_bitflags & SILENT_ADJACENCY))
-					to_chat(src, span_warning("You are too far away!"))
+					to_chat(src, span_warning("Вы слишком далеко!"))
 				return FALSE
 		else // just a normal carbon mob
-			if((action_bitflags & FORBID_TELEKINESIS_REACH))
+			if(action_bitflags & FORBID_TELEKINESIS_REACH)
 				if(!(action_bitflags & SILENT_ADJACENCY))
-					to_chat(src, span_warning("You are too far away!"))
+					to_chat(src, span_warning("Вы слишком далеко!"))
 				return FALSE
 
 			if(!HAS_TRAIT(src, TRAIT_TELEKINESIS))
 				if(!(action_bitflags & SILENT_ADJACENCY))
-					to_chat(src, span_warning("You are too far away!"))
+					to_chat(src, span_warning("Вы слишком далеко!"))
 				return FALSE
 
 	if((action_bitflags & NEED_VENTCRAWL) && !HAS_TRAIT(src, TRAIT_VENTCRAWLER_NUDE) && !HAS_TRAIT(src, TRAIT_VENTCRAWLER_ALWAYS))
-		to_chat(src, span_warning("You wouldn't fit!"))
+		to_chat(src, span_warning("Вы не поместитесь!"))
 		return FALSE
 
 	if((action_bitflags & NEED_DEXTERITY) && !IsAdvancedToolUser(src))
-		to_chat(src, span_warning("You don't have the dexterity to do this!"))
+		to_chat(src, span_warning("У вас недостаточно ловкости для этого!"))
 		return FALSE
 
 	if((action_bitflags & NEED_LITERACY) && !is_literate())
-		to_chat(src, span_warning("You can't comprehend any of this!"))
+		to_chat(src, span_warning("Вы не можете это осознать!"))
 		return FALSE
 
 	return TRUE
@@ -516,19 +525,21 @@
 
 /// Special projectiles handling for living mobs
 /mob/living/proc/projectile_allow_through(obj/projectile/projectile, border_dir)
-	// default behavior for generic mobs
-	if(!(mobility_flags & (MOBILITY_REST|MOBILITY_LIEDOWN)))
-		return !density
 	// DEAD mobs are fine to skip if they are not dense or lying
-	if(stat == DEAD)
+	if(stat == DEAD && projectile.original != src)
 		return !density || body_position == LYING_DOWN
 	// always hitting dense/standing mobs
 	if(density || body_position == STANDING_UP)
-		return FALSE
+		var/def_zone_hit_chance = projectile.calculate_hit_chance(projectile, src)
+		return !prob(def_zone_hit_chance)
+	//if this is clicked target in lying down
+	if(projectile.original == src)
+		var/def_zone_hit_chance = projectile.calculate_hit_chance(projectile, src)
+		return !prob(def_zone_hit_chance)
 	// otherwise chance to hit is defined by the projectile var/hit_crawling_mobs_chance
-	if(projectile.hit_crawling_mobs_chance > 0 && projectile.hit_crawling_mobs_chance <= 100)
-		return !prob(projectile.hit_crawling_mobs_chance)
-	return TRUE
+	var/def_zone_hit_chance = projectile.calculate_hit_chance(projectile, src)
+	var/total_hit_chance = projectile.hit_crawling_mobs_chance * def_zone_hit_chance / 100
+	return !prob(total_hit_chance)
 
 
 /mob/living/tompost_bump_override(atom/movable/mover, border_dir)
@@ -568,8 +579,8 @@
 
 
 /mob/living/verb/stop_pulling1()
-	set name = "Stop Pulling"
-	set category = "IC"
+	set name = "Прекратить тащить"
+	set category = STATPANEL_IC
 	stop_pulling()
 
 //same as above
@@ -601,8 +612,8 @@
 			span_danger("[declent_ru(NOMINATIVE)] направля[pluralize_ru(src.gender,"ет","ют")] [hand_item.declent_ru(INSTRUMENTAL)] на [pointed_object]!"),
 			span_userdanger("[declent_ru(NOMINATIVE)] направля[pluralize_ru(src.gender,"ет","ют")] [hand_item.declent_ru(INSTRUMENTAL)] на [pluralize_ru(target.gender,"тебя","вас")]!"),
 		)
-		SEND_SOUND(target, 'sound/weapons/targeton.ogg')
-		SEND_SOUND(src, 'sound/weapons/targeton.ogg')
+		SEND_SOUND(target, sound('sound/weapons/targeton.ogg'))
+		SEND_SOUND(src, sound('sound/weapons/targeton.ogg'))
 		add_emote_logs(src, "point [hand_item] HARM to [key_name(target)] [COORD(target)]")
 		return TRUE
 
@@ -622,8 +633,8 @@
 	return (health < HEALTH_THRESHOLD_CRIT && health > HEALTH_THRESHOLD_DEAD && stat == UNCONSCIOUS)
 
 
-/mob/living/ex_act(severity)
-	..()
+/mob/living/ex_act(severity, target)
+	. = ..()
 	flash_eyes()
 
 /mob/living/acid_act(acidpwr, acid_volume)
@@ -644,6 +655,7 @@
 	med_hud_set_status()
 	update_health_hud()
 	update_stamina_hud()
+	update_nutrition_hud()
 	update_damage_hud()
 	if(should_log)
 		log_debug("[src] update_stat([reason][HAS_TRAIT(src, TRAIT_GODMODE) ? ", GODMODE" : ""])")
@@ -691,10 +703,11 @@
 
 
 /mob/proc/get_contents()
+	return
 
 
 //Recursive function to find everything a mob is holding.
-/mob/living/get_contents(var/obj/item/storage/Storage = null)
+/mob/living/get_contents(obj/item/storage/Storage = null)
 	var/list/L = list()
 
 	if(Storage) //If it called itself
@@ -883,8 +896,8 @@
 
 
 /mob/living/proc/Examine_OOC()
-	set name = "Examine Meta-Info (OOC)"
-	set category = "OOC"
+	set name = "Мета-инфа (OOC)"
+	set category = STATPANEL_OOC
 	set src in view()
 
 	if(CONFIG_GET(flag/allow_metadata))
@@ -919,7 +932,7 @@
 	if(isliving(pulling))
 		set_pull_offsets(pulling, grab_state)
 
-	if(s_active && !(s_active in contents) && get_turf(s_active) != get_turf(src))	//check !( s_active in contents ) first so we hopefully don't have to call get_turf() so much.
+	if(s_active && !(s_active in contents) && get_turf(s_active) != get_turf(src))	//check !(s_active in contents) first so we hopefully don't have to call get_turf() so much.
 		s_active.close(src)
 
 	if(body_position == LYING_DOWN && !buckled && prob(getBruteLoss() * 200 / maxHealth))
@@ -944,7 +957,7 @@
 
 
 /mob/living/proc/makeTrail(turf/T)
-	if(!has_gravity())
+	if(no_gravity())
 		return
 
 	var/blood_exists = FALSE
@@ -990,11 +1003,11 @@
 								TH.color = H.dna.species.blood_color
 
 						else
-							TH.color = "#A10808"
+							TH.color = BLOOD_COLOR_RED
 
 
 /mob/living/carbon/human/makeTrail(turf/T)
-	if(HAS_TRAIT(src, TRAIT_NO_BLOOD) || !bleed_rate || bleedsuppress)
+	if(HAS_TRAIT(src, TRAIT_NO_BLOOD) || !bleed_rate)
 		return
 	..()
 
@@ -1016,7 +1029,7 @@
 
 	if(has_limbs)
 		var/turf/T = get_step(src, angle2dir(dir2angle(direction) + 90))
-		if (T)
+		if(T)
 			turfs_to_check += T
 
 		T = get_step(src, angle2dir(dir2angle(direction) - 90))
@@ -1048,8 +1061,8 @@
 
 
 /mob/living/verb/resist()
-	set name = "Resist"
-	set category = "IC"
+	set name = "Сопротивляться"
+	set category = STATPANEL_IC
 
 	DEFAULT_QUEUE_OR_CALL_VERB(VERB_CALLBACK(src, PROC_REF(run_resist)))
 
@@ -1117,7 +1130,7 @@
 		if(ishuman(src))
 			var/mob/living/carbon/human/human = src
 			. *= human.physiology.grab_resist_mod
-		. = round(. * (1 - (clamp(getStaminaLoss(), 0, maxHealth) / maxHealth)))
+		. = round(. * (1 - (clamp(getStaminaLoss(), 0, get_max_stamina()) / get_max_stamina())))
 	else if(. < 0)
 		. = 0
 		stack_trace("Wrong resist chance passed to get_resist_chance(), defaulting to zero.")
@@ -1188,7 +1201,7 @@
 *///////////////////////
 
 /mob/living/proc/Exhaust()
-	to_chat(src, "<span class='notice'>You're too exhausted to keep going...</span>")
+	to_chat(src, span_notice("Вы слишком истощены, чтобы продолжать..."))
 	Weaken(10 SECONDS)
 
 
@@ -1469,7 +1482,7 @@
 	if(user.a_intent != INTENT_HARM || stat != DEAD || !is_sharp(I) || (!butcher_results && !is_monkeybasic(src))) //can we butcher it?
 		return FALSE
 	. = TRUE
-	to_chat(user, span_notice("You begin to butcher [src]..."))
+	to_chat(user, span_notice("Вы начинаете разделывать [declent_ru(ACCUSATIVE)]..."))
 	playsound(loc, 'sound/weapons/slice.ogg', 50, TRUE, -1)
 	if(!do_after(user, I.has_speed_harvest ? 1 SECONDS : (4 SECONDS * mob_size), src, NONE, max_interact_count = 1, cancel_on_max = TRUE) || !Adjacent(user))
 		return .
@@ -1483,13 +1496,13 @@
 		for(var/i in 1 to butcher_results[path])
 			new path(loc)
 		butcher_results.Remove(path) //In case you want to have things like simple_animals drop their butcher results on gib, so it won't double up below.
-	visible_message(span_notice("[user] butchers [src]."))
+	visible_message(span_notice("[capitalize(user.declent_ru(NOMINATIVE))] разделывает [declent_ru(ACCUSATIVE)]."))
 	gib()
 
 
-/mob/living/proc/can_use_guns(var/obj/item/gun/G)
+/mob/living/proc/can_use_guns(obj/item/gun/G)
 	if(G.trigger_guard != TRIGGER_GUARD_ALLOW_ALL && !IsAdvancedToolUser() && !is_monkeybasic(src))
-		to_chat(src, "<span class='warning'>You don't have the dexterity to do this!</span>")
+		to_chat(src, span_warning("У вас недостаточно ловкости для этого!"))
 		return 0
 	return 1
 
@@ -1709,7 +1722,7 @@
 			victim.apply_damage(damage*rand(90, 110)/100, BRUTE, BODY_ZONE_HEAD, victim.run_armor_check(head, MELEE))
 			if(prob(40))
 				victim.Knockdown(2 SECONDS)
-			playsound(victim.loc, "desceration", 35, TRUE, -1)
+			playsound(victim.loc, SFX_DESECRATION, 35, TRUE, -1)
 			add_attack_logs(attacker, victim, "Headbutted")
 
 		if(INTENT_GRAB)
@@ -1801,7 +1814,7 @@
 
 
 /mob/living/proc/get_visible_species()	// Used only in /mob/living/carbon/human and /mob/living/simple_animal/hostile/morph
-	return "Unknown"
+	return UNKNOWN_STATUS_RUS
 
 
 /**
@@ -1838,7 +1851,7 @@
 
 	if(examine_time && target != src)
 		var/visible_gender = target.get_visible_gender()
-		var/visible_species = "Unknown"
+		var/visible_species = UNKNOWN_STATUS_RUS
 
 		// If we did not see the target with our own eyes when starting the examine, then there is no need to check whether it is close.
 		var/near_target = examine_distance_check(target)
@@ -1871,7 +1884,7 @@
 		return TRUE
 	face_atom(target)
 	if(!has_vision(information_only = TRUE))
-		to_chat(src, chat_box_regular(span_notice("Здесь что-то есть, но вы не видите — что именно.")), MESSAGE_TYPE_INFO, confidential = TRUE)
+		to_chat(src, chat_box_regular(span_notice("Здесь что-то есть, но вы не видите — что именно.")), MESSAGE_TYPE_INFO, confidential = TRUE)
 		return TRUE
 	return FALSE
 
@@ -1880,33 +1893,33 @@
 	SEND_SIGNAL(src, COMSIG_LIVING_EXAMINE, user, .)
 
 /**
-  * Sets the mob's direction lock towards a given atom.
-  *
-  * Arguments:
-  * * a - The atom to face towards.
-  * * track - If TRUE, updates our direction relative to the atom when moving.
-  */
+ * Sets the mob's direction lock towards a given atom.
+ *
+ * Arguments:
+ * * a - The atom to face towards.
+ * * track - If TRUE, updates our direction relative to the atom when moving.
+ */
 /mob/living/proc/set_forced_look(atom/A, track = FALSE)
 	forced_look = track ? A.UID() : get_cardinal_dir(src, A)
 	setDir()
 	add_movespeed_modifier(/datum/movespeed_modifier/forced_look)
-	to_chat(src, span_userdanger("You are now facing [track ? A : dir2text(forced_look)]. To cancel this, shift-middleclick yourself."))
+	to_chat(src, span_userdanger("Вы теперь смотрите в направлении [track ? A : dir2text(forced_look)]. Чтобы отменить, Shift+СКМ по себе."))
 	throw_alert(ALERT_DIRECTION_LOCK, /atom/movable/screen/alert/direction_lock)
 
 
 /**
-  * Clears the mob's direction lock if enabled.
-  *
-  * Arguments:
-  * * quiet - Whether to display a chat message.
-  */
+ * Clears the mob's direction lock if enabled.
+ *
+ * Arguments:
+ * * quiet - Whether to display a chat message.
+ */
 /mob/living/proc/clear_forced_look(quiet = FALSE)
 	if(!forced_look)
 		return
 	forced_look = null
 	remove_movespeed_modifier(/datum/movespeed_modifier/forced_look)
 	if(!quiet)
-		to_chat(src, span_notice("Cancelled direction lock."))
+		to_chat(src, span_notice("Блокировка направления отменена."))
 	clear_alert(ALERT_DIRECTION_LOCK)
 
 
@@ -2054,7 +2067,7 @@
 	if(HAS_TRAIT(src, TRAIT_FLOORED) && !(dir & (NORTH|SOUTH)))
 		setDir(pick(NORTH, SOUTH)) // We are and look helpless.
 	if(rotate_on_lying)
-		body_position_pixel_y_offset = PIXEL_Y_OFFSET_LYING
+		body_position_pixel_y_offset = pixel_y_lying_offset
 	if(!buckled || buckled.buckle_lying == NO_BUCKLE_LYING)
 		lying_angle_on_lying_down(new_lying_angle)
 
@@ -2075,14 +2088,12 @@
 
 /// Returns what the body_position_pixel_y_offset should be if the current size were `value`
 /mob/living/proc/get_pixel_y_offset_standing(value)
-	var/icon/living_icon = icon(icon)
-	var/height = living_icon.Height()
-	return (value-1) * height * 0.5
+	return (value-1) * get_cached_height() * 0.5
 
 
 /mob/living/proc/toggle_resting()
-	set name = "Rest"
-	set category = "IC"
+	set name = "Лечь"
+	set category = STATPANEL_IC
 
 	set_resting(!resting, silent = FALSE)
 
@@ -2099,24 +2110,24 @@
 	if(new_resting)
 		if(body_position == LYING_DOWN)
 			if(!silent)
-				to_chat(src, span_notice("You will now try to stay lying down on the floor."))
+				to_chat(src, span_notice("Теперь вы будете стараться оставаться в положении лёжа."))
 		else if(HAS_TRAIT(src, TRAIT_FORCED_STANDING) || (buckled && buckled.buckle_lying != NO_BUCKLE_LYING))
 			if(!silent)
-				to_chat(src, span_notice("You will now lay down as soon as you are able to."))
+				to_chat(src, span_notice("Вы ляжете при первой возможности."))
 		else
 			if(!silent)
-				to_chat(src, span_notice("You lay down."))
+				to_chat(src, span_notice("Вы ложитесь."))
 			set_lying_on_rest(instant)
 	else
 		if(body_position == STANDING_UP)
 			if(!silent)
-				to_chat(src, span_notice("You will now try to remain standing up."))
+				to_chat(src, span_notice("Теперь вы будете стараться оставаться в положении стоя."))
 		else if(HAS_TRAIT(src, TRAIT_FLOORED) || (buckled && buckled.buckle_lying != NO_BUCKLE_LYING))
 			if(!silent)
-				to_chat(src, span_notice("You will now stand up as soon as you are able to."))
+				to_chat(src, span_notice("Вы встанете при первой возможности."))
 		else
 			if(!silent)
-				to_chat(src, span_notice("You stand up."))
+				to_chat(src, span_notice("Вы встаёте."))
 			get_up(instant)
 
 	SEND_SIGNAL(src, COMSIG_LIVING_RESTING, new_resting, silent, instant)
@@ -2126,6 +2137,7 @@
 /// Proc to append and redefine behavior to the change of the [/mob/living/var/resting] variable.
 /mob/living/proc/update_resting()
 	//update_rest_hud_icon()
+	return
 
 
 /// Change the [body_position] to [LYING_DOWN] and update associated behavior.
@@ -2276,7 +2288,7 @@
 	if(enable)
 		if(stat == DEAD)	// dead mobs are skipped, unless we are removing SSD status
 			return FALSE
-		if(!mind.active || (ckey && ckey[1] == "@")) 	// aghosting will do this, we want to avoid SSDing admemes
+		if(!mind.active || (ckey && ckey[1] == "@"))	// aghosting will do this, we want to avoid SSDing admemes
 			return FALSE
 		if(!isnull(player_logged))	// already in SSD, return TRUE and we are done
 			return TRUE
@@ -2299,24 +2311,24 @@
 
 /mob/living/proc/do_succumb(cancel_on_no_words)
 	if(stat == DEAD)
-		to_chat(src, span_notice("It's too late, you're already dead!"))
+		to_chat(src, span_notice("Слишком поздно, вы уже мертвы!"))
 		return
 	if(health >= HEALTH_THRESHOLD_CRIT)
-		to_chat(src, span_warning("You are unable to succumb to death! This life continues!"))
+		to_chat(src, span_warning("Вы не можете сдаться смерти! Эта жизнь продолжается!"))
 		return
 
 	last_words = null // In case we kept some from last time
-	var/final_words = tgui_input_text(src, "Do you have any last words?", "Goodnight, Sweet Prince", encode = FALSE)
+	var/final_words = tgui_input_text(src, "Каковы ваши последние слова?", "Goodnight, Sweet Prince", encode = FALSE)
 
 	if(isnull(final_words) && cancel_on_no_words)
-		to_chat(src, span_notice("You decide you aren't quite ready to die."))
+		to_chat(src, span_notice("Вы решаете, что ещё не готовы умирать."))
 		return
 
 	if(stat == DEAD)
 		return
 
 	if(health >= HEALTH_THRESHOLD_CRIT)
-		to_chat(src, span_warning("You are unable to succumb to death! This life continues!"))
+		to_chat(src, span_warning("Вы не можете сдаться смерти! Эта жизнь продолжается!"))
 		return
 
 	if(!isnull(final_words))
@@ -2336,7 +2348,7 @@
 		addtimer(CALLBACK(src, PROC_REF(death)), 1 SECONDS)
 	else
 		death()
-	to_chat(src, span_notice("You have given up life and succumbed to death."))
+	to_chat(src, span_notice("Вы сдаётесь и принимаете смерть."))
 	apply_status_effect(STATUS_EFFECT_RECENTLY_SUCCUMBED)
 
 /// Updates damage slowdown accordingly to the current health
@@ -2361,7 +2373,7 @@
 			spell.revert_cast()
 			. |= RECHARGE_SUCCESSFUL
 
-	to_chat(src, span_notice("You feel [(. & RECHARGE_SUCCESSFUL) ? "raw magical energy flowing through you, it feels good!" : "very strange for a moment, but then it passes."]"))
+	to_chat(src, span_notice("Вы чувствуете [(. & RECHARGE_SUCCESSFUL) ? "поток магической энергии, это приятно!" : "себя очень странно на мгновение, но это проходит."]"))
 
 /mob/living/proc/set_name()
 	if(numba == 0)
@@ -2373,9 +2385,10 @@
 /mob/living/proc/knockOver(mob/living/carbon/target)
 	if(target.key) //save us from monkey hordes
 		target.visible_message(span_warning("[pick( \
-						  "[target] спотыка[pluralize_ru(target.gender, "ет", "ют")]ся об [declent_ru(GENITIVE)]!", \
-						  "[target] опрокидыва[pluralize_ru(target.gender, "ет", "ют")]ся на [declent_ru(GENITIVE)]!", \
-						  "[target] отлета[pluralize_ru(target.gender, "ет", "ют")] с пути [declent_ru(GENITIVE)]!", \
-						  "[capitalize(declent_ru(NOMINATIVE))] сбивает [target]!", \
-						  "[capitalize(declent_ru(NOMINATIVE))] влетает в [target], заставляя [genderize_ru(target.gender, "его", "её", "его", "их")] упасть!", \
-						  "[capitalize(declent_ru(NOMINATIVE))] опрокидывает [target]!")]"))
+			"[target] спотыка[pluralize_ru(target.gender, "ет", "ют")]ся об [declent_ru(GENITIVE)]!", \
+			"[target] опрокидыва[pluralize_ru(target.gender, "ет", "ют")]ся на [declent_ru(GENITIVE)]!", \
+			"[target] отлета[pluralize_ru(target.gender, "ет", "ют")] с пути [declent_ru(GENITIVE)]!", \
+			"[capitalize(declent_ru(NOMINATIVE))] сбивает [target]!", \
+			"[capitalize(declent_ru(NOMINATIVE))] влетает в [target], заставляя [genderize_ru(target.gender, "его", "её", "его", "их")] упасть!", \
+			"[capitalize(declent_ru(NOMINATIVE))] опрокидывает [target]!")]")
+		)

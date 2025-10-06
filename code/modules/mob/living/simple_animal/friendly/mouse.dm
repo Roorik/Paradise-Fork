@@ -13,9 +13,9 @@
 	icon_dead = "mouse_gray_dead"
 	icon_resting = "mouse_gray_sleep"
 	speak = list("Squeek!","SQUEEK!","Squeek?")
-	speak_emote = list("squeeks","squeaks","squiks")
-	emote_hear = list("squeeks","squeaks","squiks")
-	emote_see = list("runs in a circle", "shakes", "scritches at something")
+	speak_emote = list("пищит", "попискивает")
+	emote_hear = list("пищит", "попискивает")
+	emote_see = list("бегает кругами", "трясётся", "осматривается")
 	var/squeak_sound = 'sound/creatures/mouse_squeak.ogg'
 	talk_sound = list('sound/creatures/rat_talk.ogg')
 	damaged_sound = list('sound/creatures/rat_wound.ogg')
@@ -37,9 +37,7 @@
 	pass_flags = PASSTABLE | PASSGRILLE | PASSMOB
 	mobility_flags = MOBILITY_FLAGS_REST_CAPABLE_DEFAULT
 	mob_size = MOB_SIZE_TINY
-	layer = MOB_LAYER
 	atmos_requirements = list("min_oxy" = 16, "max_oxy" = 0, "min_tox" = 0, "max_tox" = 1, "min_co2" = 0, "max_co2" = 5, "min_n2" = 0, "max_n2" = 0)
-	universal_speak = FALSE
 	can_hide = TRUE
 	pass_door_while_hidden = TRUE
 	holder_type = /obj/item/holder/mouse
@@ -177,9 +175,11 @@
 		return FALSE
 
 	jetpack = item_to_add
-	user.visible_message(span_notice("[user] put something on [src]."),
+	user.visible_message(
+		span_notice("[user] put something on [src]."),
 		span_notice("You equip [src] with a cool jetpack! Sick!"),
-		span_italics("You hear the roar of a small engine."))
+		span_italics("You hear the roar of a small engine.")
+	)
 
 	RegisterSignal(src, COMSIG_MOB_GHOSTIZE, PROC_REF(remove_from_back))
 	update_icons()
@@ -321,28 +321,28 @@
 /mob/living/simple_animal/mouse/proc/sniff()
 	set name = "Понюхать"
 	set desc = "Пытаешься что-то почуять"
-	set category = "Мышь"
+	set category = STATPANEL_MOUSE
 
 	emote("msniff", intentional = TRUE)
 
 /mob/living/simple_animal/mouse/proc/shake()
 	set name = "Дрожать"
 	set desc = "Дрожит или дрыгается"
-	set category = "Мышь"
+	set category = STATPANEL_MOUSE
 
 	emote("mshake", intentional = TRUE)
 
 /mob/living/simple_animal/mouse/proc/scratch()
 	set name = "Почесаться"
 	set desc = "Чешется"
-	set category = "Мышь"
+	set category = STATPANEL_MOUSE
 
 	emote("mscratch", intentional = TRUE)
 
 /mob/living/simple_animal/mouse/proc/washup()
 	set name = "Умыться"
 	set desc = "Умывается"
-	set category = "Мышь"
+	set category = STATPANEL_MOUSE
 
 	emote("mwashup", intentional = TRUE)
 
@@ -409,8 +409,6 @@
 /mob/living/simple_animal/mouse/brown/Tom
 	name = "Tom"
 	desc = "Jerry the cat is not amused."
-	response_help  = "pets"
-	response_disarm = "gently pushes aside"
 	response_harm   = "splats"
 	unique_pet = TRUE
 	gold_core_spawnable = NO_SPAWN
@@ -466,9 +464,6 @@
 	icon_living = "mouse_clockwork"
 	icon_dead = "mouse_clockwork_dead"
 	icon_resting = "mouse_clockwork_sleep"
-	response_help  = "pets"
-	response_disarm = "gently pushes aside"
-	response_harm   = "stamps on"
 	gold_core_spawnable = NO_SPAWN
 	can_collar = FALSE
 	butcher_results = list(/obj/item/stack/sheet/metal = 1)
@@ -491,10 +486,10 @@
 	real_name = "rat"
 	desc = "Серая крыса. Не самый яркий представитель своего вида."
 	squeak_sound = 'sound/creatures/rat_squeak.ogg'
-	icon_state 		= "rat_gray"
-	icon_living 	= "rat_gray"
-	icon_dead 		= "rat_gray_dead"
-	icon_resting 	= "rat_gray_sleep"
+	icon_state		= "rat_gray"
+	icon_living	= "rat_gray"
+	icon_dead		= "rat_gray_dead"
+	icon_resting	= "rat_gray_sleep"
 	maxHealth = 15
 	health = 15
 	mob_size = MOB_SIZE_SMALL
@@ -504,82 +499,78 @@
 /mob/living/simple_animal/mouse/rat/gray
 	name = "gray rat"
 	real_name = "gray rat"
-	desc = "Серая крыса. Не самый яркий представитель своего вида."
 
 /mob/living/simple_animal/mouse/rat/white
 	name = "white rat"
 	real_name = "white rat"
 	desc = "Типичный представитель лабораторных крыс."
-	icon_state 		= "rat_white"
-	icon_living 	= "rat_white"
-	icon_dead 		= "rat_white_dead"
-	icon_resting 	= "rat_white_sleep"
+	icon_state		= "rat_white"
+	icon_living	= "rat_white"
+	icon_dead		= "rat_white_dead"
+	icon_resting	= "rat_white_sleep"
 
 /mob/living/simple_animal/mouse/rat/irish
 	name = "irish rat"		//Да, я знаю что это вид. Это каламбурчик.
 	real_name = "irish rat"
 	desc = "Ирландская крыса. На космической станции?! На этот раз им точно некуда бежать!"
-	icon_state 		= "rat_irish"
-	icon_living 	= "rat_irish"
-	icon_dead 		= "rat_irish_dead"
-	icon_resting 	= "rat_irish_sleep"
+	icon_state		= "rat_irish"
+	icon_living	= "rat_irish"
+	icon_dead		= "rat_irish_dead"
+	icon_resting	= "rat_irish_sleep"
 
-#define MAX_HAMSTER 50
-GLOBAL_VAR_INIT(hamster_count, 0)
+#define MAX_WOOLY_MOUSE 50
+GLOBAL_VAR_INIT(wooly_mouse_count, 0)
 
-/mob/living/simple_animal/mouse/hamster
-	name = "хомяк"
-	real_name = "хомяк"
-	desc = "С надутыми щёчками."
-	icon_state = "hamster"
-	icon_living = "hamster"
-	icon_dead = "hamster_dead"
-	icon_resting = "hamster_rest"
+/mob/living/simple_animal/mouse/wooly
+	name = "wooly mouse"
+	real_name = "лохматая мышь"
+	desc = "Милая лохматая мышка, много людей заводят их как домашних питомцев."
+	icon_state = "wooly_mouse"
+	icon_living = "wooly_mouse"
+	icon_dead = "wooly_mouse_dead"
+	icon_resting = "wooly_mouse_rest"
 	gender = MALE
-	mobility_flags = MOBILITY_FLAGS_REST_CAPABLE_DEFAULT
 	speak_chance = 0
-	childtype = list(/mob/living/simple_animal/mouse/hamster/baby)
-	animal_species = /mob/living/simple_animal/mouse/hamster
-	holder_type = /obj/item/holder/hamster
-	gold_core_spawnable = FRIENDLY_SPAWN
-	tts_seed = "Gyro"
+	childtype = list(/mob/living/simple_animal/mouse/wooly/baby)
+	animal_species = /mob/living/simple_animal/mouse/wooly
+	holder_type = /obj/item/holder/wooly_mouse
 	maxHealth = 10
-	health = 10
+	health = 10 // kokok
 
 
-/mob/living/simple_animal/mouse/hamster/update_desc(updates)
+/mob/living/simple_animal/mouse/wooly/update_desc(updates)
 	. = ..()	// We get initial desc here.
 	desc += gender == MALE ? " Самец!" : " Самочка! Ох... Нет..."
 
 
-/mob/living/simple_animal/mouse/hamster/Initialize(mapload)
+/mob/living/simple_animal/mouse/wooly/Initialize(mapload)
 	. = ..()
-	GLOB.hamster_count++
+	GLOB.wooly_mouse_count++
 	gender = prob(80) ? MALE : FEMALE
 	update_appearance(UPDATE_DESC)
 
 
-/mob/living/simple_animal/mouse/hamster/Destroy()
-	GLOB.hamster_count--
+/mob/living/simple_animal/mouse/wooly/Destroy()
+	GLOB.wooly_mouse_count--
 	. = ..()
 
-/mob/living/simple_animal/mouse/hamster/death(gibbed)
+/mob/living/simple_animal/mouse/wooly/death(gibbed)
 	if(!gibbed)
-		GLOB.hamster_count--
+		GLOB.wooly_mouse_count--
 	. = ..()
 
-/mob/living/simple_animal/mouse/hamster/pull_constraint(atom/movable/pulled_atom, state, supress_message = FALSE)
+/mob/living/simple_animal/mouse/wooly/pull_constraint(atom/movable/pulled_atom, state, supress_message = FALSE)
 	return TRUE
 
-/mob/living/simple_animal/mouse/hamster/Life(seconds, times_fired)
+/mob/living/simple_animal/mouse/wooly/Life(seconds, times_fired)
 	..()
-	if(GLOB.hamster_count < MAX_HAMSTER)
+	if(GLOB.wooly_mouse_count < MAX_WOOLY_MOUSE)
 		make_babies()
 
-/mob/living/simple_animal/mouse/hamster/baby
-	name = "хомячок"
-	real_name = "хомячок"
-	desc = "Очень миленький! Какие у него пушистые щёчки!"
+/mob/living/simple_animal/mouse/wooly/baby
+	name = "wooly mouse baby"
+	real_name = "лохматая мышка"
+	desc = "Очень миленькая и пушистая мышка!"
 	tts_seed = "Meepo"
 	turns_per_move = 2
 	response_help  = "полапал"
@@ -591,16 +582,15 @@ GLOBAL_VAR_INIT(hamster_count, 0)
 	maxHealth = 3
 	var/amount_grown = 0
 	can_collar = FALSE
-	holder_type = /obj/item/holder/hamster
 
 
-/mob/living/simple_animal/mouse/hamster/baby/start_pulling(atom/movable/pulled_atom, state, force = pull_force, supress_message = FALSE)
+/mob/living/simple_animal/mouse/wooly/baby/start_pulling(atom/movable/pulled_atom, state, force = pull_force, supress_message = FALSE)
 	if(!supress_message)
 		to_chat(src, span_warning("Вы слишком малы, чтобы что-то тащить."))
 	return FALSE
 
 
-/mob/living/simple_animal/mouse/hamster/baby/Life(seconds, times_fired)
+/mob/living/simple_animal/mouse/wooly/baby/Life(seconds, times_fired)
 	. =..()
 	if(!.)
 		return .
@@ -609,19 +599,19 @@ GLOBAL_VAR_INIT(hamster_count, 0)
 	if(amount_grown < 100)
 		return .
 
-	var/mob/living/simple_animal/A = new /mob/living/simple_animal/mouse/hamster(loc)
+	var/mob/living/simple_animal/A = new /mob/living/simple_animal/mouse/wooly(loc)
 	if(mind)
 		mind.transfer_to(A)
 	qdel(src)
 
 
-/mob/living/simple_animal/mouse/hamster/baby/mouse_crossed(atom/movable/arrived)
+/mob/living/simple_animal/mouse/wooly/baby/mouse_crossed(atom/movable/arrived)
 	if(!stat && ishuman(arrived))
 		to_chat(arrived, span_notice("[bicon(src)] раздавл[genderize_ru(gender, "ен", "на", "но")]!"))
 		death()
 		splat(user = arrived)
 
-
+#undef MAX_WOOLY_MOUSE
 
 #undef SNIFF
 #undef SHAKE

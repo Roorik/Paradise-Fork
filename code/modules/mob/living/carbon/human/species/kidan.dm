@@ -9,8 +9,6 @@
 	language = LANGUAGE_KIDAN
 	unarmed_type = /datum/unarmed_attack/claws
 
-	brute_mod = 0.8
-	tox_mod = 1.7
 
 	inherent_traits = list(
 		TRAIT_HAS_REGENERATION,
@@ -102,16 +100,30 @@
 		JOB_MIN_AGE_COMMAND = 20,
 	)
 
+	autohiss_basic_map = list(
+			"z" = list("zz", "zzz", "zzzz"),
+			"v" = list("vv", "vvv", "vvvv"),
+			"з" = list("зз", "ззз", "зззз"),
+			"в" = list("вв", "ввв", "вввв")
+		)
+	autohiss_extra_map = list(
+			"s" = list("z", "zs", "zzz", "zzsz"),
+			"с" = list("з", "зс", "ззз", "ззсз")
+		)
+	autohiss_exempt = list("Хитин")
+
 /datum/species/kidan/get_species_runechat_color(mob/living/carbon/human/H)
 	var/obj/item/organ/internal/eyes/E = H.get_int_organ(/obj/item/organ/internal/eyes)
 	return E.eye_colour
 
 /datum/species/kidan/on_species_gain(mob/living/carbon/human/H)
 	. = ..()
-	add_verb(H, list(/mob/living/carbon/human/proc/emote_click,
-					/mob/living/carbon/human/proc/emote_clack,
-			   		/mob/living/carbon/human/proc/emote_wiggle,
-			   		/mob/living/carbon/human/proc/emote_wave_k))
+	add_verb(H, list(
+		/mob/living/carbon/human/proc/emote_click,
+		/mob/living/carbon/human/proc/emote_clack,
+		/mob/living/carbon/human/proc/emote_wiggle,
+		/mob/living/carbon/human/proc/emote_wave_k
+	))
 	remove_verb(H, list(
 		/mob/living/carbon/human/verb/emote_pale,
 		/mob/living/carbon/human/verb/emote_blink,
@@ -124,10 +136,11 @@
 		/mob/living/carbon/human/verb/emote_eyebrow,
 		/mob/living/carbon/human/verb/emote_frown,
 		/mob/living/carbon/human/verb/emote_sniff,
-		/mob/living/carbon/human/verb/emote_glare))
+		/mob/living/carbon/human/verb/emote_glare
+	))
 	// HUD for detecting pheromones
 	var/datum/atom_hud/kidan_hud = GLOB.huds[DATA_HUD_KIDAN_PHEROMONES]
-	kidan_hud.add_hud_to(H)
+	kidan_hud.show_to(H)
 
 	// Action for creating pheromones
 	var/datum/action/innate/produce_pheromones/produce_pheromones = locate() in H.actions
@@ -159,7 +172,7 @@
 
 	// Removing the HUD for detecting pheromones
 	var/datum/atom_hud/kidan_hud = GLOB.huds[DATA_HUD_KIDAN_PHEROMONES]
-	kidan_hud.remove_hud_from(H)
+	kidan_hud.hide_from(H)
 
 	// Removing the action for creating pheromones
 	var/datum/action/innate/produce_pheromones/produce_pheromones = locate() in H.actions
@@ -168,8 +181,8 @@
 
 /// Pheromones spawnable by kida, only perceivable by other kida
 /obj/effect/kidan_pheromones
-	name = "kidan pheromones"
-	desc = "Special pheromones secreted by a kidan."
+	name = "Феромоны киданов"
+	desc = "Особые феромоны, выделяемые киданами."
 	gender = PLURAL
 	hud_possible = list(KIDAN_PHEROMONES_HUD)
 
@@ -189,7 +202,7 @@
 	// Add itself to the kidan hud
 	prepare_huds()
 	for(var/datum/atom_hud/kidan_pheromones/kidan_hud in GLOB.huds)
-		kidan_hud.add_to_hud(src)
+		kidan_hud.add_atom_to_hud(src)
 	var/image/holder = hud_list[KIDAN_PHEROMONES_HUD]
 	holder.icon = icon
 	holder.icon_state = icon_state
@@ -202,10 +215,10 @@
 /obj/effect/kidan_pheromones/examine(mob/user)
 	. = ..()
 	if(encoded_message)
-		. += "It has the following message: \"[encoded_message]\""
+		. += "Оно содержит сообщение: \"[encoded_message]\""
 	// Failsafe for mappers/adminspawns if they forgot to add a message
 	else
-		. += "Its meaning is incomprehensible."
+		. += "Его значение непостижимо."
 
 // For mappers/adminspawns, this one does not self-delete
 /obj/effect/kidan_pheromones/permanent
@@ -213,7 +226,7 @@
 
 // Innate action for creating pheromones and destroying current ones, owned by all kida
 /datum/action/innate/produce_pheromones
-	name = "Produce Pheromones"
+	name = "Создать феромоны"
 	check_flags = AB_CHECK_CONSCIOUS|AB_CHECK_INCAPACITATED
 	icon_icon = 'icons/effects/effects.dmi'
 	button_icon_state = "kidan_pheromones_static"
@@ -231,17 +244,17 @@
 	var/mob/living/carbon/human/H = owner
 
 	// Do we want to make or destroy them?
-	switch(alert(H, "Would you like to produce or destroy nearby pheromones?", "Produce Pheromones", "Produce", "Destroy", "Cancel"))
+	switch(alert(H, "Вы хотите создать или рассеять феромоны поблизости?", "Феромоны киданов", "Создать", "Рассеять", "Отмена"))
 		// We look for nearby pheromones, if they belong to us, we can destroy them
-		if("Destroy")
+		if("Рассеять")
 			var/obj/effect/kidan_pheromones/pheromones_to_destroy = locate(/obj/effect/kidan_pheromones) in range(1, H)
 			// No pheromones nearby
 			if(!pheromones_to_destroy)
-				to_chat(H, "<span class='warning'>You cannot find any pheromones nearby.</span>")
+				H.balloon_alert(H, "нет феромонов поблизости!")
 				return
 			// These are not ours, do not touch them
 			if(!(pheromones_to_destroy in active_pheromones_current))
-				to_chat(H, "<span class='warning'>These pheromones were created by someone else, you are unable to dissipate them.</span>")
+				to_chat(H, span_warning("Эти феромоны созданы кем-то другим, вы не можете их рассеять."))
 				return
 			// These are ours and we now destroy them
 			if(do_after(H, 3 SECONDS, pheromones_to_destroy, DEFAULT_DOAFTER_IGNORE|DA_IGNORE_HELD_ITEM))
@@ -249,35 +262,36 @@
 				H.create_log(MISC_LOG, "destroyed pheromones that had the message of \"[pheromones_to_destroy.encoded_message]\"")
 
 				// Destroy it; the pheromones remove themselves from our list via signals
-				to_chat(H, "<span class='notice'>You dissipate your old pheromones.</span>")
+				H.balloon_alert(H, "рассеяно!")
 				qdel(pheromones_to_destroy)
 
 		// We decide to produce new ones
-		if("Produce")
+		if("Создать")
 			// Can we create more pheromones?
 			if(length(active_pheromones_current) >= active_pheromones_maximum)
-				to_chat(H, "<span class='warning'>You already have [length(active_pheromones_current)] sets of pheromones active and are unable to produce any more.</span>")
+				to_chat(H, span_warning("У вас уже [length(active_pheromones_current)] [declension_ru(length(active_pheromones_current),"активный феромон","активных феромона","активных феромонов")], нельзя создать больше."))
 				return
 
 			// Encode the message
-			var/message_to_encode = input(H, "What message do you wish to encode? (max. [maximum_message_length] characters) Leave it empty to cancel.", "Produce Pheromones")
+			var/message_to_encode = tgui_input_text(H, "Какое сообщение вы хотите закодировать? (макс. [maximum_message_length] символов). Оставьте пустым, чтобы отменить.", "Создать феромоны")
 			if(!message_to_encode)
-				to_chat(H, "<span class='notice'>You decide against producing pheromones.</span>")
+				H.balloon_alert(H, "отменено")
 				return
 			if(length(message_to_encode) > maximum_message_length)
-				to_chat(H, "<span class='warning'>Your message was too long, the pheromones instantly dissipate.</span>")
+				H.balloon_alert(H, "превышен предел символов")
 				return
 			// Strip the message now so it does not mess with the length
 			message_to_encode = strip_html(message_to_encode)
 
 			// One batch of pheromones per tile
 			if(locate(/obj/effect/kidan_pheromones) in get_turf(H))
-				to_chat(H, "<span class='warning'>There are pheromones here already!</span>")
+				H.balloon_alert(H, "здесь уже есть феромоны!")
 				return
 
 			// Create the pheromones
 			if(do_after(H, 3 SECONDS, H, DEFAULT_DOAFTER_IGNORE|DA_IGNORE_HELD_ITEM))
-				to_chat(H, "<span class='notice'>You produce new pheromones with the message of \"[message_to_encode]\".</span>")
+				to_chat(H, span_notice("Вы создали феромоны с сообщением: \"[message_to_encode]\"."))
+				H.balloon_alert(H, "создано!")
 				var/obj/effect/kidan_pheromones/pheromones_to_create = new get_turf(H)
 				pheromones_to_create.encoded_message = message_to_encode
 				LAZYADD(active_pheromones_current, pheromones_to_create)
@@ -287,7 +301,7 @@
 
 				// Log the action
 				H.create_log(MISC_LOG, "produced pheromones with the message of \"[message_to_encode]\"")
-		if("Cancel")
+		if("Отмена")
 			return
 
 // This handles proper GCing whether we destroyed the pheromones or something else did

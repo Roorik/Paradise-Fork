@@ -41,14 +41,14 @@
 /obj/item/reagent_containers/food/snacks/proc/On_Consume(mob/M, mob/user)
 	if(!user)
 		return
-	if(!reagents.total_volume)
+	if(reagents && !reagents.total_volume)
 		if(M == user)
 			to_chat(user, span_notice("Вы доели [declent_ru(ACCUSATIVE)]."))
 		user.visible_message(span_notice("[M] доел[genderize_ru(M.gender, "", "а", "о", "и")] [declent_ru(ACCUSATIVE)]."))
 		user.drop_item_ground(src)	//so icons update :[
 		Post_Consume(M)
-		var/obj/item/trash_item = generate_trash(usr)
-		usr.put_in_hands(trash_item)
+		var/obj/item/trash_item = generate_trash(user)
+		user.put_in_hands(trash_item)
 		qdel(src)
 	return
 
@@ -58,7 +58,7 @@
 /obj/item/reagent_containers/food/snacks/attack_self(mob/user)
 	if(!opened)
 		opened = TRUE
-		to_chat(user, "<span class='notice'>You open the [src].</span>")
+		to_chat(user, span_notice("You open the [src]."))
 		update_icon(UPDATE_ICON_STATE)
 		return ..()
 	else
@@ -103,11 +103,11 @@
 	if(in_range(user, src))
 		if(bitecount > 0)
 			if(bitecount==1)
-				. += "<span class='notice'>[src] was bitten by someone!</span>"
+				. += span_notice("[src] was bitten by someone!")
 			else if(bitecount<=3)
-				. += "<span class='notice'>[src] was bitten [bitecount] times!</span>"
+				. += span_notice("[src] was bitten [bitecount] times!")
 			else
-				. += "<span class='notice'>[src] was bitten multiple times!</span>"
+				. += span_notice("[src] was bitten multiple times!")
 
 
 /obj/item/reagent_containers/food/snacks/attackby(obj/item/I, mob/user, params)
@@ -171,23 +171,23 @@
 		if(isdog(M))
 			var/mob/living/simple_animal/pet/dog/D = M
 			if(world.time < (D.last_eaten + 300))
-				to_chat(D, "<span class='notice'>You are too full to try eating [src] right now.</span>")
+				to_chat(D, span_notice("You are too full to try eating [src] right now."))
 			else if(bitecount >= 4)
-				D.visible_message("[D] [pick("burps from enjoyment", "yaps for more", "woofs twice", "looks at the area where [src] was")].","<span class='notice'>You swallow up the last part of [src].</span>")
-				playsound(loc,'sound/items/eatfood.ogg', rand(10,50), 1)
+				D.visible_message("[D] [pick("burps from enjoyment", "yaps for more", "woofs twice", "looks at the area where [src] was")].",span_notice("You swallow up the last part of [src]."))
+				playsound(loc,'sound/items/eatfood.ogg', rand(10,50), TRUE)
 				D.adjustHealth(-10)
 				D.last_eaten = world.time
 				D.taste(reagents)
 				qdel(src)
 			else
-				D.visible_message("[D] takes a bite of [src].","<span class='notice'>You take a bite of [src].</span>")
-				playsound(loc,'sound/items/eatfood.ogg', rand(10,50), 1)
+				D.visible_message("[D] takes a bite of [src].",span_notice("You take a bite of [src]."))
+				playsound(loc,'sound/items/eatfood.ogg', rand(10,50), TRUE)
 				bitecount++
 				D.last_eaten = world.time
 				D.taste(reagents)
 		else if(ismouse(M))
 			var/mob/living/simple_animal/mouse/N = M
-			to_chat(N, text("<span class='notice'>You nibble away at [src].</span>"))
+			to_chat(N, span_notice("You nibble away at [src]."))
 			if(prob(50))
 				N.visible_message("[N] nibbles away at [src].", "")
 			N.adjustHealth(-2)
@@ -195,7 +195,7 @@
 
 /obj/item/reagent_containers/food/snacks/sliceable/examine(mob/user)
 	. = ..()
-	. += span_info("<b>Alt-click</b> to put something small inside.")
+	. += span_notice("<b>Alt-click</b> to put something small inside.")
 
 /obj/item/reagent_containers/food/snacks/sliceable/click_alt(mob/living/user)
 	var/obj/item/I = user.get_active_hand()
@@ -321,14 +321,12 @@
 /obj/item/reagent_containers/food/snacks/cereal
 	name = "box of cereal"
 	desc = "A box of cereal."
-	icon = 'icons/obj/food/food.dmi'
 	icon_state = "cereal_box"
 	list_reagents = list("nutriment" = 3)
 
 /obj/item/reagent_containers/food/snacks/deepfryholder
 	name = "Deep Fried Foods Holder Obj"
 	desc = "If you can see this description the code for the deep fryer fucked up."
-	icon = 'icons/obj/food/food.dmi'
 	icon_state = "deepfried_holder_icon"
 	list_reagents = list("nutriment" = 3)
 	foodtype = FRIED | JUNKFOOD | GROSS

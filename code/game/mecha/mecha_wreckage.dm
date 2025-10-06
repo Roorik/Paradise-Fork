@@ -8,8 +8,6 @@
 	desc = "Remains of some unfortunate mecha. Completely unrepairable, but perhaps something can be salvaged."
 	icon = 'icons/obj/mecha/mecha.dmi'
 	density = TRUE
-	anchored = FALSE
-	opacity = FALSE
 	var/list/welder_salvage = list(/obj/item/stack/sheet/plasteel, /obj/item/stack/sheet/metal, /obj/item/stack/rods)
 	var/salvage_num = 5
 	var/list/crowbar_salvage = list()
@@ -47,7 +45,7 @@
 	. = ..()
 	if(!AI)
 		return
-	. += "<span class='notice'>The AI recovery beacon is active.</span>"
+	. += span_notice("The AI recovery beacon is active.")
 
 /obj/structure/mecha_wreckage/crowbar_act(mob/user, obj/item/I)
 	. = TRUE
@@ -56,24 +54,24 @@
 	if(crowbar_salvage.len)
 		var/obj/S = pick(crowbar_salvage)
 		S.forceMove(user.drop_location())
-		user.visible_message("<span class='notice'>[user] pries [S] from [src].</span>", "<span class='notice'>You pry [S] from [src].</span>")
+		user.visible_message(span_notice("[user] pries [S] from [src]."), span_notice("You pry [S] from [src]."))
 		crowbar_salvage -= S
 		return
-	to_chat(user, "<span class='notice'>You don't see anything that can be pried with [I]!</span>")
+	to_chat(user, span_notice("You don't see anything that can be pried with [I]!"))
 
 /obj/structure/mecha_wreckage/welder_act(mob/user, obj/item/I)
 	. = TRUE
 	if(!I.tool_use_check(user, 0))
 		return
 	if(salvage_num <= 0 || !length(welder_salvage))
-		to_chat(user, "<span class='notice'>You don't see anything that can be cut with [I]!</span>")
+		to_chat(user, span_notice("You don't see anything that can be cut with [I]!"))
 		return
 	if(prob(30))
-		to_chat(user, "<span class='notice'>You fail to salvage anything valuable from [src]!</span>")
+		to_chat(user, span_notice("You fail to salvage anything valuable from [src]!"))
 		return
 	var/type = pick(welder_salvage)
 	var/N = new type(get_turf(user))
-	user.visible_message("[user] cuts [N] from [src].", "<span class='notice'>You cut [N] from [src].</span>")
+	user.visible_message("[user] cuts [N] from [src].", span_notice("You cut [N] from [src]."))
 	if(!isstack(N))
 		welder_salvage -= type
 	salvage_num--
@@ -83,21 +81,21 @@
 	if(!I.use_tool(src, user, 0, volume = I.tool_volume))
 		return
 	if(wires_removed)
-		to_chat(user, "<span class='notice'>You don't see anything that can be cut with [I]!</span>")
+		to_chat(user, span_notice("You don't see anything that can be cut with [I]!"))
 		return
 	var/N = new /obj/item/stack/cable_coil(get_turf(user), rand(1, 3))
-	user.visible_message("[user] cuts [N] from [src].", "<span class='notice'>You cut [N] from [src].</span>")
+	user.visible_message("[user] cuts [N] from [src].", span_notice("You cut [N] from [src]."))
 	wires_removed = TRUE
 
 /obj/structure/mecha_wreckage/transfer_ai(interaction, mob/user, null, obj/item/aicard/card)
 	if(!..())
 		return
 
- //Proc called on the wreck by the AI card.
+//Proc called on the wreck by the AI card.
 	if(interaction != AI_TRANS_TO_CARD) //AIs can only be transferred in one direction, from the wreck to the card.
 		return
 	if(!AI) //No AI in the wreck
-		to_chat(user, "<span class='warning'>No AI backups found.</span>")
+		to_chat(user, span_warning("No AI backups found."))
 		return
 	cut_overlays() //Remove the recovery beacon overlay
 	AI.forceMove(card) //Move the dead AI to the card.
@@ -105,11 +103,11 @@
 		to_chat(AI, "The remains of your file system have been recovered on a mobile storage device.")
 	else //Give the AI a heads-up that it is probably going to get fixed.
 		AI.notify_ghost_cloning("You have been recovered from the wreckage!", source = card)
-	to_chat(user, "<span class='boldnotice'>Backup files recovered</span>: [AI.name] ([rand(1000, 9999)].exe) salvaged from [name] and stored within local memory.")
+	to_chat(user, "[span_boldnotice("Backup files recovered")]: [AI.name] ([rand(1000, 9999)].exe) salvaged from [name] and stored within local memory.")
 	AI = null
 
 /obj/structure/mecha_wreckage/gygax
-	name = "\improper Gygax wreckage"
+	name = "Gygax wreckage"
 	icon_state = "gygax-broken"
 	parts = list(
 				/obj/item/mecha_parts/part/gygax_torso,
@@ -121,34 +119,34 @@
 				)
 
 /obj/structure/mecha_wreckage/gygax/dark
-	name = "\improper Dark Gygax wreckage"
+	name = "Dark Gygax wreckage"
 	icon_state = "darkgygax-broken"
 
 /obj/structure/mecha_wreckage/gygax/ert
-	name = "\improper Special NT Gygax wreckage"
+	name = "Special NT Gygax wreckage"
 	icon_state = "ntgygax-broken"
 
 /obj/structure/mecha_wreckage/marauder
-	name = "\improper Marauder wreckage"
+	name = "Marauder wreckage"
 	icon_state = "marauder-broken"
 
 /obj/structure/mecha_wreckage/mauler
-	name = "\improper Mauler wreckage"
+	name = "Mauler wreckage"
 	icon_state = "mauler-broken"
 	desc = "The syndicate won't be very happy about this..."
 
 /obj/structure/mecha_wreckage/seraph
-	name = "\improper Seraph wreckage"
+	name = "Seraph wreckage"
 	icon_state = "seraph-broken"
 
 /obj/structure/mecha_wreckage/reticence
-	name = "\improper Reticence wreckage"
+	name = "Reticence wreckage"
 	icon_state = "reticence-broken"
 	color = "#87878715"
 	desc = "..."
 
 /obj/structure/mecha_wreckage/ripley
-	name = "\improper Ripley wreckage"
+	name = "Ripley wreckage"
 	icon_state = "ripley-broken"
 	parts = list(/obj/item/mecha_parts/part/ripley_torso,
 				/obj/item/mecha_parts/part/ripley_left_arm,
@@ -157,11 +155,11 @@
 				/obj/item/mecha_parts/part/ripley_right_leg)
 
 /obj/structure/mecha_wreckage/ripley/mkii
-	name = "\improper Ripley MK-II wreckage"
+	name = "Ripley MK-II wreckage"
 	icon_state = "ripleymkii-broken"
 
 /obj/structure/mecha_wreckage/ripley/firefighter
-	name = "\improper Firefighter wreckage"
+	name = "Firefighter wreckage"
 	icon_state = "firefighter-broken"
 	parts = list(/obj/item/mecha_parts/part/ripley_torso,
 				/obj/item/mecha_parts/part/ripley_left_arm,
@@ -171,12 +169,12 @@
 				/obj/item/clothing/suit/fire)
 
 /obj/structure/mecha_wreckage/ripley/deathripley
-	name = "\improper Death-Ripley wreckage"
+	name = "Death-Ripley wreckage"
 	icon_state = "deathripley-broken"
 	parts = null
 
 /obj/structure/mecha_wreckage/clarke
-	name = "\improper Clarke wreckage"
+	name = "Clarke wreckage"
 	icon_state = "clarke-broken"
 	parts = list(/obj/item/mecha_parts/part/clarke_torso,
 				/obj/item/mecha_parts/part/clarke_left_arm,
@@ -185,7 +183,7 @@
 				/obj/item/mecha_parts/part/clarke_right_leg)
 
 /obj/structure/mecha_wreckage/honker
-	name = "\improper H.O.N.K wreckage"
+	name = "H.O.N.K wreckage"
 	icon_state = "honker-broken"
 	desc = "All is right in the universe."
 	parts = list(
@@ -198,7 +196,7 @@
 				/obj/item/mecha_parts/part/honker_right_leg)
 
 /obj/structure/mecha_wreckage/durand
-	name = "\improper Durand wreckage"
+	name = "Durand wreckage"
 	icon_state = "durand-broken"
 	parts = list(
 			/obj/item/mecha_parts/part/durand_torso,
@@ -215,12 +213,12 @@
 	icon_state = "darkdurand-broken"
 
 /obj/structure/mecha_wreckage/phazon
-	name = "\improper Phazon wreckage"
+	name = "Phazon wreckage"
 	icon_state = "phazon-broken"
 
 
 /obj/structure/mecha_wreckage/odysseus
-	name = "\improper Odysseus wreckage"
+	name = "Odysseus wreckage"
 	icon_state = "odysseus-broken"
 	parts = list(
 			/obj/item/mecha_parts/part/odysseus_torso,
@@ -231,6 +229,6 @@
 			/obj/item/mecha_parts/part/odysseus_right_leg)
 
 /obj/structure/mecha_wreckage/sidewinder
-	name = "\improper Обломки Сайдвиндера"
+	name = "Обломки Сайдвиндера"
 	desc = "Корпорация будет ОЧЕНЬ недовольна этим. Вы хоть знаете СКОЛЬКО он стоит?!"
 	icon_state = "sidewinder-broken"

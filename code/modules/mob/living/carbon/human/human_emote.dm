@@ -43,7 +43,39 @@
 	key = "airguitar"
 	message = "дела%(ет,ют)% невероятный запил на воображаемой гитаре!"
 	hands_use_check = TRUE
+	emote_type = EMOTE_AUDIBLE
+	cooldown = 60 SECONDS
+	vary = TRUE
+	sound = list(
+		'sound/misc/guitar_rifs/guitar_riff_1.ogg',
+		'sound/misc/guitar_rifs/guitar_riff_2.ogg',
+		'sound/misc/guitar_rifs/guitar_riff_3.ogg',
+		'sound/misc/guitar_rifs/guitar_riff_4.ogg',
+		'sound/misc/guitar_rifs/guitar_riff_5.ogg',
+		'sound/misc/guitar_rifs/guitar_riff_6.ogg',
+		'sound/misc/guitar_rifs/guitar_riff_7.ogg',
+		'sound/misc/guitar_rifs/guitar_riff_8.ogg',
+	)
 
+/datum/emote/living/carbon/human/airguitar/run_emote(mob/living/carbon/human/user, params, type_override, intentional)
+	// check hands status
+	var/obj/item/organ/external/left_arm = user.bodyparts_by_name[BODY_ZONE_L_ARM]
+	var/obj/item/organ/external/right_arm = user.bodyparts_by_name[BODY_ZONE_R_ARM]
+	var/can_play = TRUE
+
+	if(!right_arm || right_arm.has_fracture_or_splint() || !left_arm || left_arm.has_fracture_or_splint())
+		can_play = FALSE
+
+	if(!can_play)
+		to_chat(user, span_warning("Я не могу играть! С моими руками что-то не то!"))
+		return TRUE
+
+	. = ..()
+
+	if(!. || !intentional || !istype(user))
+		return
+
+	return TRUE
 
 /datum/emote/living/carbon/human/clap
 	key = "clap"
@@ -155,8 +187,6 @@
 	hands_use_check = TRUE
 	sound = 'sound/weapons/slap.ogg'
 	emote_type = EMOTE_AUDIBLE
-	volume = 50
-
 
 /datum/emote/living/carbon/human/palm
 	key = "palm"
@@ -170,7 +200,6 @@
 	key_third_person = "grumbles"
 	message = "ворч%(ит,ат)%!"
 	message_mime = "как будто ворч%(ит,ат)%!"
-	message_postfix = " на %t."
 	message_param = EMOTE_PARAM_USE_POSTFIX
 	emote_type = EMOTE_AUDIBLE|EMOTE_MOUTH
 	muzzled_noises = list("беспокойные")
@@ -390,8 +419,10 @@
 		return TRUE
 
 	if(user.getOxyLoss() > 30)
-		user.visible_message(span_warning("[user.name] gasps for air and swallows their cigarette!"),
-							span_warning("You gasp for air and accidentally swallow your [cig.name]!"))
+		user.visible_message(
+			span_warning("[user.name] gasps for air and swallows their cigarette!"),
+			span_warning("You gasp for air and accidentally swallow your [cig.name]!")
+		)
 		if(cig.lit)
 			to_chat(user, span_userdanger("The lit [cig.name] burns on the way down!"))
 			user.drop_item_ground(cig, force = TRUE)
@@ -574,7 +605,6 @@
 	key_third_person = "signals"
 	message_param = "показыва%(ет,ют)% %t."
 	number_postfix = list("палец", "пальца", "пальцев")
-	param_desc = "number(0-10)"
 	mob_type_allowed_typecache = list(/mob/living/carbon/human)
 	mob_type_blacklist_typecache = null
 
@@ -754,13 +784,11 @@
 	species_type_whitelist_typecache = list(/datum/species/moth)
 	var/wings_required = FALSE
 
-
 /datum/emote/living/carbon/human/moth/can_run_emote(mob/living/carbon/human/user, status_check, intentional)
 	. = ..()
 	if(. && wings_required && !user.get_organ(BODY_ZONE_WING))
 		to_chat(user, span_warning("You have no wings!"))
 		return FALSE
-
 
 /datum/emote/living/carbon/human/moth/flap
 	key = "flap"
@@ -768,20 +796,16 @@
 	message = "маш%(ет,ут)% крыльями."
 	wings_required = TRUE
 
-
 /datum/emote/living/carbon/human/moth/flap/angry
 	key = "aflap"
 	key_third_person = "aflaps"
 	message = "агрессивно маш%(ет,ут)% крыльями!"
-	wings_required = TRUE
-
 
 /datum/emote/living/carbon/human/moth/flutter
 	key = "flutter"
 	key_third_person = "flutters"
 	message = "расправля%(ет,ют)% крылья."
 	wings_required = TRUE
-
 
 /**
  * Vox
@@ -823,7 +847,6 @@
 	// Copyright CC BY 3.0 alienistcog (freesound.org) for the sound.
 	sound = 'sound/effects/warble.ogg'
 
-
 /datum/emote/living/carbon/human/skrell/warble/sad
 	key = "warble_sad"
 	message = "изда%(ёт,ют)% грустную трель."
@@ -832,7 +855,6 @@
 		'sound/voice/skrell/sad_trill2.ogg',
 		'sound/voice/skrell/sad_trill3.ogg',
 	)
-
 
 /datum/emote/living/carbon/human/skrell/warble/joyfull
 	key = "warble_joyfull"
@@ -843,13 +865,11 @@
 		'sound/voice/skrell/joyfull_trill3.ogg',
 	)
 
-
 /datum/emote/living/carbon/human/skrell/croak
 	key = "croak"
 	key_third_person = "croaks"
 	message = "квака%(ет,ют)%."
 	message_mime = "надува%(ет,ют)% щёки."
-	message_postfix = " на %t."
 	message_param = EMOTE_PARAM_USE_POSTFIX
 	emote_type = EMOTE_AUDIBLE|EMOTE_MOUTH
 	muzzled_noises = list("очень странные")
@@ -858,7 +878,6 @@
 		'sound/voice/skrell/croaking2.ogg',
 	)
 
-
 /datum/emote/living/carbon/human/skrell/discontent
 	key = "discontent"
 	message = "клад%(ёт,ут)% два пальца на подбородок."
@@ -866,20 +885,17 @@
 	message_param = EMOTE_PARAM_USE_POSTFIX
 	hands_use_check = TRUE
 
-
 /datum/emote/living/carbon/human/skrell/relax
 	key = "relax"
 	message = "раслабля%(ет,ют)% хвосты на голове."
 	message_postfix = ", смотря на %t."
 	message_param = EMOTE_PARAM_USE_POSTFIX
 
-
 /datum/emote/living/carbon/human/skrell/excitement
 	key = "excitement"
 	message = "приподнима%(ет,ют)% кончики боковых хвостов."
 	message_postfix = ", смотря на %t."
 	message_param = EMOTE_PARAM_USE_POSTFIX
-
 
 /datum/emote/living/carbon/human/skrell/confusion
 	key = "confusion"
@@ -991,7 +1007,6 @@
 /datum/emote/living/carbon/human/drask/drask_talk
 	emote_type = EMOTE_SOUND
 	age_based = TRUE
-	message_postfix = " на %t."
 	message_param = EMOTE_PARAM_USE_POSTFIX
 	sound = 'sound/voice/drasktalk.ogg'
 
@@ -1093,16 +1108,13 @@
 	key = "whip_l"
 	key_third_person = ""
 	message = "хлещ%(ет,ут)% хвостом."
-	audio_cooldown = 15 SECONDS
 	sound = 'sound/voice/unathi/whip.ogg'
-
 
 /**
  * Diona
  */
 /datum/emote/living/carbon/human/diona
 	species_type_whitelist_typecache = list(/datum/species/diona)
-
 
 /datum/emote/living/carbon/human/diona/creak
 	key = "creak"
@@ -1113,10 +1125,8 @@
 	message_param = EMOTE_PARAM_USE_POSTFIX
 	emote_type = EMOTE_AUDIBLE
 	age_based = TRUE
-	audio_cooldown = 15 SECONDS
 	//Credit https://www.youtube.com/watch?v=ufnvlRjsOTI [0:13 - 0:16]
 	sound = 'sound/voice/dionatalk1.ogg'
-
 
 /**
  * Slimepeople
@@ -1227,7 +1237,7 @@
 	muzzled_noises = list("раздражённые", "утробные")
 	age_based = TRUE
 	volume = 80
-	sound = "growls"	// exists predefined in [/proc/get_sfx()]
+	sound = SFX_GROWL
 
 
 /**
@@ -1340,7 +1350,6 @@
 	key_third_person = "rumble"
 	message = "урч%(ит,ат)%."
 	message_mime = "тихо урч%(ит,ат)%."
-	message_postfix = " на %t."
 	message_param = EMOTE_PARAM_USE_POSTFIX
 	emote_type = EMOTE_AUDIBLE|EMOTE_MOUTH
 	muzzled_noises = list("урчащие", "гортанные")

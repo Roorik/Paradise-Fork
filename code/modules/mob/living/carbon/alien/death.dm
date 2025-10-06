@@ -12,7 +12,7 @@
 	animation.icon = 'icons/mob/mob.dmi'
 	animation.master = src
 
-	playsound(src.loc, 'sound/goonstation/effects/gib.ogg', 50, 1)
+	playsound(src.loc, 'sound/goonstation/effects/gib.ogg', 50, TRUE)
 
 	flick("gibbed-a", animation)
 	xgibs(loc)
@@ -63,6 +63,6 @@
 
 	if(!gibbed)
 		if(death_sound)
-			playsound(loc, death_sound, 80, 1, 1)
-		visible_message("<B>[src]</B> [genderize_decode(src, death_message)]")
+			playsound(loc, death_sound, 80, TRUE, 1)
+		visible_message("<b>[capitalize(declent_ru(NOMINATIVE))]</b> [genderize_decode(src, death_message)]")
 		update_icons()

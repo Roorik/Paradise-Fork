@@ -1,7 +1,7 @@
 //A beast that fire freezing blasts.
 /mob/living/simple_animal/hostile/asteroid/basilisk
 	name = "basilisk"
-	desc = "A territorial beast, covered in a thick shell that absorbs energy. Its stare causes victims to freeze from the inside."
+	desc = "Территориальный зверь, покрытый толстой энергопоглощающей бронёй. Его взгляд заставляет жертв замерзать изнутри."
 	icon = 'icons/mob/lavaland/lavaland_monsters.dmi'
 	icon_state = "Basilisk"
 	icon_living = "Basilisk"
@@ -12,10 +12,7 @@
 	projectiletype = /obj/projectile/temp/basilisk
 	projectilesound = 'sound/weapons/pierce.ogg'
 	ranged = 1
-	ranged_message = "stares"
-	ranged_cooldown_time = 30
-	throw_message = "does nothing against the hard shell of"
-	vision_range = 2
+	ranged_message = "смотрит"
 	speed = 3
 	maxHealth = 200
 	health = 200
@@ -24,24 +21,27 @@
 	melee_damage_lower = 12
 	melee_damage_upper = 12
 	attacktext = "вгрызается в"
-	a_intent = INTENT_HARM
-	speak_emote = list("chitters")
+	speak_emote = list("стрекочет")
 	attack_sound = 'sound/weapons/bladeslice.ogg'
-	vision_range = 2
-	aggro_vision_range = 9
 	turns_per_move = 5
 	gold_core_spawnable = HOSTILE_SPAWN
 	loot = list(/obj/item/stack/ore/diamond{layer = ABOVE_MOB_LAYER},
 				/obj/item/stack/ore/diamond{layer = ABOVE_MOB_LAYER})
 	tts_seed = "Antimage"
 
+/mob/living/simple_animal/hostile/asteroid/basilisk/get_ru_names()
+	return list(
+		NOMINATIVE = "базилиск",
+		GENITIVE = "базилиска",
+		DATIVE = "базилиску",
+		ACCUSATIVE = "базилиска",
+		INSTRUMENTAL = "базилиском",
+		PREPOSITIONAL = "базилиске"
+	)
+
 /obj/projectile/temp/basilisk
 	name = "freezing blast"
 	icon_state = "ice_2"
-	damage = 0
-	damage_type = BURN
-	nodamage = TRUE
-	flag = "energy"
 	temperature = 50
 
 /mob/living/simple_animal/hostile/asteroid/basilisk/GiveTarget(new_target)
@@ -49,32 +49,29 @@
 		if(isliving(target) && !target.Adjacent(targets_from) && ranged_cooldown <= world.time)//No more being shot at point blank or spammed with RNG beams
 			OpenFire(target)
 
-/mob/living/simple_animal/hostile/asteroid/basilisk/ex_act(severity)
+/mob/living/simple_animal/hostile/asteroid/basilisk/ex_act(severity, target)
 	switch(severity)
-		if(1)
+		if(EXPLODE_DEVASTATE)
 			gib()
-		if(2)
+		if(EXPLODE_HEAVY)
 			adjustBruteLoss(140)
-		if(3)
+		if(EXPLODE_LIGHT)
 			adjustBruteLoss(110)
 
 //Watcher
 /mob/living/simple_animal/hostile/asteroid/basilisk/watcher
 	name = "watcher"
-	desc = "A levitating, eye-like creature held aloft by winglike formations of sinew. A sharp spine of crystal protrudes from its body."
+	desc = "Левитирующее создание, похожее на глаз, парящее на крылоподобных мышечных структурах. Из тела торчит острый кристаллический шип."
 	icon = 'icons/mob/lavaland/watcher.dmi'
 	icon_state = "watcher"
 	icon_living = "watcher"
 	icon_aggro = "watcher"
 	icon_dead = "watcher_dead"
 	pixel_x = -10
-	throw_message = "bounces harmlessly off of"
 	melee_damage_lower = 15
 	melee_damage_upper = 15
 	attacktext = "пронзает"
-	a_intent = INTENT_HARM
-	speak_emote = list("telepathically cries")
-	attack_sound = 'sound/weapons/bladeslice.ogg'
+	speak_emote = list("телепатически вопит")
 	stat_attack = UNCONSCIOUS
 	robust_searching = 1
 	projectiletype = /obj/projectile/watcher
@@ -82,6 +79,15 @@
 	loot = list()
 	butcher_results = list(/obj/item/stack/ore/diamond = 2, /obj/item/stack/sheet/sinew = 2, /obj/item/stack/sheet/bone = 1)
 
+/mob/living/simple_animal/hostile/asteroid/basilisk/watcher/get_ru_names()
+	return list(
+		NOMINATIVE = "наблюдатель",
+		GENITIVE = "наблюдателя",
+		DATIVE = "наблюдателю",
+		ACCUSATIVE = "наблюдателя",
+		INSTRUMENTAL = "наблюдателем",
+		PREPOSITIONAL = "наблюдателе"
+	)
 
 /mob/living/simple_animal/hostile/asteroid/basilisk/watcher/Initialize(mapload)
 	. = ..()
@@ -90,7 +96,7 @@
 
 /mob/living/simple_animal/hostile/asteroid/basilisk/watcher/magmawing
 	name = "magmawing watcher"
-	desc = "When raised very close to lava, some watchers adapt to the extreme heat and use lava as both a weapon and wings."
+	desc = "Когда наблюдатели растут у самой лавы, они адаптируются к жаре и начинают использовать её как оружие."
 	icon_state = "watcher_magmawing"
 	icon_living = "watcher_magmawing"
 	icon_aggro = "watcher_magmawing"
@@ -105,9 +111,19 @@
 	crusher_loot = /obj/item/crusher_trophy/blaster_tubes/magma_wing
 	crusher_drop_mod = 60
 
+/mob/living/simple_animal/hostile/asteroid/basilisk/watcher/magmawing/get_ru_names()
+	return list(
+		NOMINATIVE = "магмовый наблюдатель",
+		GENITIVE = "магмового наблюдателя",
+		DATIVE = "магмовому наблюдателю",
+		ACCUSATIVE = "магмового наблюдателя",
+		INSTRUMENTAL = "магмовым наблюдателем",
+		PREPOSITIONAL = "магмовом наблюдателе"
+	)
+
 /mob/living/simple_animal/hostile/asteroid/basilisk/watcher/icewing
 	name = "icewing watcher"
-	desc = "Very rarely, some watchers will eke out an existence far from heat sources. In the absence of warmth, they become icy and fragile but fire much stronger freezing blasts."
+	desc = "В редких случаях наблюдатели выживают вдали от источников тепла. Без тепла они становятся хрупкими, но обретают мощные ледяные атаки."
 	icon_state = "watcher_icewing"
 	icon_living = "watcher_icewing"
 	icon_aggro = "watcher_icewing"
@@ -119,6 +135,16 @@
 	jewelry_loot = /obj/item/gem/fdiamond
 	crusher_loot = /obj/item/crusher_trophy/watcher_wing/ice_wing
 	crusher_drop_mod = 60
+
+/mob/living/simple_animal/hostile/asteroid/basilisk/watcher/icewing/get_ru_names()
+	return list(
+		NOMINATIVE = "ледяной наблюдатель",
+		GENITIVE = "ледяного наблюдателя",
+		DATIVE = "ледяному наблюдателю",
+		ACCUSATIVE = "ледяного наблюдателя",
+		INSTRUMENTAL = "ледяным наблюдателем",
+		PREPOSITIONAL = "ледяном наблюдателе"
+	)
 
 /mob/living/simple_animal/hostile/asteroid/basilisk/watcher/random/Initialize(mapload)
 	. = ..()
@@ -141,10 +167,18 @@
 /obj/projectile/watcher
 	name = "stunning blast"
 	icon_state = "temp_0"
-	damage = 10 //make it hurt, as it no more freezing
 	damage_type = BURN
-	nodamage = FALSE
 	speed = 0.8
+
+/obj/projectile/watcher/get_ru_names()
+	return list(
+		NOMINATIVE = "оглушающий выброс",
+		GENITIVE = "оглушающего выброса",
+		DATIVE = "оглушающему выбросу",
+		ACCUSATIVE = "оглушающий выброс",
+		INSTRUMENTAL = "оглушающим выбросом",
+		PREPOSITIONAL = "оглушающем выбросе"
+	)
 
 /obj/projectile/watcher/on_hit(atom/target, blocked = FALSE)
 	. = ..()
@@ -160,10 +194,19 @@
 	name = "scorching blast"
 	icon_state = "lava"
 	damage = 5
-	damage_type = BURN
 	nodamage = FALSE
 	temperature = 700 //Heats you up!
 	speed = 0.6
+
+/obj/projectile/temp/basilisk/magmawing/get_ru_names()
+	return list(
+		NOMINATIVE = "опаляющий выброс",
+		GENITIVE = "опаляющего выброса",
+		DATIVE = "опаляющему выбросу",
+		ACCUSATIVE = "опаляющий выброс",
+		INSTRUMENTAL = "опаляющим выбросом",
+		PREPOSITIONAL = "опаляющем выбросе"
+	)
 
 /obj/projectile/temp/basilisk/magmawing/on_hit(atom/target, blocked = FALSE)
 	. = ..()
@@ -173,12 +216,11 @@
 			L.adjust_fire_stacks(3)
 			L.IgniteMob()
 			if(L.getFireLoss() > 50)
-				explosion(L.loc, 0, 0, 0, 0, flame_range = 3)
+				explosion(L.loc, adminlog = FALSE, flame_range = 3)
 				L.AdjustWeakened(1 SECONDS)
 
 /obj/projectile/temp/basilisk/icewing
 	damage = 5
-	damage_type = BURN
 	nodamage = FALSE
 	speed = 0.6
 

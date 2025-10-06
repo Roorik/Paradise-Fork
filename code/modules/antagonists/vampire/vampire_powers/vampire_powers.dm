@@ -52,7 +52,6 @@
 	desc = "You shouldn't see this!"
 	school = "vampire"
 	action_background_icon_state = "bg_vampire"
-	human_req = TRUE
 	clothes_req = FALSE
 	/// How much blood this ability costs to use
 	var/required_blood
@@ -106,7 +105,7 @@
 	user.SetParalysis(0)
 	user.SetSleeping(0)
 	user.SetConfused(0)
-	user.adjustStaminaLoss(-100)
+	user.setStaminaLoss(0)
 	user.set_resting(FALSE, instant = TRUE)
 	user.get_up(instant = TRUE)
 	to_chat(user, span_notice("Вы наполняете свое тело чистой кровью и снимаете все обездвиживающие эффекты."))
@@ -164,11 +163,11 @@
 
 /obj/effect/proc_holder/spell/vampire/self/specialize/ui_static_data(mob/user)
 	var/list/data = list()
-	data["hemomancer"] = list('icons/misc/vampire_tgui.dmi', "hemomancer")
-	data["umbrae"] = list('icons/misc/vampire_tgui.dmi', "umbrae")
-	data["gargantua"] = list('icons/misc/vampire_tgui.dmi', "gargantua")
-	data["dantalion"] = list('icons/misc/vampire_tgui.dmi', "dantalion")
-	data["bestia"] = list('icons/misc/vampire_tgui.dmi', "bestia")
+	data["hemomancer"] = list(icon='icons/misc/vampire_tgui.dmi', icon_state="hemomancer")
+	data["umbrae"] = list(icon='icons/misc/vampire_tgui.dmi',  icon_state="umbrae")
+	data["gargantua"] = list(icon='icons/misc/vampire_tgui.dmi', icon_state="gargantua")
+	data["dantalion"] = list(icon='icons/misc/vampire_tgui.dmi', icon_state="dantalion")
+	data["bestia"] = list(icon='icons/misc/vampire_tgui.dmi', icon_state="bestia")
 
 	return data
 
@@ -332,11 +331,7 @@
 	name = "Возвышение вампиров"
 	desc = "Призывает смертоносных вампиров из блюспейса."
 	school = "transmutation"
-	clothes_req = FALSE
-	human_req = TRUE
 	invocation = "none"
-	invocation_type = "none"
-	base_cooldown = 10 SECONDS
 	cooldown_min = 2 SECONDS
 	action_icon_state = "revive_thrall"
 	sound = 'sound/magic/wandodeath.ogg'

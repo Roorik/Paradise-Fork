@@ -7,18 +7,17 @@
 	lefthand_file = 'icons/mob/inhands/tools_lefthand.dmi'
 	flags = CONDUCT
 	item_flags = NOBLUDGEON|NO_MAT_REDEMPTION
-	force = 0
 	throwforce = 10
 	throw_speed = 3
 	throw_range = 5
-	w_class = WEIGHT_CLASS_NORMAL
+	w_class = WEIGHT_CLASS_BULKY
 	materials = list(MAT_METAL = 30000)
 	origin_tech = "engineering=4;materials=2"
-	toolspeed = 1
 	usesound = 'sound/items/deconstruct.ogg'
 	req_access = list(ACCESS_ENGINE)
-	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 100, "acid" = 50)
+	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, RAD = 0, FIRE = 100, ACID = 50)
 	resistance_flags = FIRE_PROOF
+	toolbox_radial_menu_compatibility = TRUE
 
 	//RCD for the borgs or not?
 	// If this is a borg RCD we use power instead of matter
@@ -74,7 +73,7 @@
 	var/matter_type = /obj/item/rcd_ammo
 	var/matter_type_large = /obj/item/rcd_ammo/large
 
-/obj/item/rcd/Initialize()
+/obj/item/rcd/Initialize(mapload)
 	. = ..()
 	spark_system = new /datum/effect_system/spark_spread
 	spark_system.set_up(5, 0, src)
@@ -131,8 +130,8 @@
 
 /obj/item/rcd/examine(mob/user)
 	. = ..()
-	. += "<span class='notice'>MATTER: [matter]/[max_matter] matter-units.</span>"
-	. += "<span class='notice'>MODE: [mode].</span>"
+	. += span_notice("MATTER: [matter]/[max_matter] matter-units.")
+	. += span_notice("MODE: [mode].")
 
 /obj/item/rcd/Destroy()
 	QDEL_NULL(spark_system)
@@ -180,21 +179,21 @@
 
 /obj/item/rcd/proc/rcd_reload(obj/item/rcd_ammo/rcd_ammo, mob/user)
 	if(matter >= max_matter)
-		to_chat(user, "<span class='notice'>The RCD can't hold any more matter-units.</span>")
+		to_chat(user, span_notice("The RCD can't hold any more matter-units."))
 		return
 
 	if(!user.drop_item_ground(rcd_ammo))
-		to_chat(user, "<span class='warning'>[rcd_ammo] is stuck to your hand!</span>")
+		to_chat(user, span_warning("[rcd_ammo] is stuck to your hand!"))
 		return
 
 	user.put_in_active_hand(rcd_ammo)
 	if(rcd_ammo.type == matter_type || rcd_ammo.type == matter_type_large)
 		matter = min(matter + rcd_ammo.ammoamt, max_matter)
 		qdel(rcd_ammo)
-		playsound(loc, 'sound/machines/click.ogg', 50, 1)
-		to_chat(user, "<span class='notice'>The RCD now holds [matter]/[max_matter] matter-units.</span>")
+		playsound(loc, 'sound/machines/click.ogg', 50, TRUE)
+		to_chat(user, span_notice("The RCD now holds [matter]/[max_matter] matter-units."))
 	else
-		to_chat(user, "<span class='warning'>This matter cartridge is incompatible with your RCD</span>")
+		to_chat(user, span_warning("This matter cartridge is incompatible with your RCD"))
 	SStgui.update_uis(src)
 
 /**
@@ -239,8 +238,8 @@
 			return
 		else
 			return
-	playsound(src, 'sound/effects/pop.ogg', 50, 0)
-	to_chat(user, "<span class='notice'>You change [src]'s mode to '[choice]'.</span>")
+	playsound(src, 'sound/effects/pop.ogg', 50, FALSE)
+	to_chat(user, span_notice("You change [src]'s mode to '[choice]'."))
 
 
 /obj/item/rcd/attack_self(mob/user)
@@ -309,13 +308,13 @@
 		if("door_type")
 			var/new_door_type = text2path(params["door_type"])
 			if(!(new_door_type in current_rcd_door_types))
-				message_admins("<span class='warning'>RCD Door HREF exploit</span> attempted by [ADMIN_FULLMONTY(usr)]!")
+				message_admins("[span_warning("RCD Door HREF exploit")] attempted by [ADMIN_FULLMONTY(usr)]!")
 				return FALSE
 			door_type = new_door_type
 
 		if("set_lock")
 			if(!allowed(usr))
-				to_chat(usr, "<span class='warning'>Access denied.</span>")
+				to_chat(usr, span_warning("Access denied."))
 				return FALSE
 			locked = params["new_lock"] == "lock" ? TRUE : FALSE
 
@@ -350,12 +349,12 @@
 			selected_accesses = get_all_accesses()
 
 /**
-  * Called in ui_act() to process modal actions
-  *
-  * Arguments:
-  * * action - The action passed by tgui
-  * * params - The params passed by tgui
-  */
+ * Called in ui_act() to process modal actions
+ *
+ * Arguments:
+ * * action - The action passed by tgui
+ * * params - The params passed by tgui
+ */
 /obj/item/rcd/proc/ui_act_modal(action, list/params)
 	. = TRUE
 	switch(ui_modal_act(src, action, params))
@@ -436,7 +435,10 @@
 /obj/item/rcd/proc/detonate_pulse()
 	if(is_taipan(z) || is_admin_level(z)) //Защищает тайпан и админские Z-lvla от взрыва RCD
 		return
-	audible_message("<span class='danger'><b>[src] begins to vibrate and buzz loudly!</b></span>", "<span class='danger'><b>[src] begins vibrating violently!</b></span>")
+	audible_message(
+		span_danger("<b>[src] begins to vibrate and buzz loudly!</b>"),
+		span_danger("<b>[src] begins vibrating violently!</b>")
+	)
 	// 5 seconds to get rid of it
 	addtimer(CALLBACK(src, PROC_REF(detonate_pulse_explode)), 50)
 
@@ -444,7 +446,7 @@
  * Called in `/obj/item/rcd/proc/detonate_pulse()` via callback.
  */
 /obj/item/rcd/proc/detonate_pulse_explode()
-	explosion(src, 0, 0, 3, 1, flame_range = 1, cause = "AI detonate RCD")
+	explosion(src, devastation_range = 0, heavy_impact_range = 0, light_impact_range = 3, flame_range = 1, adminlog = TRUE, cause = "AI detonate RCD")
 	qdel(src)
 
 /obj/item/rcd/preloaded
@@ -458,7 +460,7 @@
 	matter = RCD_MATTER_500
 	canRwall = TRUE
 
-/obj/item/rcd/combat/Initialize()
+/obj/item/rcd/combat/Initialize(mapload)
 	. = ..()
 	AddElement(/datum/element/high_value_item)
 

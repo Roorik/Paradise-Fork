@@ -78,10 +78,10 @@
 	var/golem_colour = rgb(170, 170, 170)
 	var/info_text = "Будучи <span class='danger'>железным големом</span>, вы не обладаете отличительными особенностями."
 	var/random_eligible = TRUE
-	var/prefix = "Железн" 		// неполное окончание т.к. гендеризация идет через другую функцию (/datum/species/golem/get_random_name())
+	var/prefix = "Железн"		// неполное окончание т.к. гендеризация идет через другую функцию (/datum/species/golem/get_random_name())
 	var/prefix_type = 1			// Тип гендеризации префикса для более гладких переводов. 1-й = "-ый", 2-й = "-ой", 3-й = ""
 
-	var/gender_name = MALE 	// Пол для имени голема. Default - мужской
+	var/gender_name = MALE	// Пол для имени голема. Default - мужской
 	var/chance_name_male = 80	// Шанс на выпадение пола для имени
 	var/chance_name_female = 60
 	var/chance_name_neuter = 5
@@ -98,25 +98,25 @@
 
 /datum/species/golem/get_random_name()
 	//определяем случайный пол для ИМЕНИ голема. Если же все шансы провалились, то берется дефолтное значение пола
-	if (prob(chance_name_male))
+	if(prob(chance_name_male))
 		gender_name = MALE
-	else if (prob(chance_name_female))
+	else if(prob(chance_name_female))
 		gender_name = FEMALE
-	else if (prob(chance_name_neuter))
+	else if(prob(chance_name_neuter))
 		gender_name = NEUTER
 
 	var/golem_surname //Имя голема
 
 	//выбираем изначально случайное големское имя аля "Андезит"
-	switch (gender_name)
-		if (MALE)
-			if (length(GLOB.golem_male)) //Бйонд имеет привычку с отваливанием файлов. Чтобы такого не допустить, мы проверяем длину файла
+	switch(gender_name)
+		if(MALE)
+			if(length(GLOB.golem_male)) //Бйонд имеет привычку с отваливанием файлов. Чтобы такого не допустить, мы проверяем длину файла
 				golem_surname = "[pick(GLOB.golem_male)]"
-		if (FEMALE)
-			if (length(GLOB.golem_female))
+		if(FEMALE)
+			if(length(GLOB.golem_female))
 				golem_surname = "[pick(GLOB.golem_female)]"
-		if (NEUTER)
-			if (length(GLOB.golem_neuter))
+		if(NEUTER)
+			if(length(GLOB.golem_neuter))
 				golem_surname = "[pick(GLOB.golem_neuter)]"
 
 
@@ -126,28 +126,28 @@
 
 	// 5% шанс выбрать человеческое имя или фамилию, ну или если голем до сих пор не имеет имени
 	if(prob(human_surname_chance) || (golem_surname == null) || golem_surname == "" || golem_surname == " ") //игра по прежнему не считает строчные пустые элементы != null элементами. Из-за чего нужна такая проверка
-		switch (gender_name)
-			if (MALE)
-				if (prob(50)) //выбираем мужское имя или фамилию
+		switch(gender_name)
+			if(MALE)
+				if(prob(50)) //выбираем мужское имя или фамилию
 					golem_surname = pick(GLOB.first_names_male)
 				else
 					golem_surname = pick(GLOB.last_names)
-			if (FEMALE)
-				if (prob(50)) //выбираем женское имя или фамилию
+			if(FEMALE)
+				if(prob(50)) //выбираем женское имя или фамилию
 					golem_surname = pick(GLOB.first_names_female)
 				else
 					golem_surname = pick(GLOB.last_names_female)
-		 	if (NEUTER)
-			 	golem_surname = pick("Нечто", "Чудо") //Средний пол голема
+			if(NEUTER)
+				golem_surname = pick("Нечто", "Чудо") //Средний пол голема
 
 	//устанавливаем окончание прилагательных префиксов (золотой мужик теперь золотОЙ, а не золотЫЙ)
 	var/end_pr
-	switch (prefix_type)
-		if (1)
+	switch(prefix_type)
+		if(1)
 			end_pr = genderize_ru(gender_name,"ый","ая","ое","ые")
-		if (2)
+		if(2)
 			end_pr = genderize_ru(gender_name,"ой","ая","ое","ые")
-		if (3)
+		if(3)
 			end_pr = ""
 
 	//гендеризируем прилагательное-префикс и приписываем наше половое имя
@@ -169,6 +169,10 @@
 	H.real_name = get_random_name()
 	H.name = H.real_name
 	to_chat(H, info_text)
+
+
+/datum/species/golem/gain_muscles(mob/living/target, default, max_level, can_become_stronger)
+	..(target, default, max_level, FALSE)
 
 
 /datum/species/golem/get_vision_organ(mob/living/carbon/human/user)
@@ -240,15 +244,15 @@
 /datum/species/golem/plasma/handle_life(mob/living/carbon/human/H)
 	if(H.bodytemperature > 750)
 		if(!boom_warning && H.on_fire)
-			to_chat(H, "<span class='userdanger'>Вы чувствуете, что можете взорваться в любой момент!</span>")
+			to_chat(H, span_userdanger("Вы чувствуете, что можете взорваться в любой момент!"))
 			boom_warning = TRUE
 	else
 		if(boom_warning)
-			to_chat(H, "<span class='notice'>Вы чувствуете себя стабильней.</span>")
+			to_chat(H, span_notice("Вы чувствуете себя стабильней."))
 			boom_warning = FALSE
 
 	if(H.bodytemperature > 850 && H.on_fire && prob(25))
-		explosion(get_turf(H), 1, 2, 4, flame_range = 5, cause = H)
+		explosion(get_turf(H), devastation_range = 1, heavy_impact_range = 2, light_impact_range = 4, flame_range = 5, cause = H)
 		add_attack_logs(H, null, "exploded", ATKLOG_FEW)
 		if(H)
 			H.gib()
@@ -272,7 +276,7 @@
 
 
 /datum/action/innate/ignite
-	name = "Ignite"
+	name = "Поджог"
 	desc = "Подожгите себя и достигните взрыва!"
 	check_flags = AB_CHECK_CONSCIOUS|AB_CHECK_INCAPACITATED
 	button_icon_state = "sacredflame"
@@ -281,9 +285,9 @@
 	if(ishuman(owner))
 		var/mob/living/carbon/human/H = owner
 		if(H.fire_stacks)
-			to_chat(owner, "<span class='notice'>Вы подожгли себя!</span>")
+			to_chat(owner, span_notice("Вы подожгли себя!"))
 		else
-			to_chat(owner, "<span class='warning'>Вы попытались поджечь себя, но неудачно!</span>")
+			to_chat(owner, span_warning("Вы попытались поджечь себя, но неудачно!"))
 		H.IgniteMob() //firestacks are already there passively
 
 //Harder to hurt
@@ -345,7 +349,6 @@
 		NEUTER = list("Украшение", "Кольцо")
 		)
 	chance_name_male = 70
-	chance_name_female = 60
 	chance_name_neuter = 10
 	special_name_chance = 40
 
@@ -440,19 +443,18 @@
 		NEUTER = null
 		)
 	special_name_chance = 40
-	chance_name_male = 80
 	chance_name_female = 30
 
 
 //Regenerates because self-repairing super-advanced alien tech
-/datum/species/golem/alloy/handle_life(mob/living/carbon/human/H)
-	if(H.stat == DEAD)
-		return
+/datum/species/golem/alloy/handle_life(mob/living/carbon/human/human)
 	var/update = NONE
-	update |= H.heal_overall_damage(2, 2, updating_health = FALSE)
-	update |= H.heal_damages(tox = 2, oxy = 2, updating_health = FALSE)
+
+	update |= human.heal_overall_damage(2, 2, updating_health = FALSE)
+	update |= human.heal_damages(tox = 2, oxy = 2, updating_health = FALSE)
+
 	if(update)
-		H.updatehealth()
+		human.updatehealth()
 
 
 /datum/species/golem/alloy/can_understand(mob/other) //Can understand everyone, but they can only speak over their mindlink
@@ -500,13 +502,10 @@
 		NEUTER = list("Красное Дерево", "Редкое Дерево", "Древо")
 		)
 	human_surname_chance = 0
-	chance_name_male = 80
 	chance_name_female = 70
 	special_name_chance = 100
 
 /datum/species/golem/wood/handle_life(mob/living/carbon/human/H)
-	if(H.stat == DEAD)
-		return
 	var/light_amount = 0 //how much light there is in the place, affects receiving nutrition and healing
 	var/is_vamp = isvampire(H)
 	if(isturf(H.loc)) //else, there's considered to be no light
@@ -549,7 +548,6 @@
 		FEMALE = list("Яркость", "Светлость", "Яркость"),
 		NEUTER = list("Сияние", "Светило")
 		)
-	chance_name_male = 80
 	chance_name_female = 40
 	chance_name_neuter = 10
 	special_name_chance = 60
@@ -608,7 +606,7 @@
 	special_name_chance = 30
 
 /datum/species/golem/sand/handle_death(gibbed, mob/living/carbon/human/H)
-	H.visible_message("<span class='danger'>[H] рассыпал[genderize_ru(H.gender,"ся","ась","ось","ись")] в кучу песка!</span>")
+	H.visible_message(span_danger("[H] рассыпал[genderize_ru(H.gender,"ся","ась","ось","ись")] в кучу песка!"))
 	for(var/obj/item/W in H)
 		H.drop_item_ground(W)
 	for(var/i=1, i <= rand(3, 5), i++)
@@ -617,8 +615,8 @@
 
 /datum/species/golem/sand/bullet_act(obj/projectile/P, mob/living/carbon/human/H)
 	if(!(P.original == H && P.firer == H))
-		if(P.flag == "bullet" || P.flag == "bomb")
-			playsound(H, 'sound/effects/shovel_dig.ogg', 70, 1)
+		if(P.flag == BULLET || P.flag == BOMB)
+			playsound(H, 'sound/effects/shovel_dig.ogg', 70, TRUE)
 			H.visible_message(span_danger("[P.name] тонет в песчаном теле [H] без видимого вреда здоровью!"), \
 			span_userdanger("[P.name] тонет в песчаном теле [H] без видимого вреда здоровью!"), \
 			projectile_message = TRUE)
@@ -653,8 +651,8 @@
 	special_name_chance = 50
 
 /datum/species/golem/glass/handle_death(gibbed, mob/living/carbon/human/H)
-	playsound(H, "shatter", 70, 1)
-	H.visible_message("<span class='danger'>[H] разбил[genderize_ru(H.gender,"ся","ась","ось","ись")] в дребезги!</span>")
+	playsound(H, SFX_SHATTER, 70, TRUE)
+	H.visible_message(span_danger("[H] разбил[genderize_ru(H.gender,"ся","ась","ось","ись")] в дребезги!"))
 	for(var/obj/item/W in H)
 		H.drop_item_ground(W)
 	for(var/i=1, i <= rand(3, 5), i++)
@@ -698,7 +696,7 @@
 	var/tele_range = 6
 
 /datum/species/golem/bluespace/proc/reactive_teleport(mob/living/carbon/human/H)
-	H.visible_message("<span class='warning'>[H] телепортировал[genderize_ru(H.gender,"ся","ась","ось","ись")]!</span>", "<span class='danger'>Вы дестабилизируетесь и телепортируетесь!</span>")
+	H.visible_message(span_warning("[H] телепортировал[genderize_ru(H.gender,"ся","ась","ось","ись")]!"), span_danger("Вы дестабилизируетесь и телепортируетесь!"))
 	var/list/turfs = new/list()
 	for(var/turf/T in orange(tele_range, H))
 		if(T.density)
@@ -762,10 +760,9 @@
 
 
 /datum/action/innate/unstable_teleport
-	name = "Unstable Teleport"
+	name = "Нестабильный телепорт"
 	check_flags = AB_CHECK_CONSCIOUS|AB_CHECK_INCAPACITATED
 	button_icon_state = "blink"
-	icon_icon = 'icons/mob/actions/actions.dmi'
 	var/activated = FALSE // To prevent spamming
 	var/cooldown = 150
 	var/last_teleport = 0
@@ -780,13 +777,13 @@
 /datum/action/innate/unstable_teleport/Activate()
 	activated = TRUE
 	var/mob/living/carbon/human/H = owner
-	H.visible_message("<span class='warning'>[H] начинает вибрировать!</span>", "<span class='danger'>Вы начали заряжать своё блюспейс-ядро…</span>")
-	playsound(get_turf(H), 'sound/weapons/flash.ogg', 25, 1)
+	H.visible_message(span_warning("[H] начинает вибрировать!"), span_danger("Вы начали заряжать своё блюспейс-ядро…"))
+	playsound(get_turf(H), 'sound/weapons/flash.ogg', 25, TRUE)
 	addtimer(CALLBACK(src, PROC_REF(teleport), H), 15)
 
 /datum/action/innate/unstable_teleport/proc/teleport(mob/living/carbon/human/H)
 	activated = FALSE
-	H.visible_message("<span class='warning'>[H] телепортировал[genderize_ru(H.gender,"ся","ась","ось","ись")]!</span>", "<span class='danger'>Вы телепортировались!</span>")
+	H.visible_message(span_warning("[H] телепортировал[genderize_ru(H.gender,"ся","ась","ось","ись")]!"), span_danger("Вы телепортировались!"))
 	var/list/turfs = new/list()
 	for(var/turf/T in orange(tele_range, H))
 		if(isspaceturf(T))
@@ -898,14 +895,14 @@
 	if(!active)
 		if(world.time > last_honk + honkooldown)
 			active = 1
-			playsound(get_turf(H), 'sound/items/bikehorn.ogg', 50, 1)
+			playsound(get_turf(H), 'sound/items/bikehorn.ogg', 50, TRUE)
 			last_honk = world.time
 			honkooldown = rand(20, 80)
 			active = null
 	..()
 
 /datum/species/golem/bananium/handle_death(gibbed, mob/living/carbon/human/H)
-	playsound(get_turf(H), 'sound/misc/sadtrombone.ogg', 70, 0)
+	playsound(get_turf(H), 'sound/misc/sadtrombone.ogg', 70, FALSE)
 
 /datum/unarmed_attack/golem/bananium
 	attack_verb = list("хонкнул")
@@ -934,9 +931,9 @@
 
 /datum/species/golem/tranquillite/on_species_gain(mob/living/carbon/human/H)
 	. = ..()
-	H.equip_to_slot_or_del(new 	/obj/item/clothing/head/beret(H), ITEM_SLOT_HEAD)
-	H.equip_to_slot_or_del(new 	/obj/item/reagent_containers/food/drinks/bottle/bottleofnothing(H), ITEM_SLOT_POCKET_RIGHT)
-	H.equip_to_slot_or_del(new 	/obj/item/cane(H), ITEM_SLOT_HAND_LEFT)
+	H.equip_to_slot_or_del(new	/obj/item/clothing/head/beret(H), ITEM_SLOT_HEAD)
+	H.equip_to_slot_or_del(new	/obj/item/reagent_containers/food/drinks/bottle/bottleofnothing(H), ITEM_SLOT_POCKET_RIGHT)
+	H.equip_to_slot_or_del(new	/obj/item/cane(H), ITEM_SLOT_HAND_LEFT)
 	if(H.mind)
 		H.mind.AddSpell(new /obj/effect/proc_holder/spell/aoe/conjure/build/mime_wall(null))
 		H.mind.AddSpell(new /obj/effect/proc_holder/spell/mime/speak(null))
@@ -955,12 +952,12 @@
 	skinned_type = /obj/item/stack/sheet/brass
 	info_text = "Будучи <span class='danger'>латунный големом</span>, вы очень хрупкие, но взамен имеете силу Ратвара."
 	special_names = list(
-        MALE = list("Сплав", "Брусок", "Кусок", "Мужик", "Кирпич", "Минерал", "Буреходец", "Пожарник", "Лавоходец", "Лавоплавунец", "Тяжеступ", "Работяга", "Тяжеловес", "Увалень", "Бугай", "Пупс"),
-        FEMALE = list("Дева"),
-        NEUTER = null
-        )
+		MALE = list("Сплав", "Брусок", "Кусок", "Мужик", "Кирпич", "Минерал", "Буреходец", "Пожарник", "Лавоходец", "Лавоплавунец", "Тяжеступ", "Работяга", "Тяжеловес", "Увалень", "Бугай", "Пупс"),
+		FEMALE = list("Дева"),
+		NEUTER = null
+	)
+	speed_mod = 0
 	chance_name_male = 70
-	chance_name_female = 60
 	chance_name_neuter = 10
 	special_name_chance = 40
 
@@ -970,7 +967,7 @@
 		SSticker.mode.add_clocker(H.mind)
 
 /datum/species/golem/clockwork/handle_death(gibbed, mob/living/carbon/human/H)
-	H.visible_message("<span class='danger'>[H] crumbles into cogs and gears! Then leftovers suddenly dusts!</span>")
+	H.visible_message(span_danger("[H] crumbles into cogs and gears! Then leftovers suddenly dusts!"))
 	for(var/obj/item/W in H)
 		H.drop_item_ground(W)
 	new /obj/item/clockwork/clockgolem_remains(get_turf(H))

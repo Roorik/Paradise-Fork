@@ -297,7 +297,7 @@ GLOBAL_LIST_EMPTY(plant_seeds)
 	if(get_gene(/datum/plant_gene/trait/plant_type/fungal_metabolism))
 		text += "- Plant type: Mushroom. Can grow in dry soil.\n"
 	if(get_gene(/datum/plant_gene/trait/plant_type/alien_properties))
-		text += "- Plant type: <span class='warning'>UNKNOWN</span> \n"
+		text += "- Plant type: [span_warning("UNKNOWN")] \n"
 	if(potency != -1)
 		text += "- Potency: [potency]\n"
 	if(yield != -1)
@@ -335,10 +335,10 @@ GLOBAL_LIST_EMPTY(plant_seeds)
 
 	if(istype(I, /obj/item/plant_analyzer))
 		add_fingerprint(user)
-		to_chat(user, "[span_info("This is the ")][span_name("[name]")]")
+		to_chat(user, "[span_notice("This is the ")][span_name("[name]")]")
 		var/advanced_info = get_analyzer_text()
 		if(advanced_info)
-			to_chat(user, span_info("[advanced_info]"))
+			to_chat(user, span_notice("[advanced_info]"))
 		return ATTACK_CHAIN_PROCEED_SUCCESS
 
 	return ..()
@@ -357,7 +357,7 @@ GLOBAL_LIST_EMPTY(plant_seeds)
 	if(variant == "")
 		variant = null
 	if(prev != variant)
-		to_chat(user, "<span class='notice'>You [variant ? "change" : "remove"] the [plantname]'s variant designation.</span>")
+		to_chat(user, span_notice("You [variant ? "change" : "remove"] the [plantname]'s variant designation."))
 	apply_variant_name()
 
 /obj/item/seeds/proc/apply_variant_name()

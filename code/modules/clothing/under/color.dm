@@ -11,6 +11,7 @@
 		/obj/item/clothing/under/color/blackf,
 		/obj/item/clothing/under/color/blue/dodgeball,
 		/obj/item/clothing/under/color/orange/prison,
+		/obj/item/clothing/under/prison,
 		/obj/item/clothing/under/color/red/dodgeball,
 		/obj/item/clothing/under/color/red/jersey,
 		/obj/item/clothing/under/color/blue/jersey,
@@ -89,13 +90,39 @@
 	item_color = "orange"
 
 /obj/item/clothing/under/color/orange/prison
-	name = "orange jumpsuit"
-	desc = "It's standardised Nanotrasen prisoner-wear. Its suit sensors are stuck in the \"Fully On\" position."
-	icon_state = "orange"
-	item_state = "o_suit"
-	item_color = "orange"
+	name = "old prison jumpsuit"
+	desc = "Старая одежда заключенных из Нанотрейзен. Датчики костюма заблокированы в максимальном режиме отслеживания."
 	has_sensor = 2
 	sensor_mode = 3
+
+/obj/item/clothing/under/color/orange/prison/get_ru_names()
+	return list(
+		NOMINATIVE = "старый тюремный комбинезон",
+		GENITIVE = "старый тюремный комбинезон",
+		DATIVE = "старому тюремному комбинезону",
+		ACCUSATIVE = "старый тюремный комбинезон",
+		INSTRUMENTAL = "старым тюремным комбинезоном",
+		PREPOSITIONAL = "старом тюремном комбинезоне"
+	)
+
+/obj/item/clothing/under/prison
+	name = "prison jumpsuit"
+	desc = "Cтандартная одежда заключенных из Нанотрейзен. Датчики костюма заблокированы в максимальном режиме отслеживания."
+	icon_state = "prison"
+	item_state = "prison"
+	item_color = "prison"
+	has_sensor = 2
+	sensor_mode = 3
+
+/obj/item/clothing/under/prison/get_ru_names()
+	return list(
+		NOMINATIVE = "тюремный комбинезон",
+		GENITIVE = "тюремный комбинезон",
+		DATIVE = "тюремному комбинезону",
+		ACCUSATIVE = "тюремный комбинезон",
+		INSTRUMENTAL = "тюремным комбинезоном",
+		PREPOSITIONAL = "тюремном комбинезоне"
+	)
 
 /obj/item/clothing/under/color/pink
 	name = "pink jumpsuit"
@@ -175,11 +202,6 @@
 	icon_state = "lightgreen"
 	item_color = "lightgreen"
 
-/obj/item/clothing/under/color/lightblue
-	name = "light blue jumpsuit"
-	icon_state = "lightblue"
-	item_color = "lightblue"
-
 /obj/item/clothing/under/color/lightbrown
 	name = "light brown jumpsuit"
 	icon_state = "lightbrown"
@@ -214,12 +236,10 @@
 	name = "red team jersey"
 	desc = "The jersey of the Nanotrasen Phi-ghters!"
 	icon_state = "redjersey"
-	item_state = "r_suit"
 	item_color = "redjersey"
 
 /obj/item/clothing/under/color/blue/jersey
 	name = "blue team jersey"
 	desc = "The jersey of the Nanotrasen Pi-rates!"
 	icon_state = "bluejersey"
-	item_state = "b_suit"
 	item_color = "bluejersey"

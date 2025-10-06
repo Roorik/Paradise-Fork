@@ -1,15 +1,14 @@
 /mob/living/simple_animal/hostile/construct
 	name = "Construct"
 	real_name = "Construct"
-	speak_emote = list("hisses")
-	emote_hear = list("wails","screeches")
+	speak_emote = list("шипит")
+	emote_hear = list("визжит", "воет")
 	tts_seed = "Acolyte"
 	response_help  = "thinks better of touching"
 	response_disarm = "flails at"
 	response_harm   = "punches"
 	icon_dead = "shade_dead"
 	speed = 0
-	a_intent = INTENT_HARM
 	stop_automated_movement = TRUE
 	nightvision = 8
 	see_invisible = SEE_INVISIBLE_HIDDEN_RUNES
@@ -27,6 +26,7 @@
 	var/cult_icon_changing = TRUE //Changing the sprite from the type of cult
 	var/playstyle_string = "<b>You are a generic construct! Your job is to not exist, and you should probably adminhelp this.</b>"
 	var/holy = FALSE
+	healable = FALSE
 	light_system = MOVABLE_LIGHT
 
 
@@ -51,13 +51,17 @@
 
 /mob/living/simple_animal/hostile/construct/Initialize(mapload)
 	. = ..()
-	add_traits(list(TRAIT_HEALS_FROM_CULT_PYLONS, TRAIT_HEALS_FROM_HOLY_PYLONS, TRAIT_NO_FLOATING_ANIM), INNATE_TRAIT)
+	if(holy)
+		ADD_TRAIT(src, TRAIT_HEALS_FROM_HOLY_PYLONS, INNATE_TRAIT)
+	else
+		ADD_TRAIT(src, TRAIT_HEALS_FROM_CULT_PYLONS, INNATE_TRAIT)
+	ADD_TRAIT(src, TRAIT_NO_FLOATING_ANIM, INNATE_TRAIT)
 	AddElement(/datum/element/simple_flying)
 
 /mob/living/simple_animal/hostile/construct/ComponentInitialize()
 	AddComponent( \
 		/datum/component/animal_temperature, \
-		minbodytemp = 223, \
+		minbodytemp = 0, \
 	)
 
 /mob/living/simple_animal/hostile/construct/death(gibbed)
@@ -69,9 +73,9 @@
 
 	if(src.health < src.maxHealth)
 		if(src.health >= src.maxHealth/2)
-			. += "<span class='notice'>It looks slightly dented.</span>"
+			. += span_notice("It looks slightly dented.")
 		else
-			. += "<span class='warning'>It looks severely dented!</span>"
+			. += span_warning("It looks severely dented!")
 
 /mob/living/simple_animal/hostile/construct/attack_animal(mob/living/simple_animal/M)
 	if(istype(M, /mob/living/simple_animal/hostile/construct/builder))
@@ -79,16 +83,20 @@
 			adjustBruteLoss(-5)
 			if(src != M)
 				Beam(M,icon_state="sendbeam",time=4)
-				M.visible_message("<span class='danger'>[M] repairs some of \the <b>[src]'s</b> dents.</span>", \
-						   "<span class='cult'>You repair some of <b>[src]'s</b> dents, leaving <b>[src]</b> at <b>[health]/[maxHealth]</b> health.</span>")
+				M.visible_message(
+					"<span class='danger'>[M] repairs some of \the <b>[src]'s</b> dents.</span>", \
+					"<span class='cult'>You repair some of <b>[src]'s</b> dents, leaving <b>[src]</b> at <b>[health]/[maxHealth]</b> health.</span>"
+				)
 			else
-				M.visible_message("<span class='danger'>[M] repairs some of its own dents.</span>", \
-						   "<span class='cult'>You repair some of your own dents, leaving you at <b>[M.health]/[M.maxHealth]</b> health.</span>")
+				M.visible_message(
+					span_danger("[M] repairs some of its own dents."), \
+					"<span class='cult'>You repair some of your own dents, leaving you at <b>[M.health]/[M.maxHealth]</b> health.</span>"
+				)
 		else
 			if(src != M)
 				to_chat(M, "<span class='cult'>You cannot repair <b>[src]'s</b> dents, as it has none!</span>")
 			else
-				to_chat(M, "<span class='cult'>You cannot repair your own dents, as you have none!</span>")
+				to_chat(M, span_cult("You cannot repair your own dents, as you have none!"))
 	else if(src != M)
 		return ..()
 
@@ -109,20 +117,23 @@
 	icon = 'icons/mob/mob.dmi'
 	icon_state = "behemoth"
 	icon_living = "behemoth"
-	maxHealth = 250
-	health = 250
+	maxHealth = 400
+	health = 400
 	response_harm   = "harmlessly punches"
 	harm_intent_damage = 0
 	obj_damage = 90
 	melee_damage_lower = 30
 	melee_damage_upper = 30
 	attacktext = "бьёт тяжёлой бронированной перчаткой"
-	speed = 3
+	speed = 2
 	environment_smash = 2
 	attack_sound = 'sound/weapons/punch3.ogg'
 	status_flags = 0
 	construct_type = "juggernaut"
 	mob_size = MOB_SIZE_LARGE
+	move_resist = MOVE_FORCE_STRONG
+	move_force = MOVE_FORCE_STRONG
+	pull_force = MOVE_FORCE_STRONG
 	construct_spells = list(/obj/effect/proc_holder/spell/night_vision, /obj/effect/proc_holder/spell/aoe/conjure/build/lesserforcewall)
 	force_threshold = 11
 	playstyle_string = "<b>You are a Juggernaut. Though slow, your shell can withstand extreme punishment, \
@@ -133,11 +144,11 @@
 	AIStatus = AI_ON
 	environment_smash = 1 //only token destruction, don't smash the cult wall NO STOP
 
-/mob/living/simple_animal/hostile/construct/armoured/bullet_act(var/obj/projectile/P)
+/mob/living/simple_animal/hostile/construct/armoured/bullet_act(obj/projectile/P)
 	if(P.is_reflectable(REFLECTABILITY_ENERGY))
 		var/reflectchance = 80 - round(P.damage/3)
 		if(prob(reflectchance))
-			if((P.damage_type == BRUTE || P.damage_type == BURN))
+			if(P.damage_type == BRUTE || P.damage_type == BURN)
 				adjustBruteLoss(P.damage * 0.5)
 			visible_message(span_danger("The [P.name] gets reflected by [src]'s shell!"), \
 							span_userdanger("The [P.name] gets reflected by [src]'s shell!"),
@@ -168,8 +179,8 @@
 	icon = 'icons/mob/mob.dmi'
 	icon_state = "floating"
 	icon_living = "floating"
-	maxHealth = 75
-	health = 75
+	maxHealth = 150
+	health = 150
 	melee_damage_lower = 25
 	melee_damage_upper = 25
 	attacktext = "рубит"
@@ -206,11 +217,11 @@
 	icon = 'icons/mob/mob.dmi'
 	icon_state = "artificer"
 	icon_living = "artificer"
-	maxHealth = 50
-	health = 50
+	maxHealth = 100
+	health = 100
 	response_harm = "viciously beats"
 	harm_intent_damage = 5
-	obj_damage = 60
+	obj_damage = 80
 	melee_damage_lower = 5
 	melee_damage_upper = 5
 	attacktext = "таранит"
@@ -250,12 +261,12 @@
 	if(Found(the_target) || ..()) //If we Found it or Can_Attack it normally, we Can_Attack it as long as it wasn't invisible
 		return 1 //as a note this shouldn't be added to base hostile mobs because it'll mess up retaliate hostile mobs
 
-/mob/living/simple_animal/hostile/construct/builder/MoveToTarget(var/list/possible_targets)
+/mob/living/simple_animal/hostile/construct/builder/MoveToTarget(list/possible_targets)
 	..()
 	if(isliving(target))
 		var/mob/living/L = target
 		if(isconstruct(L) && L.health >= L.maxHealth) //is this target an unhurt construct? stop trying to heal it
-			LoseTarget()
+			lose_target()
 			return 0
 		if(L.health <= melee_damage_lower+melee_damage_upper) //ey bucko you're hurt as fuck let's go hit you
 			retreat_distance = null
@@ -302,7 +313,7 @@
 	icon_living = "behemoth"
 	maxHealth = 750
 	health = 750
-	speak_emote = list("rumbles")
+	speak_emote = list("грохочет")
 	response_harm = "harmlessly punches"
 	harm_intent_damage = 0
 	melee_damage_lower = 50
@@ -344,8 +355,8 @@
 							/obj/effect/proc_holder/spell/aoe/conjure/build/floor,
 							/obj/effect/proc_holder/spell/smoke/disable)
 	retreat_distance = 2 //AI harvesters will move in and out of combat, like wraiths, but shittier
-	playstyle_string = "<B>You are a Harvester. You are not strong, but your powers of domination will assist you in your role: \
-						Bring those who still cling to this world of illusion back to the master so they may know Truth.</B>"
+	playstyle_string = "<b>You are a Harvester. You are not strong, but your powers of domination will assist you in your role: \
+						Bring those who still cling to this world of illusion back to the master so they may know Truth.</b>"
 	hud_type = /datum/hud/construct/harvester
 
 

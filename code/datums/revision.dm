@@ -2,10 +2,10 @@ GLOBAL_DATUM_INIT(revision_info, /datum/code_revision, new)
 GLOBAL_PROTECT(revision_info) // Dont mess with this
 
 /**
-  * Code Revision Datum
-  *
-  * Allows the server code to be aware of the Git environment it is running in, and lets commit hash be viewed
-  */
+ * Code Revision Datum
+ *
+ * Allows the server code to be aware of the Git environment it is running in, and lets commit hash be viewed
+ */
 /datum/code_revision
 	/// Current commit hash the server is running
 	var/commit_hash
@@ -23,10 +23,10 @@ GLOBAL_PROTECT(revision_info) // Dont mess with this
 	originmastercommit = rustg_git_revparse("origin/master220")
 
 /**
-  * Code Revision Logging Helper
-  *
-  * Small proc to simplify logging all this stuff
-  */
+ * Code Revision Logging Helper
+ *
+ * Small proc to simplify logging all this stuff
+ */
 /datum/code_revision/proc/log_info()
 	// Put revision info in the world log
 	var/logmsg
@@ -41,9 +41,9 @@ GLOBAL_PROTECT(revision_info) // Dont mess with this
 	log_runtime_summary(logmsg)
 
 /client/verb/get_revision_info()
-	set name = "Get Revision Info"
-	set category = "OOC"
+	set name = "Информация о сборке"
 	set desc = "Retrieve technical information about the server"
+	set category = STATPANEL_OOC
 
 	var/list/msg = list()
 	msg += "<span class='notice'><b>Server Revision Info</b></span>"
@@ -62,4 +62,4 @@ GLOBAL_PROTECT(revision_info) // Dont mess with this
 	// And the clients for good measure
 	msg += "<b>Client (your) BYOND Version:</b> [byond_version].[byond_build]"
 
-	to_chat(usr, msg.Join("<br>"))
+	to_chat(usr, chat_box_examine(msg.Join("<br>")))

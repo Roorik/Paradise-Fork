@@ -1,20 +1,14 @@
-/datum/game_mode
-	var/list/datum/mind/changelings = list()
-
 /datum/game_mode/changeling
 	name = "changeling"
 	config_tag = "changeling"
 	restricted_jobs = list(JOB_TITLE_AI, JOB_TITLE_CYBORG)
-	protected_jobs = list(JOB_TITLE_OFFICER, JOB_TITLE_WARDEN, JOB_TITLE_DETECTIVE, JOB_TITLE_HOS, JOB_TITLE_CAPTAIN, JOB_TITLE_BLUESHIELD, JOB_TITLE_REPRESENTATIVE, JOB_TITLE_PILOT, JOB_TITLE_JUDGE, JOB_TITLE_BRIGDOC, JOB_TITLE_LAWYER, JOB_TITLE_CCOFFICER, JOB_TITLE_CCFIELD, JOB_TITLE_CCSPECOPS, JOB_TITLE_CCSUPREME, JOB_TITLE_SYNDICATE)
+	protected_jobs = list(JOB_TITLE_OFFICER, JOB_TITLE_WARDEN, JOB_TITLE_DETECTIVE, JOB_TITLE_HOS, JOB_TITLE_CAPTAIN, JOB_TITLE_BLUESHIELD, JOB_TITLE_REPRESENTATIVE, JOB_TITLE_PILOT, JOB_TITLE_JUDGE, JOB_TITLE_BRIGDOC, JOB_TITLE_LAWYER, JOB_TITLE_CCOFFICER, JOB_TITLE_CCFIELD, JOB_TITLE_CCSPECOPS, JOB_TITLE_CCSUPREME, JOB_TITLE_SYNDICATE, JOB_TITLE_PRISONER, JOB_TITLE_CMO, JOB_TITLE_RD, JOB_TITLE_QUARTERMASTER, JOB_TITLE_HOP, JOB_TITLE_CHIEF)
 	protected_species = list(SPECIES_MACNINEPERSON)
 	required_players = 15
 	required_enemies = 1
 	recommended_enemies = 4
 	/// The total number of changelings allowed to be picked.
 	var/changeling_amount = 4
-	/// A list containing references to the minds of soon-to-be changelings. This is seperate to avoid duplicate entries in the `changelings` list.
-	var/list/datum/mind/pre_changelings = list()
-
 
 /datum/game_mode/changeling/Destroy(force)
 	pre_changelings.Cut()
@@ -22,8 +16,8 @@
 
 
 /datum/game_mode/changeling/announce()
-	to_chat(world, "<B>The current game mode is - Changeling!</B>")
-	to_chat(world, "<B>There are alien changelings on the station. Do not let the changelings succeed!</B>")
+	to_chat(world, "<b>The current game mode is - Changeling!</b>")
+	to_chat(world, "<b>There are alien changelings on the station. Do not let the changelings succeed!</b>")
 
 
 /datum/game_mode/changeling/pre_setup()
@@ -61,7 +55,7 @@
 
 /datum/game_mode/proc/auto_declare_completion_changeling()
 	if(length(changelings))
-		var/text = "<FONT size = 3><B>The changelings were:</B></FONT>"
+		var/list/text = list(span_fontsize3("<b>The changelings were:</b>"))
 		for(var/datum/mind/changeling in changelings)
 			var/changelingwin = TRUE
 
@@ -89,14 +83,14 @@
 				var/count = 1
 				for(var/datum/objective/objective in all_objectives)
 					if(objective.check_completion())
-						text += "<br><B>Objective #[count]</B>: [objective.explanation_text] <font color='green'><B>Success!</B></font>"
+						text += "<br><b>Objective #[count]</b>: [objective.explanation_text] <font color='green'><b>Success!</b></font>"
 						if(istype(objective, /datum/objective/steal))
 							var/datum/objective/steal/steal_objective = objective
 							SSblackbox.record_feedback("nested tally", "changeling_steal_objective", 1, list("Steal [steal_objective.steal_target]", "SUCCESS"))
 						else
 							SSblackbox.record_feedback("nested tally", "changeling_objective", 1, list("[objective.type]", "SUCCESS"))
 					else
-						text += "<br><B>Objective #[count]</B>: [objective.explanation_text] <font color='red'>Fail.</font>"
+						text += "<br><b>Objective #[count]</b>: [objective.explanation_text] <font color='red'>Fail.</font>"
 						if(istype(objective, /datum/objective/steal))
 							var/datum/objective/steal/steal_objective = objective
 							SSblackbox.record_feedback("nested tally", "changeling_steal_objective", 1, list("Steal [steal_objective.steal_target]", "FAIL"))
@@ -106,13 +100,11 @@
 					count++
 
 			if(changelingwin)
-				text += "<br><font color='green'><B>The changeling was successful!</B></font>"
+				text += "<br><font color='green'><b>The changeling was successful!</b></font>"
 				SSblackbox.record_feedback("tally", "changeling_success", 1, "SUCCESS")
 			else
-				text += "<br><font color='red'><B>The changeling has failed.</B></font>"
+				text += "<br><font color='red'><b>The changeling has failed.</b></font>"
 				SSblackbox.record_feedback("tally", "changeling_success", 1, "FAIL")
 
-		to_chat(world, text)
-
-	return TRUE
+		return text.Join("")
 

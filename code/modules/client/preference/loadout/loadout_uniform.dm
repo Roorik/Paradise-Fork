@@ -2,7 +2,7 @@
 /datum/gear/uniform
 	subtype_path = /datum/gear/uniform
 	slot = ITEM_SLOT_CLOTH_INNER
-	sort_category = "Uniforms and Casual Dress"
+	sort_category = "Униформа"
 
 /datum/gear/uniform/suit
 	subtype_path = /datum/gear/uniform/suit
@@ -11,32 +11,34 @@
 
 /datum/gear/uniform/suit/jumpsuit
 	index_name = "jumpsuit, select"
-	display_name = "jumpsuit"
+	display_name = "Комбинезон"
 	path = /obj/item/clothing/under/color/grey
 
 /datum/gear/uniform/suit/jumpsuit/New()
 	..()
-	var/list/suits = list(/obj/item/clothing/under/color/grey,
-						  /obj/item/clothing/under/color/black,
-						  /obj/item/clothing/under/color/blue,
-						  /obj/item/clothing/under/color/green,
-						  /obj/item/clothing/under/color/orange,
-						  /obj/item/clothing/under/color/pink,
-						  /obj/item/clothing/under/color/red,
-						  /obj/item/clothing/under/color/white,
-						  /obj/item/clothing/under/color/yellow,
-						  /obj/item/clothing/under/color/lightblue,
-						  /obj/item/clothing/under/color/aqua,
-						  /obj/item/clothing/under/color/purple,
-						  /obj/item/clothing/under/color/lightpurple,
-						  /obj/item/clothing/under/color/lightgreen,
-						  /obj/item/clothing/under/color/lightblue,
-						  /obj/item/clothing/under/color/lightbrown,
-						  /obj/item/clothing/under/color/brown,
-						  /obj/item/clothing/under/color/yellowgreen,
-						  /obj/item/clothing/under/color/darkblue,
-						  /obj/item/clothing/under/color/lightred,
-						  /obj/item/clothing/under/color/darkred,)
+	var/list/suits = list(
+		/obj/item/clothing/under/color/grey,
+		/obj/item/clothing/under/color/black,
+		/obj/item/clothing/under/color/blue,
+		/obj/item/clothing/under/color/green,
+		/obj/item/clothing/under/color/orange,
+		/obj/item/clothing/under/color/pink,
+		/obj/item/clothing/under/color/red,
+		/obj/item/clothing/under/color/white,
+		/obj/item/clothing/under/color/yellow,
+		/obj/item/clothing/under/color/lightblue,
+		/obj/item/clothing/under/color/aqua,
+		/obj/item/clothing/under/color/purple,
+		/obj/item/clothing/under/color/lightpurple,
+		/obj/item/clothing/under/color/lightgreen,
+		/obj/item/clothing/under/color/lightblue,
+		/obj/item/clothing/under/color/lightbrown,
+		/obj/item/clothing/under/color/brown,
+		/obj/item/clothing/under/color/yellowgreen,
+		/obj/item/clothing/under/color/darkblue,
+		/obj/item/clothing/under/color/lightred,
+		/obj/item/clothing/under/color/darkred
+	)
 	gear_tweaks += new /datum/gear_tweak/path(suits, src, TRUE)
 
 /datum/gear/uniform/suit/soviet
@@ -61,16 +63,17 @@
 
 /datum/gear/uniform/chaps
 	index_name = "chaps, select"
-	display_name = "chaps"
+	display_name = "Чапсы"
 	path = /obj/item/clothing/under/red_chaps
 
 /datum/gear/uniform/chaps/New()
 	..()
-	var/list/chaps = list(/obj/item/clothing/under/red_chaps,
-						  /obj/item/clothing/under/white_chaps,
-						  /obj/item/clothing/under/tan_chaps,
-						  /obj/item/clothing/under/brown_chaps,
-						  )
+	var/list/chaps = list(
+		/obj/item/clothing/under/red_chaps,
+		/obj/item/clothing/under/white_chaps,
+		/obj/item/clothing/under/tan_chaps,
+		/obj/item/clothing/under/brown_chaps,
+	)
 	gear_tweaks += new /datum/gear_tweak/path(chaps, src, TRUE)
 /datum/gear/uniform/skirt
 	subtype_path = /datum/gear/uniform/skirt
@@ -78,6 +81,14 @@
 /datum/gear/uniform/skirt/syndi
 	index_name = "skirt, tactical"
 	path = /obj/item/clothing/under/syndicate/tacticool/skirt
+
+/datum/gear/uniform/suit/blackops_coverall
+	index_name = "blackops coverall"
+	path = /obj/item/clothing/under/syndicate/blackops_civ
+
+/datum/gear/uniform/suit/evecutive_grey
+	index_name = "executive suit, grey"
+	path = /obj/item/clothing/under/syndicate/sniper_civ
 
 /datum/gear/uniform/skirt/dyeable
 	index_name = "dyeable skirt, color"
@@ -91,14 +102,16 @@
 
 /datum/gear/uniform/skirt/plaid
 	index_name = "plaid skirt, select"
-	display_name = "plaid skirt"
+	display_name = "Юбка в клетку"
 	path = /obj/item/clothing/under/dress/plaid_blue
 
 /datum/gear/uniform/skirt/plaid/New()
 	..()
-	var/list/skirts = list(/obj/item/clothing/under/dress/plaid_blue,
-						   /obj/item/clothing/under/dress/plaid_purple,
-						   /obj/item/clothing/under/dress/plaid_red,)
+	var/list/skirts = list(
+		/obj/item/clothing/under/dress/plaid_blue,
+		/obj/item/clothing/under/dress/plaid_purple,
+		/obj/item/clothing/under/dress/plaid_red
+	)
 	gear_tweaks += new /datum/gear_tweak/path(skirts, src, TRUE)
 
 /datum/gear/uniform/skirt/redeveninggown
@@ -156,7 +169,7 @@
 /datum/gear/uniform/skirt/job/med
 	index_name = "skirt, medical"
 	path = /obj/item/clothing/under/rank/medical/skirt
-	allowed_roles = list(JOB_TITLE_CMO, JOB_TITLE_DOCTOR, JOB_TITLE_INTERN, JOB_TITLE_PSYCHIATRIST, JOB_TITLE_PARAMEDIC, JOB_TITLE_CORONER)
+	allowed_roles = list(JOB_TITLE_CMO, JOB_TITLE_DOCTOR, JOB_TITLE_MINING_MEDIC, JOB_TITLE_INTERN, JOB_TITLE_PSYCHIATRIST, JOB_TITLE_PARAMEDIC, JOB_TITLE_CORONER)
 
 /datum/gear/uniform/skirt/job/phys
 	index_name = "skirt, physician"
@@ -248,15 +261,17 @@
 
 /datum/gear/uniform/medical/scrubs
 	index_name = "medical scrubs, select"
-	display_name = "medical scrubs"
+	display_name = "Медицинская одежда"
 	path = /obj/item/clothing/under/rank/medical/purple
-	allowed_roles = list(JOB_TITLE_CMO, JOB_TITLE_DOCTOR, JOB_TITLE_INTERN)
+	allowed_roles = list(JOB_TITLE_CMO, JOB_TITLE_DOCTOR, JOB_TITLE_MINING_MEDIC, JOB_TITLE_INTERN)
 
 /datum/gear/uniform/medical/scrubs/New()
 	..()
-	var/list/scrubs = list(/obj/item/clothing/under/rank/medical/purple,
-						   /obj/item/clothing/under/rank/medical/lightgreen,
-						   /obj/item/clothing/under/rank/medical/green,)
+	var/list/scrubs = list(
+		/obj/item/clothing/under/rank/medical/purple,
+		/obj/item/clothing/under/rank/medical/lightgreen,
+		/obj/item/clothing/under/rank/medical/green
+	)
 	gear_tweaks += new /datum/gear_tweak/path(scrubs, src, TRUE)
 
 /datum/gear/uniform/sec
@@ -298,20 +313,22 @@
 /datum/gear/uniform/cargo/miner
 	index_name = "shaft miner sweater"
 	path = /obj/item/clothing/under/rank/miner/alt
-	allowed_roles = list(JOB_TITLE_QUARTERMASTER, JOB_TITLE_MINER)
+	allowed_roles = list(JOB_TITLE_QUARTERMASTER, JOB_TITLE_MINER, JOB_TITLE_MINING_MEDIC)
 
 /datum/gear/uniform/shorts
 	index_name = "shorts, select"
-	display_name = "shorts"
+	display_name = "Шорты"
 	path = /obj/item/clothing/under/shorts/red
 
 /datum/gear/uniform/shorts/New()
 	..()
-	var/list/shorts = list("red" = /obj/item/clothing/under/shorts/red,
-						   "green" = /obj/item/clothing/under/shorts/green,
-						   "blue" = /obj/item/clothing/under/shorts/blue,
-						   "black" = /obj/item/clothing/under/shorts/black,
-						   "grey" = /obj/item/clothing/under/shorts/grey,)
+	var/list/shorts = list(
+		"red" = /obj/item/clothing/under/shorts/red,
+		"green" = /obj/item/clothing/under/shorts/green,
+		"blue" = /obj/item/clothing/under/shorts/blue,
+		"black" = /obj/item/clothing/under/shorts/black,
+		"grey" = /obj/item/clothing/under/shorts/grey
+	)
 	gear_tweaks += new /datum/gear_tweak/path(shorts, src)
 
 /datum/gear/uniform/pants
@@ -319,69 +336,64 @@
 
 /datum/gear/uniform/pants/jeans
 	index_name = "jeans, select"
-	display_name = "jeans"
+	display_name = "Джинсы"
 	path = /obj/item/clothing/under/pants/classicjeans
 
 /datum/gear/uniform/pants/jeans/New()
 	..()
-	var/list/jeans = list(/obj/item/clothing/under/pants/classicjeans,
-						  /obj/item/clothing/under/pants/mustangjeans,
-						  /obj/item/clothing/under/pants/blackjeans,
-						  /obj/item/clothing/under/pants/youngfolksjeans,
-						  )
+	var/list/jeans = list(
+		/obj/item/clothing/under/pants/classicjeans,
+		/obj/item/clothing/under/pants/mustangjeans,
+		/obj/item/clothing/under/pants/blackjeans,
+		/obj/item/clothing/under/pants/youngfolksjeans,
+	)
 	gear_tweaks += new /datum/gear_tweak/path(jeans, src, TRUE)
 
 /datum/gear/uniform/pants/pants
 	index_name = "pants, select"
-	display_name = "pants"
+	display_name = "Штаны"
 	path = /obj/item/clothing/under/pants/white
 
 /datum/gear/uniform/pants/pants/New()
 	..()
-	var/list/pants = list(/obj/item/clothing/under/pants/white,
-						  /obj/item/clothing/under/pants/red,
-						  /obj/item/clothing/under/pants/black,
-						  /obj/item/clothing/under/pants/tan,
-						  /obj/item/clothing/under/pants/blue,
-						  /obj/item/clothing/under/pants/track,
-						  /obj/item/clothing/under/pants/khaki,
-						  /obj/item/clothing/under/pants/camo,
-						  )
+	var/list/pants = list(
+		/obj/item/clothing/under/pants/white,
+		/obj/item/clothing/under/pants/red,
+		/obj/item/clothing/under/pants/black,
+		/obj/item/clothing/under/pants/tan,
+		/obj/item/clothing/under/pants/blue,
+		/obj/item/clothing/under/pants/track,
+		/obj/item/clothing/under/pants/khaki,
+		/obj/item/clothing/under/pants/camo,
+	)
 	gear_tweaks += new /datum/gear_tweak/path(pants, src, TRUE)
 
 /datum/gear/uniform/suit/tacticool
 	index_name = "tacticool turtleneck"
-	description = "A sleek black turtleneck paired with some khakis (WARNING DOES NOT HAVE SUIT SENSORS)"
 	path = /obj/item/clothing/under/syndicate/tacticool
 
 /datum/gear/uniform/hawaii
 	index_name = "hawaiian shirt (red)"
-	description = "Sometimes you just want to shoot the guy who brought the chainsaw to the drug deal"
 	path = /obj/item/clothing/under/redhawaiianshirt
 
 /datum/gear/uniform/hawaii/pink
 	index_name = "hawaiian shirt (pink)"
-	description = "Sometimes you just want some pink in your life. For what? Who knows"
 	path = /obj/item/clothing/under/pinkhawaiianshirt
 
 /datum/gear/uniform/hawaii/blue
 	index_name = "hawaiian shirt (blue)"
-	description = "Be careful around water! Some guys in blue shirt like you can't swim"
 	path = /obj/item/clothing/under/bluehawaiianshirt
 
 /datum/gear/uniform/hawaii/orange
 	index_name = "hawaiian shirt (orange)"
-	description = "Come one step closer and I will knock his teeth out!"
 	path = /obj/item/clothing/under/orangehawaiianshirt
 
 /datum/gear/uniform/ussptracksuit_red
 	index_name = "track suit (red)"
-	description = "A classic track suit. There is a small tag on the clothes that says \"Made in the USSP\"."
 	path = /obj/item/clothing/under/ussptracksuit_red
 
 /datum/gear/uniform/ussptracksuit_blue
 	index_name = "track suit (blue)"
-	description = "A classic track suit. There is a small tag on the clothes that says \"Made in the USSP\"."
 	path = /obj/item/clothing/under/ussptracksuit_blue
 
 /datum/gear/uniform/dress50s

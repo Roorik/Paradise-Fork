@@ -1,8 +1,3 @@
-/datum/game_mode
-	var/list/datum/mind/superheroes = list()
-	var/list/datum/mind/supervillains = list()
-	var/list/datum/mind/greyshirts = list()
-
 /datum/superheroes
 	var/name
 	var/desc
@@ -10,8 +5,7 @@
 	var/list/default_spells = list()
 	var/activated = FALSE //for wishgranters to not give an option if someone already has it.
 
-
-/datum/superheroes/proc/create(var/mob/living/carbon/human/H)
+/datum/superheroes/proc/create(mob/living/carbon/human/H)
 	assign_genes(H)
 	assign_spells(H)
 	equip(H)
@@ -19,13 +13,13 @@
 	assign_id(H)
 	H.mind.special_role = SPECIAL_ROLE_SUPER
 
-/datum/superheroes/proc/equip(var/mob/living/carbon/human/H)
+/datum/superheroes/proc/equip(mob/living/carbon/human/H)
 	H.rename_character(H.real_name, name)
 	for(var/obj/item/W in H.get_all_slots())
 		H.drop_item_ground(W)
 	H.equip_to_slot_or_del(new /obj/item/radio/headset(H), ITEM_SLOT_EAR_LEFT)
 
-/datum/superheroes/proc/fixflags(var/mob/living/carbon/human/H)
+/datum/superheroes/proc/fixflags(mob/living/carbon/human/H)
 	for(var/obj/item/W in H.get_all_slots())
 		ADD_TRAIT(W, TRAIT_NODROP, SUPERHERO_TRAIT)
 
@@ -37,7 +31,7 @@
 	H.gene_stability = 100
 
 
-/datum/superheroes/proc/assign_spells(var/mob/living/carbon/human/H)
+/datum/superheroes/proc/assign_spells(mob/living/carbon/human/H)
 	if(default_spells.len)
 		for(var/spell in default_spells)
 			var/obj/effect/proc_holder/spell/S = spell
@@ -45,7 +39,7 @@
 				return
 			H.mind.AddSpell(new S(null))
 
-/datum/superheroes/proc/assign_id(var/mob/living/carbon/human/H)
+/datum/superheroes/proc/assign_id(mob/living/carbon/human/H)
 	var/obj/item/card/id/syndicate/W = new(H)
 	W.registered_name = H.real_name
 	W.access = list(ACCESS_MAINT_TUNNELS)
@@ -73,7 +67,7 @@
 	foes, and protected the station for years. Your tech gadgets make you a force to be reckoned with. You are the hero this \
 	station deserves."
 
-/datum/superheroes/owlman/equip(var/mob/living/carbon/human/H)
+/datum/superheroes/owlman/equip(mob/living/carbon/human/H)
 	..()
 
 	H.equip_to_slot_or_del(new /obj/item/clothing/shoes/black/greytide(H), ITEM_SLOT_FEET)
@@ -92,7 +86,7 @@
 	of the command staff of this station. Along with your gang of dim-witted yet trusty henchmen, you will be able to execute \
 	the most dastardly plans."
 
-/datum/superheroes/griffin/equip(var/mob/living/carbon/human/H)
+/datum/superheroes/griffin/equip(mob/living/carbon/human/H)
 	..()
 
 	H.equip_to_slot_or_del(new /obj/item/clothing/shoes/griffin(H), ITEM_SLOT_FEET)
@@ -112,7 +106,7 @@
 	station's hero roster, you intend to leave your mark."
 	default_spells = list(/obj/effect/proc_holder/spell/charge_up/bounce/lightning/lightnian)
 
-/datum/superheroes/lightnian/equip(var/mob/living/carbon/human/H)
+/datum/superheroes/lightnian/equip(mob/living/carbon/human/H)
 	..()
 
 	H.equip_to_slot_or_del(new /obj/item/clothing/shoes/orange(H), ITEM_SLOT_FEET)
@@ -131,7 +125,7 @@
 	intend to take your revenge and make them all pay thanks to your magnetic powers."
 	default_spells = list(/obj/effect/proc_holder/spell/charge_up/bounce/magnet)
 
-/datum/superheroes/electro/equip(var/mob/living/carbon/human/H)
+/datum/superheroes/electro/equip(mob/living/carbon/human/H)
 	..()
 
 	H.equip_to_slot_or_del(new /obj/item/clothing/shoes/black/greytide(H), ITEM_SLOT_FEET)
@@ -155,8 +149,8 @@
 	action_icon_state = "spell_greytide"
 	var/recruiting = 0
 
-	selection_activated_message		= "<span class='notice'>You start preparing a mindblowing monologue. <B>Left-click to cast at a target!</B></span>"
-	selection_deactivated_message	= "<span class='notice'>You decide to save your brilliance for another day.</span>"
+	selection_activated_message		= span_notice("You start preparing a mindblowing monologue. <b>ЛКМ по цели, чтобы применить!</b>")
+	selection_deactivated_message	= span_notice("You decide to save your brilliance for another day.")
 	need_active_overlay = TRUE
 
 
@@ -171,12 +165,12 @@
 /obj/effect/proc_holder/spell/recruit/can_cast(mob/user = usr, charge_check = TRUE, show_message = FALSE)
 	if(SSticker.mode.greyshirts.len >= 3)
 		if(show_message)
-			to_chat(user, "<span class='warning'>You have already recruited the maximum number of henchmen.</span>")
+			to_chat(user, span_warning("You have already recruited the maximum number of henchmen."))
 		return FALSE
 	if(recruiting)
 
 		if(show_message)
-			to_chat(user, "<span class='danger'>You are already recruiting!</span>")
+			to_chat(user, span_danger("You are already recruiting!"))
 		return FALSE
 	return ..()
 
@@ -188,46 +182,46 @@
 /obj/effect/proc_holder/spell/recruit/cast(list/targets,mob/living/user = usr)
 	var/mob/living/carbon/human/target = targets[1]
 	if(target.mind.assigned_role != JOB_TITLE_CIVILIAN)
-		to_chat(user, "<span class='warning'>You can only recruit Civilians.</span>")
+		to_chat(user, span_warning("You can only recruit Civilians."))
 		revert_cast(user)
 		return
 
 	recruiting = TRUE
-	to_chat(user, "<span class='danger'>This target is valid. You begin the recruiting process.</span>")
-	to_chat(target, "<span class='userdanger'>[user] focuses in concentration. Your head begins to ache.</span>")
+	to_chat(user, span_danger("This target is valid. You begin the recruiting process."))
+	to_chat(target, span_userdanger("[user] focuses in concentration. Your head begins to ache."))
 
 	for(var/progress = 0, progress <= 3, progress++)
 		switch(progress)
 			if(1)
-				to_chat(user, "<span class='notice'>You begin by introducing yourself and explaining what you're about.</span>")
-				user.visible_message("<span class='danger'>[user] introduces [user.p_them()]self and explains [user.p_their()] plans.</span>")
+				to_chat(user, span_notice("You begin by introducing yourself and explaining what you're about."))
+				user.visible_message(span_danger("[user] introduces [user.p_them()]self and explains [user.p_their()] plans."))
 			if(2)
-				to_chat(user, "<span class='notice'>You begin the recruitment of [target].</span>")
-				user.visible_message("<span class='danger'>[user] leans over towards [target], whispering excitedly as [user.p_they()] give[user.p_s()] a speech.</span>")
-				to_chat(target, "<span class='danger'>You feel yourself agreeing with [user], and a surge of loyalty begins building.</span>")
+				to_chat(user, span_notice("You begin the recruitment of [target]."))
+				user.visible_message(span_danger("[user] leans over towards [target], whispering excitedly as [user.p_they()] give[user.p_s()] a speech."))
+				to_chat(target, span_danger("You feel yourself agreeing with [user], and a surge of loyalty begins building."))
 				target.Weaken(24 SECONDS)
 				sleep(20)
 				if(ismindshielded(target))
-					to_chat(user, "<span class='notice'>[target.p_they(TRUE)] are enslaved by Nanotrasen. You feel [target.p_their()] interest in your cause wane and disappear.</span>")
-					user.visible_message("<span class='danger'>[user] stops talking for a moment, then moves back away from [target].</span>")
-					to_chat(target, "<span class='danger'>Your mindshield implant activates, protecting you from conversion.</span>")
+					to_chat(user, span_notice("[target.p_they(TRUE)] are enslaved by Nanotrasen. You feel [target.p_their()] interest in your cause wane and disappear."))
+					user.visible_message(span_danger("[user] stops talking for a moment, then moves back away from [target]."))
+					to_chat(target, span_danger("Your mindshield implant activates, protecting you from conversion."))
 					return
 			if(3)
-				to_chat(user, "<span class='notice'>You begin filling out the application form with [target].</span>")
-				user.visible_message("<span class='danger'>[user] pulls out a pen and paper and begins filling an application form with [target].</span>")
-				to_chat(target, "<span class='danger'>You are being convinced by [user] to fill out an application form to become a henchman.</span>")//Ow the edge
+				to_chat(user, span_notice("You begin filling out the application form with [target]."))
+				user.visible_message(span_danger("[user] pulls out a pen and paper and begins filling an application form with [target]."))
+				to_chat(target, span_danger("You are being convinced by [user] to fill out an application form to become a henchman."))//Ow the edge
 
 		if(!do_after(user, 10 SECONDS, target, NONE)) //around 30 seconds total for enthralling, 45 for someone with a mindshield implant
-			to_chat(user, "<span class='danger'>The enrollment process has been interrupted - you have lost the attention of [target].</span>")
-			to_chat(target, "<span class='warning'>You move away and are no longer under the charm of [user]. The application form is null and void.</span>")
+			to_chat(user, span_danger("The enrollment process has been interrupted - you have lost the attention of [target]."))
+			to_chat(target, span_warning("You move away and are no longer under the charm of [user]. The application form is null and void."))
 			recruiting = FALSE
 			return
 
 	recruiting = FALSE
-	to_chat(user, "<span class='notice'>You have recruited <b>[target]</b> as your henchman!</span>")
-	to_chat(target, "<span class='deadsay'><b>You have decided to enroll as a henchman for [user]. You are now part of the feared 'Greyshirts'.</b></span>")
-	to_chat(target, "<span class='deadsay'><b>You must follow the orders of [user], and help [user.p_them()] succeed in [user.p_their()] dastardly schemes.</span>")
-	to_chat(target, "<span class='deadsay'>You may not harm other Greyshirt or [user]. However, you do not need to obey other Greyshirts.</span>")
+	to_chat(user, span_notice("You have recruited <b>[target]</b> as your henchman!"))
+	to_chat(target, span_deadsay("<b>You have decided to enroll as a henchman for [user]. You are now part of the feared 'Greyshirts'.</b>"))
+	to_chat(target, span_deadsay("<b>You must follow the orders of [user], and help [user.p_them()] succeed in [user.p_their()] dastardly schemes."))
+	to_chat(target, span_deadsay("You may not harm other Greyshirt or [user]. However, you do not need to obey other Greyshirts."))
 	SSticker.mode.greyshirts += target.mind
 	target.set_species(/datum/species/human)
 	var/obj/item/organ/external/head/head_organ = target.get_organ(BODY_ZONE_HEAD)

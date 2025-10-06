@@ -1,6 +1,5 @@
 /obj/item/photo
 	name = "photo"
-	icon = 'icons/obj/items.dmi'
 	icon_state = "photo"
 	item_state = "paper"
 	w_class = WEIGHT_CLASS_SMALL
@@ -19,7 +18,7 @@
 		show(user)
 		. += span_notice("Alt-Click to rename photo.")
 	else
-		. += "<span class='notice'>It is too far away.</span>"
+		. += span_notice("It is too far away.")
 
 /obj/item/photo/attack_self(mob/user)
 	user.examinate(src)
@@ -77,7 +76,7 @@
 				qdel(src)
 
 			else
-				to_chat(user, "<span class='warning'>You must hold \the [P] steady to burn \the [src].</span>")
+				to_chat(user, span_warning("You must hold \the [P] steady to burn \the [src]."))
 
 /obj/item/photo/proc/show(mob/user)
 	var/icon/img_shown = new/icon(img)
@@ -90,11 +89,13 @@
 			colormatrix[7], colormatrix[8], colormatrix[9],
 		)
 	usr << browse_rsc(img_shown, "tmp_photo.png")
-	usr << browse({"<html><meta charset="UTF-8"><head><title>[name]</title></head>"} \
-		+ "<body style='overflow:hidden;margin:0;text-align:center'>" \
-		+ "<img src='tmp_photo.png' width='[64*photo_size]' style='-ms-interpolation-mode:nearest-neighbor' />" \
-		+ "[scribble ? "<br>Written on the back:<br><i>[scribble]</i>" : ""]"\
-		+ "</body></html>", "window=Photo[UID()];size=[64*photo_size]x[scribble ? 400 : 64*photo_size]")
+	var/datum/browser/popup = new(usr, "Photo[UID()]", null, 64 * photo_size, scribble ? 400 : 64 * photo_size)
+	popup.set_content("<div class='photo-container' style='width: [64*photo_size]px; height: [64*photo_size]px;'> \
+	<img src='tmp_photo.png' width='100%' height='100%'  /> \
+	[scribble ? "<p>Written on the back:<br><i>[scribble]</i></p>" : ""] \
+	</div>")
+	popup.add_stylesheet("photo", 'html/css/photo.css')
+	popup.open(TRUE)
 	onclose(usr, "Photo[UID()]")
 	return
 

@@ -18,7 +18,7 @@
 /datum/player_panel_veth/ui_data(mob/user)
 	var/list/players = list()
 	for(var/mob/M in GLOB.mob_list)
-		if (M.ckey)
+		if(M.ckey)
 			players += list(list(
 				"name" = M.name || "No Character",
 				"job" = M.job || "No Job",
@@ -53,7 +53,7 @@
 		if("gamePanel")
 			usr.client.game_panel()
 		if("openAdditionalPanel")
-			usr.client.holder.vuap_open(params["selectedPlayerCkey"], null)
+			usr.client.holder.vuap_open(params["selectedPlayerCkey"], M)
 		if("createCommandReport")
 			usr.client.cmd_admin_create_centcom_report()
 		if("logs")
@@ -64,6 +64,8 @@
 			usr.client.debug_variables(M)
 		if("tp")
 			usr.client.holder.Topic(null, list("traitor" = M.UID()))
+		if("obs")
+			usr.client.holder.Topic(null, list("observeinventory" = M.UID()))
 		if("adminaiinteract")
 			usr.client.toggle_advanced_interaction()
 

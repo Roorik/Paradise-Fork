@@ -45,8 +45,8 @@
 
 
 /obj/item/reagent_containers/food/snacks/grown/banana/suicide_act(mob/user)
-	user.visible_message("<span class='suicide'>[user] is aiming the [name] at [user.p_them()]self! It looks like [user.p_theyre()] trying to commit suicide.</span>")
-	playsound(loc, 'sound/items/bikehorn.ogg', 50, 1, -1)
+	user.visible_message(span_suicide("[user] is aiming the [name] at [user.p_them()]self! It looks like [user.p_theyre()] trying to commit suicide."))
+	playsound(loc, 'sound/items/bikehorn.ogg', 50, TRUE, -1)
 	sleep(25)
 	if(!user)
 		return OXYLOSS
@@ -54,7 +54,7 @@
 	sleep(25)
 	if(!user)
 		return OXYLOSS
-	user.visible_message("<B>[user]</B> laughs so hard [user.p_they()] begin[user.p_s()] to suffocate!")
+	user.visible_message("<b>[user]</b> laughs so hard [user.p_they()] begin[user.p_s()] to suffocate!")
 	return OXYLOSS
 
 /obj/item/grown/bananapeel
@@ -64,13 +64,11 @@
 	icon_state = "banana_peel"
 	item_state = "banana_peel"
 	w_class = WEIGHT_CLASS_TINY
-	throwforce = 0
 	throw_speed = 3
-	throw_range = 7
 
 /obj/item/grown/bananapeel/suicide_act(mob/user)
-	user.visible_message("<span class='suicide'>[user] is deliberately slipping on the [src.name]! It looks like [user.p_theyre()] trying to commit suicide.</span>")
-	playsound(loc, 'sound/misc/slip.ogg', 50, 1, -1)
+	user.visible_message(span_suicide("[user] is deliberately slipping on the [src.name]! It looks like [user.p_theyre()] trying to commit suicide."))
+	playsound(loc, 'sound/misc/slip.ogg', 50, TRUE, -1)
 	return BRUTELOSS
 
 

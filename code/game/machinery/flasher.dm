@@ -3,7 +3,6 @@
 /obj/machinery/flasher
 	name = "Mounted flash"
 	desc = "A wall-mounted flashbulb device."
-	icon = 'icons/obj/stationobjs.dmi'
 	icon_state = "mflash1"
 	base_icon_state = "mflash"
 	max_integrity = 250
@@ -79,7 +78,7 @@
 	if((disable) || (last_flash && world.time < last_flash + 150))
 		return
 
-	playsound(loc, 'sound/weapons/flash.ogg', 100, 1)
+	playsound(loc, 'sound/weapons/flash.ogg', 100, TRUE)
 	flick("[base_icon_state]_flash", src)
 	set_light(2, 1, COLOR_WHITE, TRUE)
 	addtimer(CALLBACK(src, TYPE_PROC_REF(/atom, set_light_on), FALSE), 2)
@@ -144,7 +143,6 @@
 	var/id = null
 	var/active = 0
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 2
 	active_power_usage = 4
 
@@ -168,7 +166,7 @@
 	active = TRUE
 	update_icon(UPDATE_ICON_STATE)
 
-	for(var/obj/machinery/flasher/flasher in GLOB.machines)
+	for(var/obj/machinery/flasher/flasher in SSmachines.get_by_type(/obj/machinery/flasher))
 		if(flasher.id == id)
 			INVOKE_ASYNC(flasher, TYPE_PROC_REF(/obj/machinery/flasher, flash))
 

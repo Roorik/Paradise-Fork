@@ -1,11 +1,10 @@
 /obj/machinery/ai_slipper
-	name = "\improper AI liquid dispenser"
+	name = "AI liquid dispenser"
 	icon = 'icons/obj/device.dmi'
 	icon_state = "liquid_dispenser"
 	layer = 3
 	plane = FLOOR_PLANE
 	anchored = TRUE
-	max_integrity = 200
 	armor = list(melee = 50, bullet = 20, laser = 20, energy = 20, bomb = 0, bio = 0, rad = 0, fire = 50, acid = 30)
 	interaction_flags_click = ALLOW_SILICON_REACH
 	var/uses = 20
@@ -47,7 +46,7 @@
 	if(locked)
 		if(user.machine == src)
 			user.unset_machine()
-			user << browse(null, "window=ai_slipper")
+			close_window(user, "ai_slipper")
 	else
 		if(user.machine == src)
 			attack_hand(user)
@@ -109,22 +108,26 @@
 	if(get_dist(src, user) > 1 && (!issilicon(user) && !user.can_admin_interact()))
 		to_chat(user, span_warning("Too far away."))
 		user.unset_machine()
-		user << browse(null, "window=ai_slipper")
+		var/datum/browser/popup = new(user, "ai_slipper")
+		popup.set_content(null)
+		popup.open(FALSE)
 		return
 
 	user.set_machine(src)
 	var/area/myarea = get_area(src)
-	var/t = "<TT><B>AI Liquid Dispenser</B> ([myarea.name])<HR>"
+	var/t = "<tt><b>AI Liquid Dispenser</b> ([myarea.name])<hr>"
 
 	if(locked && (!issilicon(user) && !user.can_admin_interact()))
-		t += "<I>(Swipe ID card to unlock control panel.)</I><BR>"
+		t += "<i>(Swipe ID card to unlock control panel.)</i><br></tt>"
 	else
 		add_fingerprint(user)
-		t += text("Dispenser [] - <a href='byond://?src=[UID()];toggleOn=1'>[]?</a><br>\n", disabled ? "deactivated" : "activated", disabled ? "Enable" : "Disable")
-		t += text("Uses Left: [uses]. <a href='byond://?src=[UID()];toggleUse=1'>Activate the dispenser?</A><br>\n")
+		t += "Dispenser [disabled ? "deactivated" : "activated"] - <a href='byond://?src=[UID()];toggleOn=1'>[disabled ? "Enable" : "Disable"]</a><br>\n"
+		t += "Uses Left: [uses]. <a href='byond://?src=[UID()];toggleUse=1'>Activate the dispenser</a><br>\n</tt>"
 
-	user << browse(t, "window=computer;size=575x450")
-	onclose(user, "computer")
+	var/datum/browser/popup = new(user, "ai_slipper", "AI Liquid Dispenser", 575, 450)
+	popup.set_content(t)
+	popup.open(TRUE)
+	onclose(user, "ai_slipper")
 
 
 /obj/machinery/ai_slipper/Topic(href, href_list)

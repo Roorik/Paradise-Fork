@@ -19,17 +19,11 @@
 
 /obj/item/reagent_containers/food/snacks/icecream/icecreamcone
 	name = "ice cream cone"
-	desc = "Delicious ice cream."
-	icon_state = "icecream_cone"
-	volume = 50
-	bitesize = 3
 	list_reagents = list("nutriment" = 3, "sugar" = 7, "ice" = 2)
 
 /obj/item/reagent_containers/food/snacks/icecream/icecreamcup
 	name = "chocolate ice cream cone"
-	desc = "Delicious ice cream."
 	icon_state = "icecream_cup"
-	volume = 50
 	bitesize = 6
 	list_reagents = list("nutriment" = 5, "chocolate" = 8, "ice" = 2)
 
@@ -48,6 +42,7 @@
 /obj/item/reagent_containers/food/snacks/friedbanana
 	name = "fried banana"
 	desc = "Goreng Pisang, also known as fried bananas."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "friedbanana"
 	list_reagents = list("sugar" = 10, "nutriment" = 8, "cornoil" = 4)
 	foodtype = FRIED | FRUIT | SUGAR
@@ -55,6 +50,7 @@
 /obj/item/reagent_containers/food/snacks/ricepudding
 	name = "rice pudding"
 	desc = "Where's the Jam!"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "rpudding"
 	trash = /obj/item/trash/snack_bowl
 	filling_color = "#FFFBDB"
@@ -65,6 +61,7 @@
 /obj/item/reagent_containers/food/snacks/spacylibertyduff
 	name = "spacy liberty duff"
 	desc = "Jello gelatin, from Alfred Hubbard's cookbook."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "spacylibertyduff"
 	trash = /obj/item/trash/snack_bowl
 	filling_color = "#42B873"
@@ -76,6 +73,7 @@
 /obj/item/reagent_containers/food/snacks/amanitajelly
 	name = "amanita jelly"
 	desc = "Looks curiously toxic."
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "amanitajelly"
 	trash = /obj/item/trash/snack_bowl
 	filling_color = "#ED0758"

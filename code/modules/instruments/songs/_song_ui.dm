@@ -64,7 +64,7 @@
 			name = ""
 		if("import")
 			var/t = ""
-			t = tgui_input_text(user, "Please paste the entire song, formatted:", parent.name, max_length = (MUSIC_MAXLINECHARS * MUSIC_MAXLINES), multiline = TRUE)
+			t = copytext(params["import"], 1, (MUSIC_MAXLINECHARS * MUSIC_MAXLINES))
 			if(!t || !(state.can_use_topic(parent, user) == UI_INTERACTIVE))
 				return
 			parse_song(t, user)
@@ -156,8 +156,8 @@
 	parent.add_fingerprint(user)
 
 /**
-  * Parses a song the user has input into lines and stores them.
-  */
+ * Parses a song the user has input into lines and stores them.
+ */
 /datum/song/proc/parse_song(text, mob/user)
 	set waitfor = FALSE
 	stop_playing()

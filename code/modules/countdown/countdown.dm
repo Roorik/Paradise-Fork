@@ -6,7 +6,6 @@
 		To earth, who can tell?"
 
 	invisibility = INVISIBILITY_OBSERVER
-	anchored = TRUE
 	layer = MASSIVE_OBJ_LAYER
 	color = "#ff0000" // text color
 	var/text_size = 3 // larger values clip when the displayed text is larger than 2 digits.
@@ -20,7 +19,7 @@
 
 /obj/effect/countdown/examine(mob/user)
 	. = ..()
-	. += "<span class='notice'>This countdown is displaying: [displayed_text].</span>"
+	. += span_notice("This countdown is displaying: [displayed_text].")
 
 /obj/effect/countdown/proc/attach(atom/A)
 	attached_to = A
@@ -60,7 +59,7 @@
 	STOP_PROCESSING(SSfastprocess, src)
 	return ..()
 
-/obj/effect/countdown/ex_act(severity) //immune to explosions
+/obj/effect/countdown/ex_act(severity, target) //immune to explosions
 	return
 
 /obj/effect/countdown/singularity_pull()
@@ -95,7 +94,7 @@
 	name = "anomaly countdown"
 
 /obj/effect/countdown/anomaly/get_value()
-	var/obj/effect/anomaly/A = attached_to
+	var/obj/effect/old_anomaly/A = attached_to
 	if(!istype(A))
 		return
 	var/time_left = max(0, (A.death_time - world.time) / 10)

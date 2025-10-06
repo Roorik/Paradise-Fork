@@ -108,6 +108,11 @@
 		/mob/living/carbon/human/verb/emote_frown,
 		/mob/living/carbon/human/verb/emote_snuffle))
 
+
+/datum/species/skrell/gain_muscles(mob/living/target, datum/strength_level/default, max_level, can_become_stronger)
+	..(target, target.gender == FEMALE ? default.prev_level : default, max_level, can_become_stronger)
+
+
 /datum/species/skrell/on_species_loss(mob/living/carbon/human/H)
 	. = ..()
 	remove_verb(H, list(
@@ -136,7 +141,7 @@
 		var/update = NONE
 		if(M.getFireLoss() < 25 && M.getBruteLoss() < 25 && M.health != 100)
 			update |= M.heal_overall_damage(4, 4, updating_health = FALSE)
-			to_chat(M, "<span class='notice'>Освежающая вода закрывает ваши мелкие раны!</span>")
+			to_chat(M, span_notice("Освежающая вода закрывает ваши мелкие раны!"))
 		update |= M.heal_damage_type(5, OXY, updating_health = FALSE)
 		if(update)
 			M.updatehealth()

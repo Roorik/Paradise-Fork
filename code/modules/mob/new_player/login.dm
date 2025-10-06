@@ -5,7 +5,7 @@
 	if(CONFIG_GET(number/player_reroute_cap) && CONFIG_GET(string/overflow_server_url))
 		if(!whitelist_check())
 			if(CONFIG_GET(number/player_reroute_cap) == 1 || length(GLOB.clients) > CONFIG_GET(number/player_reroute_cap))
-				src << browse(null, "window=privacy_consent")
+				close_window(src, "privacy_consent")
 				src << link(CONFIG_GET(string/overflow_server_url))
 
 	if(GLOB.join_motd)
@@ -20,6 +20,7 @@
 		loc = pick(GLOB.newplayer_start)
 	else
 		loc = locate(1,1,1)
+
 	lastarea = loc
 
 	client.screen = list() // Remove HUD items just in case.
@@ -37,7 +38,7 @@
 	GLOB.player_list |= src
 	GLOB.new_player_mobs |= src
 
-	if((ckey in GLOB.de_admins) || (ckey in GLOB.de_mentors))
+	if((ckey in GLOB.de_admins) || (ckey in GLOB.de_mentors) || (ckey in GLOB.de_devs))
 		add_verb(src, /client/proc/readmin)
 	. = TRUE
 

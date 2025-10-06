@@ -20,7 +20,7 @@
 	message_admins("[key_name_admin(usr)] has checked the air status of [target]")
 	log_admin("[key_name(usr)] has checked the air status of [target]")
 
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Display Air Status") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Display Air Status")
 
 /client/proc/fix_next_move()
 	set category = "Debug"
@@ -59,7 +59,7 @@
 	message_admins("[key_name_admin(largest_click_mob)] had the largest click delay with [largest_click_time] frames / [largest_click_time/10] seconds!")
 	message_admins("world.time = [world.time]")
 
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Unfreeze Everyone") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Unfreeze Everyone")
 	return
 
 /client/proc/radio_report()
@@ -80,7 +80,7 @@
 		"8" = "RADIO_MULEBOT",
 		"_default" = "NO_FILTER"
 		)
-	var/output = {"<meta charset="UTF-8"><b>Radio Report</b><hr>"}
+	var/output = {"<b>Radio Report</b><hr>"}
 	for(var/fq in SSradio.frequencies)
 		output += "<b>Freq: [fq]</b><br>"
 		var/datum/radio_frequency/fqs = SSradio.frequencies[fq]
@@ -99,16 +99,18 @@
 				else
 					output += "&nbsp;&nbsp;&nbsp;&nbsp;[device]<br>"
 
-	usr << browse(output,"window=radioreport")
+	var/datum/browser/popup = new(usr, "radioreport", "Radio Report")
+	popup.set_content(output)
+	popup.open(FALSE)
 
 	message_admins("[key_name_admin(usr)] has generated a radio report")
 	log_admin("[key_name(usr)] has generated a radio report")
 
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Radio Report") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Radio Report")
 
 /client/proc/reload_admins()
 	set name = "Reload Admins"
-	set category = "Admin.Admin"
+	set category = STATPANEL_ADMIN_ADMIN
 
 	if(!check_rights(R_SERVER))
 		return
@@ -117,7 +119,7 @@
 	log_admin("[key_name(usr)] has manually reloaded admins")
 
 	load_admins(run_async=TRUE)
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Reload Admins") //If you are copy-pasting this, ensure the 4th parameter is unique to the new proc!
+	BLACKBOX_LOG_ADMIN_VERB("Reload Admins")
 
 
 /client/proc/print_jobban_old()
@@ -158,8 +160,7 @@
 /client/proc/vv_by_ref()
 	set name = "VV by Ref"
 	set desc = "Give this a ref string, and you will see its corresponding VV panel if it exists"
-	set category = "Admin.Debug"
-
+	set category = STATPANEL_ADMIN_DEBUG
 	// It's gated by "Debug Verbs", so might as well gate it to the debug permission
 	if(!check_rights(R_DEBUG))
 		return

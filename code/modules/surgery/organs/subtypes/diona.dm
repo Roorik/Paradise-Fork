@@ -16,6 +16,9 @@
 	amputation_point = "ствол"
 	encased = null
 	gendered_icon = FALSE
+	cannot_break = TRUE
+	encased = null
+	convertable_children = list(/obj/item/organ/external/groin/diona)
 
 /obj/item/organ/external/groin/diona
 	species_type = /datum/species/diona
@@ -166,6 +169,8 @@
 	encased = null
 	amputation_point = "верхний ствол"
 	gendered_icon = FALSE
+	cannot_break = TRUE
+	encased = null
 
 /obj/item/organ/diona/process()
 	return
@@ -206,7 +211,7 @@
 
 /datum/action/item_action/organ_action/diona_brain_evacuation/Trigger(left_click = TRUE)
 	. = ..()
-	if(tgui_alert(src, "Вы уверены, что хотите покинуть своё тело как нимфа? (Если использовать, пока вы живы, вас лишит роли антагониста!)", "Подтверждение эвакуации", list("Да", "Нет")) == "Нет")
+	if(tgui_alert(usr, "Вы уверены, что хотите покинуть своё тело как нимфа? (Если использовать, пока вы живы, вас лишит роли антагониста!)", "Подтверждение эвакуации", list("Да", "Нет")) == "Нет")
 		return
 
 	if(. && istype(target, /obj/item/organ/internal/brain/diona))

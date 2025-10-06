@@ -38,8 +38,6 @@
 	icon_state = "logs"
 	force = 5
 	throwforce = 5
-	w_class = WEIGHT_CLASS_NORMAL
-	throw_speed = 2
 	throw_range = 3
 	origin_tech = "materials=1"
 	attack_verb = list("ударил", "огрел")
@@ -126,7 +124,6 @@
 	yield = 5
 	potency = 50
 	growthstages = 2
-	growing_icon = 'icons/obj/hydroponics/growing.dmi'
 	icon_dead = "bamboo-dead"
 	genes = list(/datum/plant_gene/trait/repeated_harvest)
 
@@ -148,7 +145,6 @@
 	icon_state = "punji"
 	resistance_flags = FLAMMABLE
 	max_integrity = 30
-	density = FALSE
 	anchored = TRUE
 
 /obj/structure/punji_sticks/Initialize(mapload)
@@ -159,10 +155,9 @@
 
 /obj/structure/bonfire
 	name = "bonfire"
-	desc = "For grilling, broiling, charring, smoking, heating, roasting, toasting, simmering, searing, melting, and occasionally burning things."
+	desc = "Для приготовления пищи, включая жарку, копчение, обугливание, запекание, поджаривание, тушение, обжиг, плавление, а иногда и для сжигания вещей."
 	icon = 'icons/obj/hydroponics/equipment.dmi'
 	icon_state = "bonfire"
-	density = FALSE
 	anchored = TRUE
 	buckle_lying = 0
 	pass_flags_self = PASSTABLE|LETPASSTHROW
@@ -170,6 +165,16 @@
 	var/burning = FALSE
 	var/lighter // Who lit the fucking thing
 	var/fire_stack_strength = 5
+
+/obj/structure/bonfire/get_ru_names()
+	return list(
+		NOMINATIVE = "костёр",
+		GENITIVE = "костра",
+		DATIVE = "костру",
+		ACCUSATIVE = "костёр",
+		INSTRUMENTAL = "костром",
+		PREPOSITIONAL = "костре"
+	)
 
 /obj/structure/bonfire/dense
 	density = TRUE
@@ -207,14 +212,14 @@
 		add_fingerprint(user)
 		var/obj/item/stack/rods/rods = I
 		if(rod_installed)
-			to_chat(user, span_warning("The [name] already has a metal rod installed."))
+			to_chat(user, span_warning("На [declent_ru(PREPOSITIONAL)] уже установлен металлический стержень."))
 			return ATTACK_CHAIN_PROCEED
 		if(!rods.use(1))
-			to_chat(user, span_warning("You need at least one rod to do this."))
+			to_chat(user, span_warning("Для этого вам потребуется как минимум один стержень."))
 			return ATTACK_CHAIN_PROCEED
 		user.visible_message(
-			span_notice("[user] has constructed a central rod inside [src]."),
-			span_notice("You have constructed a central rod inside [src]."),
+			span_notice("[user] устанавлива[pluralize_ru(user.gender,"ет","ют")] центральный стержень внутри [declent_ru(GENITIVE)]."),
+			span_notice("Вы установили металлический стержень внутри [declent_ru(GENITIVE)]."),
 		)
 		rod_installed = TRUE
 		can_buckle = TRUE
@@ -233,7 +238,7 @@
 
 /obj/structure/bonfire/attack_hand(mob/user)
 	if(burning)
-		to_chat(user, span_warning("You need to extinguish [src] before removing the logs!"))
+		to_chat(user, span_warning("Перед извлечением поленьев необходимо потушить [declent_ru(ACCUSATIVE)]!"))
 		return
 	if(!has_buckled_mobs() && do_after(user, 5 SECONDS, src))
 		for(var/I in 1 to 5)

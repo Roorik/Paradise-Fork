@@ -16,10 +16,8 @@
 	icon_state = "snake"
 	icon_living = "snake"
 	icon_dead = "snake_dead"
-	speak_emote = list("hisses")
+	speak_emote = list("шипит")
 	tts_seed = "Ladyvashj"
-	health = 20
-	maxHealth = 20
 	attacktext = "кусает"
 	attack_sound = 'sound/weapons/bite.ogg'
 	death_sound = 'sound/creatures/snake_death.ogg'
@@ -59,7 +57,7 @@
 
 /mob/living/simple_animal/hostile/retaliate/poison/snake/AttackingTarget()
 	if(istype(target, /mob/living/simple_animal/mouse))
-		visible_message("<span class='notice'>[name] consumes [target] in a single gulp!</span>", "<span class='notice'>You consume [target] in a single gulp!</span>")
+		visible_message(span_notice("[name] consumes [target] in a single gulp!"), span_notice("You consume [target] in a single gulp!"))
 		QDEL_NULL(target)
 		adjustHealth(-2)
 	else
@@ -70,9 +68,7 @@
 	name = "Руж"
 	desc = "Уникальная трёхголовая змея Офицера Телекоммуникаций синдиката. Выращена в лаборатории. У каждой головы свой характер!"
 	icon = 'icons/mob/pets.dmi'
-	mob_size = MOB_SIZE_SMALL
 	blood_volume = BLOOD_VOLUME_NORMAL
-	can_collar = TRUE
 	gender = FEMALE
 	icon_state = "rouge"
 	icon_living = "rouge"
@@ -80,19 +76,10 @@
 	icon_resting = "rouge_rest"
 	speak_chance = 5
 	speak = list("Шшш", "Тсс!", "Тц тц тц!", "ШШшшШШшшШ!")
-	speak_emote = list("hisses")
+	speak_emote = list("шипит")
 	emote_hear = list("зевает", "шипит", "дурачится", "толкается")
 	emote_see = list("высовывает язык", "кружится", "трясёт хвостом")
-	tts_seed = "Ladyvashj"
-	health = 20
-	maxHealth = 20
 	mobility_flags = MOBILITY_FLAGS_REST_CAPABLE_DEFAULT
-	attacktext = "кусает"
-	melee_damage_lower = 5
-	melee_damage_upper = 6
-	response_help  = "pets"
-	response_disarm = "shoos"
-	response_harm   = "steps on"
 	var/obj/item/inventory_head
 	var/list/strippable_inventory_slots = list()
 	faction = list("neutral", "syndicate")
@@ -104,9 +91,10 @@
 	AddElement(/datum/element/strippable, length(strippable_inventory_slots) ? create_strippable_list(strippable_inventory_slots) : GLOB.strippable_snake_items)
 
 /mob/living/simple_animal/hostile/retaliate/poison/snake/rouge/verb/chasetail()
-	set name = "Chase your tail"
+	set name = "Гоняться за хвостом"
 	set desc = "d'awwww."
-	set category = "Animal"
+	set category = STATPANEL_ANIMAL
+
 	visible_message("[src] [pick("dances around", "chases [p_their()] tail")].", "[pick("You dance around", "You chase your tail")].")
 	spin(20, 1)
 
@@ -179,16 +167,16 @@
 
 	if(inventory_head)
 		if(user)
-			to_chat(user, "<span class='warning'>You can't put more than one hat on [src]!</span>")
+			to_chat(user, span_warning("You can't put more than one hat on [src]!"))
 		return
 	if(!item_to_add)
-		user.visible_message("<span class='notice'>[user] pets [src].</span>", "<span class='notice'>You rest your hand on [src]'s head for a moment.</span>")
+		user.visible_message(span_notice("[user] pets [src]."), span_notice("You rest your hand on [src]'s head for a moment."))
 		if(flags & HOLOGRAM)
 			return
 		return
 
 	if(user && !user.drop_item_ground(item_to_add))
-		to_chat(user, "<span class='warning'>\The [item_to_add] is stuck to your hand, you cannot put it on [src]'s head!</span>")
+		to_chat(user, span_warning("\The [item_to_add] is stuck to your hand, you cannot put it on [src]'s head!"))
 		return 0
 
 	var/valid = FALSE
@@ -197,17 +185,19 @@
 
 	if(valid)
 		if(health <= 0)
-			to_chat(user, "<span class='notice'>Безжизненный взгляд в глазах [real_name] никак не меняется, когда вы надеваете [item_to_add] на неё.</span>")
+			to_chat(user, span_notice("Безжизненный взгляд в глазах [real_name] никак не меняется, когда вы надеваете [item_to_add] на неё."))
 		else if(user)
-			user.visible_message("<span class='notice'>[user] надевает [item_to_add] на центральную голову [real_name]. [src] смотрит на [user] и довольно шипит.</span>",
-				"<span class='notice'>Вы надеваете [item_to_add] на голову [real_name]. [src] озадачено смотрит на вас, пока другие головы смотрят на центральную с завистью.</span>",
-				"<span class='italics'>Вы слышите дружелюбное шипение.</span>")
+			user.visible_message(
+				span_notice("[user] надевает [item_to_add] на центральную голову [real_name]. [src] смотрит на [user] и довольно шипит."),
+				span_notice("Вы надеваете [item_to_add] на голову [real_name]. [src] озадачено смотрит на вас, пока другие головы смотрят на центральную с завистью."),
+				span_italics("Вы слышите дружелюбное шипение.")
+			)
 		item_to_add.forceMove(src)
 		inventory_head = item_to_add
 		update_snek_fluff()
 		regenerate_icons()
 	else
-		to_chat(user, "<span class='warning'>Вы надеваете [item_to_add] на голову [src], но она скидывает [item_to_add] с себя!</span>")
+		to_chat(user, span_warning("Вы надеваете [item_to_add] на голову [src], но она скидывает [item_to_add] с себя!"))
 		item_to_add.forceMove(drop_location())
 		if(prob(25))
 			step_rand(item_to_add)
@@ -223,7 +213,7 @@
 	desc = initial(desc)
 	// BYOND/DM doesn't support the use of initial on lists.
 	speak = list("Шшш", "Тсс!", "Тц тц тц!", "ШШшшШШшшШ!")
-	speak_emote = list("hisses")
+	speak_emote = list("шипит")
 	emote_hear = list("зевает", "шипит", "дурачится", "толкается")
 	emote_see = list("высовывает язык", "кружится", "трясёт хвостом")
 
@@ -255,3 +245,27 @@
 			head_icon = SF.get_overlay()
 
 		add_overlay(head_icon)
+
+/mob/living/simple_animal/hostile/retaliate/poison/snake/riraha
+	name = "Доктор Рираха"
+	desc = "Оранжевая змея в шапочке медсестры, от которой исходит аромат медицинской марихуаны."
+	icon_state = "riraha"
+	icon_living = "riraha"
+	icon_dead = "riraha_dead"
+	speak_emote = list("шипит")
+	tts_seed = "Xenia"
+	melee_damage_lower = 1
+	melee_damage_upper = 3
+	faction = list("neutral")
+	unique_pet = TRUE
+
+
+/mob/living/simple_animal/hostile/retaliate/poison/snake/riraha/get_ru_names()
+	return list(
+		NOMINATIVE = "доктор Рираха",
+		GENITIVE = "доктора Рираха",
+		DATIVE = "доктору Рираху",
+		ACCUSATIVE = "доктора Рираха",
+		INSTRUMENTAL = "доктором Рирахой",
+		PREPOSITIONAL = "докторе Рирахе"
+		)

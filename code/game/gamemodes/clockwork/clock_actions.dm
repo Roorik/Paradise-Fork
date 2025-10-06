@@ -17,7 +17,7 @@
 	check_flags = AB_CHECK_CONSCIOUS|AB_TRANSFER_MIND
 
 /datum/action/innate/clockwork/comm/Activate()
-	var/input = stripped_input(usr, "Please choose a message to tell to the other workmates.", "Voice of Clockwork", "")
+	var/input = tgui_input_text(usr, "Please choose a message to tell to the other workmates.", "Voice of Clockwork", "")
 	if(!input || !IsAvailable())
 		return
 	clockwork_commune(usr, input)
@@ -29,8 +29,10 @@
 
 	var/prefix = ""
 	if(HAS_TRAIT(user, TRAIT_MUTE) || user.mind.miming) //Under vow of silence/mute?
-		user.visible_message("<span class='notice'>[user] appears to whisper to themselves.</span>",
-		"<span class='notice'>You begin to whisper to yourself.</span>") //Make them do *something* abnormal.
+		user.visible_message(
+			span_notice("[user] appears to whisper to themselves."),
+			span_notice("You begin to whisper to yourself.")
+		) //Make them do *something* abnormal.
 		sleep(10)
 	else if(!issilicon(user))
 		user.whisper("N`i th`e le-ing roc-cus!") // Otherwise book club sayings.
@@ -68,4 +70,4 @@
 	if(SSticker?.mode)
 		SSticker.mode.clocker_objs.study(usr, TRUE)
 	else
-		to_chat(usr, "<span class='clockitalic'>You fail to study the Veil. (This should never happen, adminhelp and/or yell at a coder)</span>")
+		to_chat(usr, span_clockitalic("You fail to study the Veil. (This should never happen, adminhelp and/or yell at a coder)"))

@@ -1,6 +1,5 @@
 /mob/living/simple_animal/hostile/guardian/healer
 	friendly = "heals"
-	speed = 0
 	damage_transfer = 0.7
 	melee_damage_lower = 5
 	melee_damage_upper = 5
@@ -22,9 +21,7 @@
 	icon_living = "seal"
 	icon_state = "seal"
 	attacktext = "шлёпает"
-	speak_emote = list("barks")
-	friendly = "heals"
-	speed = 0
+	speak_emote = list("лает", "рявкает")
 	melee_damage_lower = 0
 	melee_damage_upper = 0
 	melee_damage_type = STAMINA
@@ -37,19 +34,19 @@
 /mob/living/simple_animal/hostile/guardian/healer/Life(seconds, times_fired)
 	..()
 	var/datum/atom_hud/medsensor = GLOB.huds[DATA_HUD_MEDICAL_ADVANCED]
-	medsensor.add_hud_to(src)
+	medsensor.show_to(src)
 
 /mob/living/simple_animal/hostile/guardian/healer/get_status_tab_items()
 	var/list/status_tab_data = ..()
 	. = status_tab_data
 	if(beacon_cooldown >= world.time)
-		status_tab_data[++status_tab_data.len] = list("Перезарядка блюспейс маяка:", "[max(round((beacon_cooldown - world.time) * 0.1, 0.1), 0)] секунд")
+		status_tab_data[++status_tab_data.len] = list("Перезарядка блюспейс маяка:", "[max(round((beacon_cooldown - world.time) * 0.1, 0.1), 0)] секунд[declension_ru(max(round((beacon_cooldown - world.time) * 0.1, 0.1), 0), "а", "ы", "")]")
 
 /mob/living/simple_animal/hostile/guardian/healer/AttackingTarget()
 	. = ..()
 	if(toggle)
 		if(loc == summoner)
-			to_chat(src, "<span class='danger'>Нужно явить себя для лечения!</span>")
+			to_chat(src, span_danger("Нужно явить себя для лечения!"))
 			return
 		if(iscarbon(target))
 			var/mob/living/carbon/c_target = target
@@ -78,59 +75,59 @@
 			hud_used.action_intent.icon_state = a_intent
 			melee_damage_lower = 5
 			melee_damage_upper = 5
-			to_chat(src, "<span class='danger'>Вы переключились в боевой режим.</span>")
+			to_chat(src, span_danger("Вы переключились в боевой режим."))
 			toggle = FALSE
 		else
 			a_intent = INTENT_HELP
 			hud_used.action_intent.icon_state = a_intent
 			melee_damage_lower = 0
 			melee_damage_upper = 0
-			to_chat(src, "<span class='danger'>Вы переключились в режим исцеления.</span>")
+			to_chat(src, span_danger("Вы переключились в режим исцеления."))
 			toggle = TRUE
 	else
-		to_chat(src, "<span class='danger'>Нужно быть в хозяине для переключения режимов!</span>")
+		to_chat(src, span_danger("Нужно быть в хозяине для переключения режимов!"))
 
 /mob/living/simple_animal/hostile/guardian/healer/verb/Beacon()
-	set name = "Установить блюспейс маяк"
-	set category = "Guardian"
+	set name = "Установить БС-маяк"
+	set category = STATPANEL_GUARDIAN
 	set desc = "Пометьте пол как ваш маяк, позволяя телепортировать цели на него. Ваш маяк не будет работать в небезопасных атмосферных условиях."
 	if(beacon_cooldown < world.time)
 		var/turf/beacon_loc = get_turf(loc)
 		if(isfloorturf(beacon_loc))
 			var/turf/simulated/floor/F = beacon_loc
 			F.icon = 'icons/turf/floors.dmi'
-			F.name = "bluespace recieving pad"
-			F.desc = "A recieving zone for bluespace teleportations. Building a wall over it should disable it."
+			F.name = "bluespace receiving pad"
+			F.desc = "A receiving zone for bluespace teleportations. Building a wall over it should disable it."
 			F.icon_state = "light_on-w"
-			to_chat(src, "<span class='danger'>Маяк установлен! Вы можете телепортировать на него вещи и людей, нажав Alt+Click </span>")
+			to_chat(src, span_danger("Маяк установлен! Вы можете телепортировать на него вещи и людей, нажав Alt+ЛКМ"))
 			if(beacon)
 				beacon.ChangeTurf(/turf/simulated/floor/plating)
 			beacon = F
 			beacon_cooldown = world.time + default_beacon_cooldown
 
 	else
-		to_chat(src, "<span class='danger'>Ваша сила на перезарядке! Нужно дождаться ещё [max(round((beacon_cooldown - world.time)*0.1, 0.1), 0)] секунд, пока вы сможете переставить маяк.</span>")
+		to_chat(src, span_danger("Ваша сила на перезарядке! Нужно дождаться ещё [max(round((beacon_cooldown - world.time)*0.1, 0.1), 0)] секунд, пока вы сможете переставить маяк."))
 
 /mob/living/simple_animal/hostile/guardian/healer/AltClickOn(atom/movable/A)
 	if(!istype(A))
 		return
 	if(loc == summoner)
-		to_chat(src, "<span class='danger'>Вы должны явить себя для телепортации вещей!</span>")
+		to_chat(src, span_danger("Вы должны явить себя для телепортации вещей!"))
 		return
 	if(!beacon)
-		to_chat(src, "<span class='danger'>Вам нужно установить маяк чтобы телепортировать вещи!</span>")
+		to_chat(src, span_danger("Вам нужно установить маяк чтобы телепортировать вещи!"))
 		return
 	if(!Adjacent(A))
-		to_chat(src, "<span class='danger'>Вам нужно быть рядом с целью!</span>")
+		to_chat(src, span_danger("Вам нужно быть рядом с целью!"))
 		return
-	if((A.anchored))
-		to_chat(src, "<span class='danger'>Цель прикреплена к полу. Телепортация невозможна.</span>")
+	if(A.anchored)
+		to_chat(src, span_danger("Цель прикреплена к полу. Телепортация невозможна."))
 		return
-	to_chat(src, "<span class='danger'>Вы начинаете телепортировать [A]</span>")
+	to_chat(src, span_danger("Вы начинаете телепортировать [A]"))
 	if(do_after(src, 5 SECONDS, A, NONE))
 		if(!A.anchored)
 			if(!beacon) //Check that the beacon still exists and is in a safe place. No instant kills.
-				to_chat(src, "<span class='danger'>Вам нужно установить маяк чтобы телепортировать вещи!</span>")
+				to_chat(src, span_danger("Вам нужно установить маяк чтобы телепортировать вещи!"))
 				return
 			var/turf/T = beacon
 			if(T.is_safe())
@@ -139,17 +136,16 @@
 				investigate_log("[key_name_log(src)] teleported [key_name_log(A)] to [COORD(beacon)].", INVESTIGATE_TELEPORTATION)
 				new /obj/effect/temp_visual/guardian/phase(get_turf(A))
 				return
-			to_chat(src, "<span class='danger'>Маячок не в безопасном месте, нужен кислород для хозяина.</span>")
+			to_chat(src, span_danger("Маячок не в безопасном месте, нужен кислород для хозяина."))
 			return
 	else
-		to_chat(src, "<span class='danger'>Вам нужно стоять смирно!</span>")
+		to_chat(src, span_danger("Вам нужно стоять смирно!"))
 
 
 /obj/effect/proc_holder/spell/guardian_quickmend
 	name = "Быстрое исцеление"
 	desc = "Проверяет хозяина на наличие травм. Если таковые есть, лечит случайную из них. Шанс срабатывания 50%."
 	action_icon_state = "heal"
-	action_background_icon_state = "bg_spell"
 	base_cooldown = 35 SECONDS
 	clothes_req = FALSE
 	human_req = FALSE

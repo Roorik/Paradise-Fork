@@ -6,6 +6,7 @@
 /obj/item/reagent_containers/food/snacks/soup
 	name = "impossible soup"
 	desc = "This soup is so good, it shouldn't even exist!"
+	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "beans" // If you don't have a sprite, you get beans.
 	consume_sound = 'sound/items/drink.ogg'
 	trash = /obj/item/trash/snack_bowl
@@ -154,6 +155,7 @@
 /obj/item/reagent_containers/food/snacks/soup/stew
 	name = "stew"
 	desc = "A nice and warm stew. Healthy and strong."
+	w_class = WEIGHT_CLASS_NORMAL
 	icon_state = "stew"
 	filling_color = "#9E673A"
 	bitesize = 7

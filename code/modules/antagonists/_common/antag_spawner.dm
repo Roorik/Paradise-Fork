@@ -19,19 +19,26 @@
 	var/borg_to_spawn
 	var/checking = FALSE
 	var/rolename = "Syndicate Operative"
+	var/image/poll_icon
+	var/poll_icon_file = 'icons/mob/simple_human.dmi'
+	var/poll_icon_state = "syndicate_space_sword"
+
+/obj/item/antag_spawner/nuke_ops/Initialize(mapload)
+	. = ..()
+	poll_icon = image(icon = poll_icon_file, icon_state = poll_icon_state)
 
 /obj/item/antag_spawner/nuke_ops/proc/before_candidate_search(user)
 	return TRUE
 
 /obj/item/antag_spawner/nuke_ops/proc/check_usability(mob/user)
 	if(used)
-		to_chat(user, "<span class='warning'>[src] is out of power!</span>")
+		to_chat(user, span_warning("[src] is out of power!"))
 		return FALSE
-	if(!(user.mind in SSticker.mode.syndicates))
-		to_chat(user, "<span class='danger'>AUTHENTICATION FAILURE. ACCESS DENIED.</span>")
+	if(!(user.mind.has_antag_datum(/datum/antagonist/nuclear_operative)))
+		to_chat(user, span_danger("AUTHENTICATION FAILURE. ACCESS DENIED."))
 		return FALSE
 	if(checking)
-		to_chat(user, "<span class='danger'>The device is already connecting to Syndicate command. Please wait.</span>")
+		to_chat(user, span_danger("The device is already connecting to Syndicate command. Please wait."))
 		return FALSE
 	return TRUE
 
@@ -45,9 +52,8 @@
 
 	checking = TRUE
 
-	to_chat(user, "<span class='notice'>You activate [src] and wait for confirmation.</span>")
-	var/image/I = new('icons/mob/simple_human.dmi', "syndicate_space_sword")
-	var/list/nuke_candidates = SSghost_spawns.poll_candidates("Do you want to play as a [rolename]?", ROLE_OPERATIVE, TRUE, 15 SECONDS, source = I)
+	to_chat(user, span_notice("You activate [src] and wait for confirmation."))
+	var/list/nuke_candidates = SSghost_spawns.poll_candidates("Вы хотите сыграть за [rolename]?", ROLE_OPERATIVE, TRUE, 15 SECONDS, source = poll_icon)
 	if(LAZYLEN(nuke_candidates))
 		checking = FALSE
 		if(QDELETED(src) || !check_usability(user))
@@ -59,67 +65,65 @@
 		qdel(src)
 	else
 		checking = FALSE
-		to_chat(user, "<span class='warning'>Unable to connect to Syndicate command. Please wait and try again later or use the teleporter on your uplink to get your points refunded.</span>")
+		to_chat(user, span_warning("Unable to connect to Syndicate command. Please wait and try again later or use the teleporter on your uplink to get your points refunded."))
 
 /obj/item/antag_spawner/nuke_ops/spawn_antag(client/C, turf/T, kind, datum/mind/user)
 	var/mob/living/carbon/human/M = new/mob/living/carbon/human(T)
 
-	var/agent_number = LAZYLEN(SSticker.mode.syndicates) - 1
-	M.real_name = "[syndicate_name()] Operative #[agent_number]"
-
-	set_syndicate_values(C, M)
-	SSticker.mode.create_syndicate(M.mind)
-	SSticker.mode.equip_syndicate(M, 0)
-	SSticker.mode.update_syndicate_id(M.mind, FALSE)
-
-/obj/item/antag_spawner/nuke_ops/proc/set_syndicate_values(client/C, mob/living/M)
 	M.key = C.key
-
-	SSticker.mode.syndicates += M.mind
-	SSticker.mode.update_synd_icons_added(M.mind)
-
-	M.mind.assigned_role = SPECIAL_ROLE_NUKEOPS
-	M.mind.special_role = SPECIAL_ROLE_NUKEOPS
-	M.mind.offstation_role = TRUE
-
-	M.faction = list("syndicate")
-	SSticker.mode.forge_syndicate_objectives(M.mind)
-	SSticker.mode.greet_syndicate(M.mind)
+	create_syndicate(M.mind)
+	var/datum/antagonist/nuclear_operative/datum = M.mind.add_antag_datum(/datum/antagonist/nuclear_operative/reinf, /datum/team/nuclear_team)
+	datum.equip()
 
 //////SYNDICATE BORG
 /obj/item/antag_spawner/nuke_ops/borg_tele
 	name = "syndicate cyborg teleporter"
-	desc = "A single-use teleporter designed to quickly reinforce operatives in the field."
 	var/switch_roles = FALSE
 
 /obj/item/antag_spawner/nuke_ops/borg_tele/assault
 	name = "syndicate assault cyborg teleporter"
 	borg_to_spawn = "Assault"
+	rolename = "Syndicate Assault Cyborg"
+	poll_icon_file = 'icons/mob/robots.dmi'
+	poll_icon_state = "syndie-bloodhound-preview"
 
 /obj/item/antag_spawner/nuke_ops/borg_tele/medical
 	name = "syndicate medical teleporter"
 	borg_to_spawn = "Medical"
+	rolename = "Syndicate Medical Cyborg"
+	poll_icon_file = 'icons/mob/robots.dmi'
+	poll_icon_state = "syndi-medi"
 
 /obj/item/antag_spawner/nuke_ops/borg_tele/saboteur
 	name = "syndicate saboteur teleporter"
 	borg_to_spawn = "Saboteur"
+	rolename = "Syndicate Saboteur Cyborg"
+	poll_icon_file = 'icons/mob/robots.dmi'
+	poll_icon_state = "syndi-engi-preview"
+
+#define SYNDICATE_CYBORG "Борг Синдиката"
+#define NUCLEAR_OPERATIVE "Ядерный Оперативник"
+#define CANCER_SWITCH_ROLES_CHOICE "Не активировать этот робот-телепортатор"
 
 /obj/item/antag_spawner/nuke_ops/borg_tele/before_candidate_search(mob/user)
-	var/switch_roles_choice = input("Would you like to continue playing as an operative or take over as the cyborg? If you play as the cyborg, another player will control your old self.", "Play As") as null|anything in list("Nuclear Operative", "Syndicate Cyborg")
-	if(!switch_roles_choice || !(check_usability(user)))
+	var/switch_roles_choice = tgui_input_list(usr, "Вы хотите продолжить играть за оперативника или стать боргом? Если вы выберете борга, другой игрок займет ваше старое тело.", "Играть за", list(NUCLEAR_OPERATIVE, SYNDICATE_CYBORG, CANCER_SWITCH_ROLES_CHOICE))
+	if(!switch_roles_choice || !(check_usability(user)) || switch_roles_choice == CANCER_SWITCH_ROLES_CHOICE)
 		return FALSE
 
-	if(switch_roles_choice == "Syndicate Cyborg")
+	if(switch_roles_choice == SYNDICATE_CYBORG)
 		switch_roles = TRUE
-		rolename = initial(rolename)
+		rolename = "Syndicate Operative"
 	else
 		switch_roles = FALSE
-		rolename = "Syndicate [borg_to_spawn] Cyborg"
 
 	return TRUE
 
+#undef SYNDICATE_CYBORG
+#undef NUCLEAR_OPERATIVE
+#undef CANCER_SWITCH_ROLES_CHOICE
+
 /obj/item/antag_spawner/nuke_ops/borg_tele/spawn_antag(client/C, turf/T, datum/mind/user)
-	if(!(user in SSticker.mode.syndicates))
+	if(!(user.has_antag_datum(/datum/antagonist/nuclear_operative)))
 		used = FALSE
 		return
 
@@ -137,8 +141,10 @@
 	if(prob(50))
 		brainfirstname = pick(GLOB.first_names_female)
 		brainopslastname = pick(GLOB.last_names_female)
-	if(syndicate_name())  //the brain inside the syndiborg has the same last name as the other ops.
-		brainopslastname = syndicate_name()
+
+	var/datum/team/nuclear_team/team = GLOB.antagonist_teams[/datum/team/nuclear_team]
+	if(team?.syndicate_name)  //the brain inside the syndiborg has the same last name as the other ops.
+		brainopslastname = team.syndicate_name
 	var/brainopsname = "[brainfirstname] [brainopslastname]"
 
 	R.mmi.name = "[initial(R.mmi.name)]: [brainopsname]"
@@ -146,13 +152,12 @@
 	R.mmi.brainmob.name = brainopsname
 
 	if(!switch_roles)
-		set_syndicate_values(C, R)
+		R.key = C.key
 	else
 		var/mob/living/L = user.current
-		set_syndicate_values(user.current.client, R)
-
+		R.key = user.current.client.key
 		L.key = C.key
-		SSticker.mode.greet_syndicate(L.mind)
+	R.mind.add_antag_datum(/datum/antagonist/nuclear_operative/cyborg, /datum/team/nuclear_team)
 
 ///////////SLAUGHTER DEMON
 
@@ -161,23 +166,23 @@
 	desc = "A magically infused bottle of blood, distilled from countless murder victims. Used in unholy rituals to attract horrifying creatures."
 	icon = 'icons/obj/wizard.dmi'
 	icon_state = "vial"
-	var/shatter_msg = "<span class='notice'>You shatter the bottle, no \
-		turning back now!</span>"
-	var/veil_msg = "<span class='warning'>You sense a dark presence lurking \
-		just beyond the veil...</span>"
+	var/shatter_msg = span_notice("You shatter the bottle, no \
+		turning back now!")
+	var/veil_msg = span_warning("You sense a dark presence lurking \
+		just beyond the veil...")
 	var/objective_verb = "Kill"
 	var/mob/living/demon_type = /mob/living/simple_animal/demon/slaughter
 
 /obj/item/antag_spawner/slaughter_demon/attack_self(mob/user)
 	if(level_blocks_magic(user.z)) //this is to make sure the wizard does NOT summon a demon from the Den..
-		to_chat(user, "<span class='notice'>You should probably wait until you reach the station.</span>")
+		to_chat(user, span_notice("You should probably wait until you reach the station."))
 		return
 
 	if(used)
-		to_chat(user, "<span class='notice'>This bottle already has a broken seal.</span>")
+		to_chat(user, span_notice("This bottle already has a broken seal."))
 		return
 	used = TRUE
-	to_chat(user, "<span class='notice'>You break the seal on the bottle, calling upon the dire spirits of the underworld...</span>")
+	to_chat(user, span_notice("You break the seal on the bottle, calling upon the dire spirits of the underworld..."))
 
 	var/type = "slaughter"
 	if(demon_type == /mob/living/simple_animal/demon/slaughter/laughter)
@@ -189,11 +194,11 @@
 		spawn_antag(C, get_turf(src.loc), initial(demon_type.name), user)
 		to_chat(user, "[shatter_msg]")
 		to_chat(user, "[veil_msg]")
-		playsound(user.loc, 'sound/effects/glassbr1.ogg', 100, 1)
+		playsound(user.loc, 'sound/effects/glassbr1.ogg', 100, TRUE)
 		qdel(src)
 	else
 		used = FALSE
-		to_chat(user, "<span class='notice'>The demons do not respond to your summon. Perhaps you should try again later.</span>")
+		to_chat(user, span_notice("The demons do not respond to your summon. Perhaps you should try again later."))
 
 
 /obj/item/antag_spawner/slaughter_demon/spawn_antag(client/C, turf/T, type = "", mob/user)
@@ -223,10 +228,9 @@
 	desc = "A magically infused bottle of clown love, distilled from \
 		countless hugging attacks. Used in funny rituals to attract \
 		adorable creatures."
-	icon = 'icons/obj/wizard.dmi'
 	icon_state = "vialtickles"
-	veil_msg = "<span class='warning'>You sense an adorable presence \
-		lurking just beyond the veil...</span>"
+	veil_msg = span_warning("You sense an adorable presence \
+		lurking just beyond the veil...")
 	objective_verb = "Hug and tickle"
 	demon_type = /mob/living/simple_animal/demon/slaughter/laughter
 
@@ -236,11 +240,9 @@
 	desc = "A magically infused bottle of pure darkness, distilled from \
 		ground up shadowling bones. Used in dark rituals to attract \
 		dark creatures."
-	icon = 'icons/obj/wizard.dmi'
 	icon_state = "vialshadows"
-	veil_msg = "<span class='warning'>You sense a dark presence \
-		lurking in the shadows...</span>"
-	objective_verb = "Kill"
+	veil_msg = span_warning("You sense a dark presence \
+		lurking in the shadows...")
 	demon_type = /mob/living/simple_animal/demon/shadow
 
 
@@ -251,23 +253,23 @@
 	desc = "A magically infused bottle of ooze, distilled by methods rather not be spoken of. Used to awaken an all-consuming monstrosity."
 	icon = 'icons/obj/wizard.dmi'
 	icon_state = "vialooze"
-	var/shatter_msg = "<span class='notice'>You shatter the bottle, no \
-		turning back now!</span>"
-	var/veil_msg = "<span class='warning'>The sludge is awake and seeps \
-		away...</span>"
+	var/shatter_msg = span_notice("You shatter the bottle, no \
+		turning back now!")
+	var/veil_msg = span_warning("The sludge is awake and seeps \
+		away...")
 	var/objective_verb = "Eat"
 	var/mob/living/morph_type = /mob/living/simple_animal/hostile/morph
 
 /obj/item/antag_spawner/morph/attack_self(mob/user)
 	if(level_blocks_magic(user.z))//this is to make sure the wizard does NOT summon a morph from the Den..
-		to_chat(user, "<span class='notice'>You should probably wait until you reach the station.</span>")
+		to_chat(user, span_notice("You should probably wait until you reach the station."))
 		return
 
 	if(used)
-		to_chat(user, "<span class='notice'>This bottle already has a broken seal.</span>")
+		to_chat(user, span_notice("This bottle already has a broken seal."))
 		return
 	used = TRUE
-	to_chat(user, "<span class='notice'>You break the seal on the bottle, calling upon the dire sludge to awaken...</span>")
+	to_chat(user, span_notice("You break the seal on the bottle, calling upon the dire sludge to awaken..."))
 
 	var/list/candidates = SSghost_spawns.poll_candidates("Do you want to play as a magical morph awakened by [user.real_name]?", ROLE_MORPH, 1, 10 SECONDS, source = morph_type)
 
@@ -276,11 +278,11 @@
 		spawn_antag(C, get_turf(src.loc), initial(morph_type.name), user)
 		to_chat(user, "[shatter_msg]")
 		to_chat(user, "[veil_msg]")
-		playsound(user.loc, 'sound/effects/glassbr1.ogg', 100, 1)
+		playsound(user.loc, 'sound/effects/glassbr1.ogg', 100, TRUE)
 		qdel(src)
 	else
 		used = FALSE
-		to_chat(user, "<span class='notice'>The sludge does not respond to your attempt to awake it. Perhaps you should try again later.</span>")
+		to_chat(user, span_notice("The sludge does not respond to your attempt to awake it. Perhaps you should try again later."))
 
 /obj/item/antag_spawner/morph/spawn_antag(client/C, turf/T, type = "", mob/user)
 	var/mob/living/simple_animal/hostile/morph/wizard/M = new /mob/living/simple_animal/hostile/morph/wizard(pick(GLOB.xeno_spawn))
@@ -301,7 +303,7 @@
 	M.mind.objectives += KillDaCrew
 	var/list/messages = M.mind.prepare_announce_objectives()
 	to_chat(M, chat_box_red(messages.Join("<br>")))
-	M << 'sound/magic/mutate.ogg'
+	SEND_SOUND(src, sound('sound/magic/mutate.ogg'))
 
 
 ///////////Pulse Demon
@@ -311,34 +313,34 @@
 	desc = "A magically sealed lightbulb confining some manner of electricity based creature."
 	icon = 'icons/obj/lighting.dmi'
 	icon_state = "lbulb"
-	var/shatter_msg = "<span class='notice'>You shatter the bulb, no turning back now!</span>"
-	var/veil_msg = "<span class='warning'>The creature sparks energetically and zips away...</span>"
+	var/shatter_msg = span_notice("You shatter the bulb, no turning back now!")
+	var/veil_msg = span_warning("The creature sparks energetically and zips away...")
 	var/objective_verb = "Electrocute"
 	var/mob/living/demon_type = /mob/living/simple_animal/demon/pulse_demon
 
 /obj/item/antag_spawner/pulse_demon/attack_self(mob/user)
 	if(level_blocks_magic(user.z))
-		to_chat(user, "<span class='notice'>You should probably wait until you reach the station.</span>")
+		to_chat(user, span_notice("You should probably wait until you reach the station."))
 		return
 
 	var/turf/T = get_turf(src)
 	var/obj/structure/cable/wire = locate() in T
 	if(!wire || wire.avail() <= 0)
-		to_chat(user, "<span class='warning'>This is not a suitable place, the creature would die here. Find a powered cable to release it onto.</span>")
+		to_chat(user, span_warning("This is not a suitable place, the creature would die here. Find a powered cable to release it onto."))
 		return
 
 	if(used)
-		to_chat(user, "<span class='notice'>This bulb already has a broken seal.</span>")
+		to_chat(user, span_notice("This bulb already has a broken seal."))
 		return
 
 	used = TRUE
-	to_chat(user, "<span class='notice'>You break the seal on the bulb, waiting for the creature to spark to life...</span>")
+	to_chat(user, span_notice("You break the seal on the bulb, waiting for the creature to spark to life..."))
 
 	var/list/candidates = SSghost_spawns.poll_candidates("Do you want to play as a pulse demon summoned by [user.real_name]?", ROLE_DEMON, TRUE, 10 SECONDS, source = demon_type)
 
 	if(!length(candidates))
 		used = FALSE
-		to_chat(user, "<span class='notice'>The creature does not come to life. Perhaps you should try again later.</span>")
+		to_chat(user, span_notice("The creature does not come to life. Perhaps you should try again later."))
 		return
 
 	var/mob/C = pick(candidates)

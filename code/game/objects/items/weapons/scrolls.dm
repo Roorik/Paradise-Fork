@@ -18,13 +18,15 @@
 
 /obj/item/teleportation_scroll/attack_self(mob/user as mob)
 	user.set_machine(src)
-	var/dat = {"<meta charset="UTF-8"><B>Teleportation Scroll:</B><BR>"}
-	dat += "Number of uses: [src.uses]<BR>"
-	dat += "<HR>"
-	dat += "<B>Four uses use them wisely:</B><BR>"
-	dat += "<A href='byond://?src=[UID()];spell_teleport=1'>Teleport</A><BR>"
-	dat += "Kind regards,<br>Wizards Federation<br><br>P.S. Don't forget to bring your gear, you'll need it to cast most spells.<HR>"
-	user << browse(dat, "window=scroll")
+	var/dat = {"<b>Teleportation Scroll:</b></br>"}
+	dat += "Number of uses: [src.uses]</br>"
+	dat += "<hr>"
+	dat += "<b>Four uses use them wisely:</b></br>"
+	dat += "<a href='byond://?src=[UID()];spell_teleport=1'>Teleport</a></br>"
+	dat += "Kind regards,<br>Wizards Federation<br><br>P.S. Don't forget to bring your gear, you'll need it to cast most spells.<hr>"
+	var/datum/browser/popup = new(user, "scroll", "Teleportation Scroll")
+	popup.set_content(dat)
+	popup.open(TRUE)
 	onclose(user, "scroll")
 	return
 
@@ -43,16 +45,16 @@
 	attack_self(H)
 	return
 
-/obj/item/teleportation_scroll/proc/teleportscroll(var/mob/user)
+/obj/item/teleportation_scroll/proc/teleportscroll(mob/user)
 
 	var/A
 
-	A = tgui_input_list(user, "Area to jump to", "BOOYEA", GLOB.teleportlocs)
+	A = tgui_input_list(user, "Area to jump to", "BOOYEA", SSmapping.teleportlocs)
 
 	if(!A)
 		return
 
-	var/area/thearea = GLOB.teleportlocs[A]
+	var/area/thearea = SSmapping.teleportlocs[A]
 
 	if(user.incapacitated() || HAS_TRAIT(user, TRAIT_HANDS_BLOCKED))
 		return
@@ -60,7 +62,7 @@
 		return
 
 	if(thearea.tele_proof && !istype(thearea, /area/wizard_station))
-		to_chat(user, "<span class='warning'>A mysterious force disrupts your arcane spell matrix, and you remain where you are.</span>")
+		to_chat(user, span_warning("A mysterious force disrupts your arcane spell matrix, and you remain where you are."))
 		return
 
 	var/datum/effect_system/fluid_spread/smoke/smoke = new
@@ -79,7 +81,7 @@
 				L+=T
 
 	if(!L.len)
-		to_chat(user, "<span class='warning'>The spell matrix was unable to locate a suitable teleport destination for an unknown reason. Sorry.</span>")
+		to_chat(user, span_warning("The spell matrix was unable to locate a suitable teleport destination for an unknown reason. Sorry."))
 		return
 
 	if(user && user.buckled)

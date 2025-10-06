@@ -19,7 +19,7 @@
 /mob/living/carbon/AIize()
 	if(HAS_TRAIT(src, TRAIT_NO_TRANSFORM))
 		return
-	for(var/obj/item/check as anything in get_equipped_items(include_pockets = TRUE, include_hands = TRUE))
+	for(var/obj/item/check as anything in get_equipped_items(INCLUDE_POCKETS | INCLUDE_HELD))
 		drop_item_ground(check, force = TRUE)
 	ADD_TRAIT(src, TRAIT_NO_TRANSFORM, PERMANENT_TRANSFORMATION_TRAIT)
 	icon = null
@@ -65,7 +65,7 @@
 /mob/living/carbon/human/proc/Robotize(cell_type = null, connect_to_default_AI = TRUE, mob/living/silicon/ai/AI = null)
 	if(HAS_TRAIT(src, TRAIT_NO_TRANSFORM))
 		return
-	for(var/obj/item/check as anything in get_equipped_items(include_pockets = TRUE, include_hands = TRUE))
+	for(var/obj/item/check as anything in get_equipped_items(INCLUDE_POCKETS | INCLUDE_HELD))
 		drop_item_ground(check, force = TRUE)
 
 	ADD_TRAIT(src, TRAIT_NO_TRANSFORM, PERMANENT_TRANSFORMATION_TRAIT)
@@ -127,7 +127,7 @@
 /mob/living/carbon/human/proc/corgize()
 	if(HAS_TRAIT(src, TRAIT_NO_TRANSFORM))
 		return
-	for(var/obj/item/check as anything in get_equipped_items(include_pockets = TRUE, include_hands = TRUE))
+	for(var/obj/item/check as anything in get_equipped_items(INCLUDE_POCKETS | INCLUDE_HELD))
 		drop_item_ground(check, force = TRUE)
 	ADD_TRAIT(src, TRAIT_NO_TRANSFORM, PERMANENT_TRANSFORMATION_TRAIT)
 	icon = null
@@ -138,17 +138,17 @@
 	var/mob/living/simple_animal/pet/dog/corgi/new_corgi = new /mob/living/simple_animal/pet/dog/corgi (loc)
 	new_corgi.key = key
 
-	to_chat(new_corgi, "<B>You are now a Corgi. Yap Yap!</B>")
+	to_chat(new_corgi, "<b>You are now a Corgi. Yap Yap!</b>")
 	qdel(src)
 
 /mob/living/carbon/human/Animalize()
 
 	var/list/mobtypes = typesof(/mob/living/simple_animal)
-	var/mobpath = input("Which type of mob should [src] turn into?", "Choose a type") in mobtypes
+	var/mobpath = tgui_input_list(usr, "Which type of mob should [src] turn into?", "Choose a type", mobtypes)
 
 	if(HAS_TRAIT(src, TRAIT_NO_TRANSFORM))
 		return
-	for(var/obj/item/check as anything in get_equipped_items(include_pockets = TRUE, include_hands = TRUE))
+	for(var/obj/item/check as anything in get_equipped_items(INCLUDE_POCKETS | INCLUDE_HELD))
 		drop_item_ground(check, force = TRUE)
 
 	ADD_TRAIT(src, TRAIT_NO_TRANSFORM, PERMANENT_TRANSFORMATION_TRAIT)
@@ -170,7 +170,7 @@
 /mob/proc/Animalize()
 
 	var/list/mobtypes = typesof(/mob/living/simple_animal)
-	var/mobpath = input("Which type of mob should [src] turn into?", "Choose a type") in mobtypes
+	var/mobpath = tgui_input_list(usr, "Which type of mob should [src] turn into?", "Choose a type", mobtypes)
 
 	var/mob/new_mob = new mobpath(src.loc)
 
@@ -183,7 +183,7 @@
 /mob/living/carbon/human/proc/paize(name, bespai)
 	if(HAS_TRAIT(src, TRAIT_NO_TRANSFORM))
 		return
-	for(var/obj/item/check as anything in get_equipped_items(include_pockets = TRUE, include_hands = TRUE))
+	for(var/obj/item/check as anything in get_equipped_items(INCLUDE_POCKETS | INCLUDE_HELD))
 		drop_item_ground(check, force = TRUE)
 	ADD_TRAIT(src, TRAIT_NO_TRANSFORM, PERMANENT_TRANSFORMATION_TRAIT)
 	icon = null
@@ -203,7 +203,7 @@
 	pai.real_name = name
 	card.name = name
 
-	to_chat(pai, "<B>You have become a pAI! Your name is [pai.name].</B>")
+	to_chat(pai, "<b>You have become a pAI! Your name is [pai.name].</b>")
 	INVOKE_ASYNC(GLOBAL_PROC, /proc/qdel, src)
 
 /mob/proc/gorillize(gorilla_type = "Normal", message = TRUE)
@@ -213,7 +213,7 @@
 	if(stat == DEAD)
 		return
 
-	for(var/obj/item/check as anything in get_equipped_items(include_pockets = TRUE, include_hands = TRUE))
+	for(var/obj/item/check as anything in get_equipped_items(INCLUDE_POCKETS | INCLUDE_HELD))
 		drop_item_ground(check, force = TRUE)
 
 	ADD_TRAIT(src, TRAIT_NO_TRANSFORM, PERMANENT_TRANSFORMATION_TRAIT)
@@ -270,8 +270,8 @@
 	if(isnymph(passed_mob) && !jobban_isbanned(src, ROLE_NYMPH))
 		return TRUE
 
-	// Whitelist typecache. Alphabetical order please!
 	var/static/list/safe_respawn_typecache_whitelist = typecacheof(list(
+		/mob/living/carbon/human/lesser/monkey/punpun,
 		/mob/living/simple_animal/butterfly,
 		/mob/living/simple_animal/chick,
 		/mob/living/simple_animal/chicken,
@@ -282,8 +282,8 @@
 		/mob/living/simple_animal/goose,
 		/mob/living/simple_animal/hostile/gorilla/cargo_domestic,
 		/mob/living/simple_animal/hostile/retaliate/poison/snake/rouge,
-		/mob/living/simple_animal/mouse/hamster,
 		/mob/living/simple_animal/mouse/rat,
+		/mob/living/simple_animal/mouse/wooly,
 		/mob/living/simple_animal/parrot,
 		/mob/living/simple_animal/pet/cat,
 		/mob/living/simple_animal/pet/dog/corgi,
@@ -296,7 +296,6 @@
 		/mob/living/simple_animal/pig,
 		/mob/living/simple_animal/possum,
 		/mob/living/simple_animal/turkey,
-		/mob/living/carbon/human/lesser/monkey/punpun,
 	))
 
 	// Blacklist typecache.

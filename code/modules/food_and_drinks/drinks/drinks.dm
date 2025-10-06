@@ -10,7 +10,6 @@
 	consume_sound = 'sound/items/drink.ogg'
 	possible_transfer_amounts = list(5,10,15,20,25,30,50)
 	visible_transfer_rate = TRUE
-	volume = 50
 	resistance_flags = NONE
 	antable = FALSE
 	var/chugging = FALSE
@@ -132,6 +131,7 @@
 		if(isrobot(user))
 			SynthesizeDrinkFromTransfer(user, transfer_data)
 
+		after_transfer(target)
 		to_chat(user, span_notice("Вы переливаете <b>[trans]</b> единиц[declension_ru(trans, "у", "ы", "")] вещества в [target.declent_ru(ACCUSATIVE)]."))
 
 	else if(target.is_drainable()) //A dispenser. Transfer FROM it TO us.
@@ -174,15 +174,12 @@
 	name = "pewter cup"
 	desc = "Everyone gets a trophy."
 	icon_state = "pewter_cup"
-	w_class = WEIGHT_CLASS_TINY
 	force = 1
 	throwforce = 1
-	amount_per_transfer_from_this = 5
 	materials = list(MAT_METAL=100)
 	possible_transfer_amounts = null
 	volume = 5
 	flags = CONDUCT
-	container_type = OPENCONTAINER
 	resistance_flags = FIRE_PROOF
 
 /obj/item/reagent_containers/food/drinks/trophy/gold_cup
@@ -235,16 +232,18 @@
 /obj/item/reagent_containers/food/drinks/ice
 	name = "ice cup"
 	desc = "Стаканчик льда. Не жуйте, а то горло болеть будет."
-	ru_names = list(
-        NOMINATIVE = "стаканчик льда",
-        GENITIVE = "стаканчика льда",
-        DATIVE = "стаканчику льда",
-        ACCUSATIVE = "стаканчик льда",
-        INSTRUMENTAL = "стаканчиком льда",
-        PREPOSITIONAL = "стаканчике льда"
-	)
 	icon_state = "icecup"
 	list_reagents = list("ice" = 30)
+
+/obj/item/reagent_containers/food/drinks/ice/get_ru_names()
+	return list(
+		NOMINATIVE = "стаканчик льда",
+		GENITIVE = "стаканчика льда",
+		DATIVE = "стаканчику льда",
+		ACCUSATIVE = "стаканчик льда",
+		INSTRUMENTAL = "стаканчиком льда",
+		PREPOSITIONAL = "стаканчике льда"
+	)
 
 /obj/item/reagent_containers/food/drinks/tea
 	name = "Duke Purple tea"
@@ -348,7 +347,6 @@
 	volume = 60
 
 /obj/item/reagent_containers/food/drinks/flask/barflask
-	name = "flask"
 	desc = "For those who can't be bothered to hang out at the bar to drink."
 	icon_state = "barflask"
 

@@ -13,7 +13,6 @@
 
 	area_type = /area
 	protected_areas = list(/area/space, /area/crew_quarters/sleep)
-	target_trait = STATION_LEVEL
 
 	immunity_type = TRAIT_WEATHER_IMMUNE
 
@@ -25,7 +24,11 @@
 /datum/weather/xeno_storm/telegraph()
 	. = ..()
 	status_alarm(TRUE)
-	GLOB.event_announcement.Announce("Зафиксирована сигнатура Императрицы Ксеноморфов на борту станции [station_name()]. Запущено глубокое сканирование.", "ВНИМАНИЕ: БИОЛОГИЧЕСКАЯ УГРОЗА.", 'sound/effects/siren-spooky.ogg')
+	GLOB.major_announcement.announce(
+		message = "Зафиксирована сигнатура Императрицы Ксеноморфов на борту станции [station_name()]. Запущено глубокое сканирование.",
+		new_title = ANNOUNCE_BIOHAZARD_RU,
+		new_sound = 'sound/effects/siren-spooky.ogg'
+	)
 
 	if(!.)
 		return

@@ -8,9 +8,7 @@
 	icon_state = "bucket_proxy"
 	force = 3
 	throwforce = 5
-	throw_speed = 2
 	throw_range = 5
-	w_class = WEIGHT_CLASS_NORMAL
 	var/created_name = "Чистобот"
 	var/robot_arm = /obj/item/robot_parts/l_arm
 
@@ -57,13 +55,13 @@
 //Edbot Assembly
 
 /obj/item/ed209_assembly
-	name = "\improper ED-209 assembly"
+	name = "ED-209 assembly"
 	desc = "Заготовка для чего-то серьёзного."
 	icon = 'icons/obj/aibots.dmi'
 	icon_state = "ed209_frame"
 	item_state = "ed209_frame"
 	var/build_step = 0
-	var/created_name = "\improper ED-209 Security Robot" //To preserve the name if it's a unique securitron I guess
+	var/created_name = "ED-209 Security Robot" //To preserve the name if it's a unique securitron I guess
 	var/lasercolor = ""
 	var/new_name = ""
 
@@ -250,7 +248,7 @@
 
 		if(9)
 			add_fingerprint(user)
-			if(!istype(I, /obj/item/stock_parts/cell))
+			if(!iscell(I))
 				to_chat(user, span_notice("Для завершения сборки ED-209 нужна батарея."))
 				balloon_alert(user, "неверная деталь")
 				return ATTACK_CHAIN_PROCEED
@@ -307,9 +305,7 @@
 	icon_state = "toolbox_tiles"
 	force = 3
 	throwforce = 10
-	throw_speed = 2
 	throw_range = 5
-	w_class = WEIGHT_CLASS_NORMAL
 	var/created_name = "Floorbot"
 	var/toolbox = /obj/item/storage/toolbox/mechanical
 	var/toolbox_color = "" //Blank for blue, r for red, y for yellow, etc.
@@ -328,10 +324,6 @@
 
 	add_fingerprint(user)
 	var/obj/item/stack/tile/plasteel/plasteel = I
-	if(istype(I, /obj/item/storage/toolbox/green/memetic))
-		to_chat(user, span_notice("Хорошая попытка..."))
-		balloon_alert(user, "невозможно")
-		return .
 
 	if(length(contents))
 		to_chat(user, span_notice("Вы не можете начать сборку, пока в ящике для инструментов что-то лежит."))
@@ -500,7 +492,6 @@
 	desc = "Аптечка первой помощи с прикрепленной роботизированной рукой."
 	icon = 'icons/obj/aibots.dmi'
 	icon_state = "firstaid_arm"
-	w_class = WEIGHT_CLASS_NORMAL
 	req_access = list(ACCESS_MEDICAL, ACCESS_ROBOTICS)
 	var/build_step = 0
 	var/created_name = "Medibot" //To preserve the name if it's a unique medbot I guess
@@ -804,7 +795,7 @@
 //General Griefsky
 
 /obj/item/griefsky_assembly
-	name = "\improper General Griefsky assembly"
+	name = "General Griefsky assembly"
 	desc = "Причудливая конструкция. Выглядит мощно."
 	icon = 'icons/obj/aibots.dmi'
 	icon_state = "griefsky_assembly"
@@ -815,7 +806,7 @@
 
 /obj/item/griefsky_assembly/update_name(updates = ALL)
 	. = ..()
-	name = toy_step > 0 ? "\improper Genewul Giftskee assembly" : "\improper General Griefsky assembly"
+	name = toy_step > 0 ? "Genewul Giftskee assembly" : "General Griefsky assembly"
 
 
 /obj/item/griefsky_assembly/attackby(obj/item/I, mob/user, params)
@@ -959,7 +950,6 @@
 	desc = "Клоунская коробка с прикрепленной роботизированной рукой."
 	icon = 'icons/obj/aibots.dmi'
 	icon_state = "honkbot_arm"
-	w_class = WEIGHT_CLASS_NORMAL
 	req_access = list(ACCESS_CLOWN, ACCESS_ROBOTICS, ACCESS_MIME)
 	var/build_step = 0
 	var/created_name = "Honkbot" //To preserve the name if it's a unique medbot I guess

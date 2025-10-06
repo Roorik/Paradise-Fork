@@ -11,9 +11,9 @@
 		animation.icon = 'icons/mob/mob.dmi'
 		animation.master = src
 
-		playsound(src.loc, 'sound/goonstation/effects/gib.ogg', 50, 1)
+		playsound(src.loc, 'sound/goonstation/effects/gib.ogg', 50, TRUE)
 	else
-		playsound(src.loc, 'sound/goonstation/effects/robogib.ogg', 50, 1)
+		playsound(src.loc, 'sound/goonstation/effects/robogib.ogg', 50, TRUE)
 
 	var/drop_loc = drop_location()
 	for(var/obj/item/organ/internal/organ as anything in internal_organs)
@@ -41,7 +41,7 @@
 		hgibs(loc, dna)
 	else
 		new /obj/effect/decal/cleanable/blood/gibs/robot(loc)
-		do_sparks(3, 1, src)
+		do_sparks(3, TRUE, src)
 	QDEL_IN(animation, 15)
 	QDEL_IN(src, 0)
 	return TRUE

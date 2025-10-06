@@ -21,12 +21,12 @@
 		if(getBruteLoss() < maxHealth*0.5)
 			msg += "It looks slightly dented.\n"
 		else
-			msg += "<B>It looks severely dented!</B>\n"
+			msg += "<b>It looks severely dented!</b>\n"
 	if(getFireLoss())
 		if(getFireLoss() < maxHealth*0.5)
 			msg += "It looks slightly charred.\n"
 		else
-			msg += "<B>It looks severely burnt and heat-warped!</B>\n"
+			msg += "<b>It looks severely burnt and heat-warped!</b>\n"
 	if(health < -maxHealth*0.5)
 		msg += "It looks barely operational.\n"
 	if(fire_stacks < 0)
@@ -62,7 +62,7 @@
 		msg += "\n[print_flavor_text()]\n"
 
 	if(pose)
-		if( findtext(pose,".",length(pose)) == 0 && findtext(pose,"!",length(pose)) == 0 && findtext(pose,"?",length(pose)) == 0 )
+		if(findtext(pose,".",length(pose)) == 0 && findtext(pose,"!",length(pose)) == 0 && findtext(pose,"?",length(pose)) == 0)
 			pose = addtext(pose,".") //Makes sure all emotes end with a period.
 		msg += "\nIt is [pose]"
 

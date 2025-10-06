@@ -20,7 +20,7 @@
 		new /obj/item/reagent_containers/food/pill/zoom(src)
 
 /obj/item/storage/pill_bottle/sovietstimulants
-	name = "\improper Soviet combat stimulants"
+	name = "Soviet combat stimulants"
 	desc = "Increases user speed and performance for surprise and shock warfare. Effects wear off quickly. Take at the moment of enemy contact for maximum effect."
 	wrapper_color = COLOR_RED
 
@@ -30,7 +30,6 @@
 
 
 /obj/item/reagent_containers/food/pill/random_drugs
-	name = "pill"
 	icon_state = "pillrandom"
 	desc = "A cocktail of illicit designer drugs, who knows what might be in here."
 

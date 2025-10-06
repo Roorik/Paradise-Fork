@@ -1,10 +1,12 @@
 /datum/event/meteor_wave/goreop/announce()
-	var/meteor_declaration = "Метеоритные оперативники заявили о своем намерении полностью уничтожить [station_name()] своими собственными телами. Осмелится ли экипаж остановить их?"
-	GLOB.event_announcement.Announce(meteor_declaration, "Объявление 'Войны'", 'sound/effects/siren.ogg')
+	GLOB.major_announcement.announce(
+		message = "Метеоритные оперативники заявили о своем намерении полностью уничтожить [station_name()] своими собственными телами. Осмелится ли экипаж остановить их?",
+		new_title = ANNOUNCE_DECLAREWAR_RU,
+		new_sound = 'sound/effects/siren.ogg'
+	)
 
 /datum/event/meteor_wave/goreop/setup()
 	waves = 3
-
 
 /datum/event/meteor_wave/goreop/tick()
 	if(waves && activeFor >= next_meteor)
@@ -13,7 +15,8 @@
 		waves--
 		endWhen = (waves ? next_meteor + 1 : activeFor + 15)
 
-
-
 /datum/event/meteor_wave/goreop/end()
-	GLOB.event_announcement.Announce("Все метеориты мертвы. Безоговорочная победа станции.", "МЕТЕОРИТЫ.")
+	GLOB.minor_announcement.announce(
+		message = "Все метеориты мертвы. Безоговорочная победа станции.",
+		new_title = ANNOUNCE_METEOR_RU
+	)

@@ -1,6 +1,16 @@
 /obj/structure/closet/crate/necropolis/dragon
 	name = "dragon chest"
 
+/obj/structure/closet/crate/necropolis/dragon/get_ru_names()
+	return list(
+		NOMINATIVE = "драконий сундук",
+		GENITIVE = "драконьего сундука",
+		DATIVE = "драконьему сундуку",
+		ACCUSATIVE = "драконий сундук",
+		INSTRUMENTAL = "драконьим сундуком",
+		PREPOSITIONAL = "драконьем сундуке"
+	)
+
 /obj/structure/closet/crate/necropolis/dragon/populate_contents()
 	new /obj/item/gem/amber(src)
 	var/loot = rand(1,5)
@@ -21,6 +31,16 @@
 /obj/structure/closet/crate/necropolis/dragon/crusher
 	name = "firey dragon chest"
 
+/obj/structure/closet/crate/necropolis/dragon/crusher/get_ru_names()
+	return list(
+		NOMINATIVE = "огненный драконий сундук",
+		GENITIVE = "огненного драконьего сундука",
+		DATIVE = "огненному драконьему сундуку",
+		ACCUSATIVE = "огненный драконий сундук",
+		INSTRUMENTAL = "огненным драконьим сундуком",
+		PREPOSITIONAL = "огненном драконьем сундуке"
+	)
+
 /obj/structure/closet/crate/necropolis/dragon/crusher/populate_contents()
 	. = ..()
 	new /obj/item/crusher_trophy/tail_spike(src)
@@ -30,7 +50,7 @@
 
 /obj/item/melee/ghost_sword
 	name = "spectral blade"
-	desc = "A rusted and dulled blade. It doesn't look like it'd do much damage. It glows weakly."
+	desc = "Ржавый затупленный клинок. Выглядит так, будто не нанесёт много урона. Слабо светится."
 	icon_state = "spectral"
 	item_state = "spectral"
 	flags = CONDUCT
@@ -45,11 +65,28 @@
 	var/summon_cooldown = 0
 	var/list/mob/dead/observer/spirits
 
+/obj/item/melee/ghost_sword/get_ru_names()
+	return list(
+		NOMINATIVE = "спектральный клинок",
+		GENITIVE = "спектрального клинка",
+		DATIVE = "спектральному клинку",
+		ACCUSATIVE = "спектральный клинок",
+		INSTRUMENTAL = "спектральным клинком",
+		PREPOSITIONAL = "спектральном клинке"
+	)
+
 /obj/item/melee/ghost_sword/New()
 	..()
 	spirits = list()
 	START_PROCESSING(SSobj, src)
 	GLOB.poi_list |= src
+
+/obj/item/melee/ghost_sword/ComponentInitialize()
+	. = ..()
+	AddComponent( \
+		/datum/component/cleave_attack, \
+		swing_sound = SFX_BLADE_SWING_LIGHT \
+	)
 
 /obj/item/melee/ghost_sword/Destroy()
 	for(var/mob/dead/observer/G in spirits)
@@ -61,11 +98,11 @@
 
 /obj/item/melee/ghost_sword/attack_self(mob/user)
 	if(summon_cooldown > world.time)
-		to_chat(user, "You just recently called out for aid. You don't want to annoy the spirits.")
+		to_chat(user, "Вы недавно уже призывали помощь. Не стоит раздражать духов.")
 		return
-	to_chat(user, "You call out for aid, attempting to summon spirits to your side.")
+	to_chat(user, "Вы взываете о помощи, пытаясь призвать духов на свою сторону.")
 
-	notify_ghosts("[user] is raising [user.p_their()] [src], calling for your help!", enter_link="<a href=?src=[UID()];follow=1>(Click to help)</a>", source = user, action = NOTIFY_FOLLOW)
+	notify_ghosts("[user] поднима[pluralize_ru(user.gender,"ет","ют")] [declent_ru(ACCUSATIVE)], взывая о вашей помощи!", enter_link="<a href='byond://?src=[UID()];follow=1'>(Нажмите, чтобы помочь)</a>", source = user, action = NOTIFY_FOLLOW)
 
 	summon_cooldown = world.time + 600
 
@@ -85,7 +122,7 @@
 	var/mob/dead/observer/current_spirits = list()
 
 	for(var/mob/dead/observer/O in GLOB.player_list)
-		if((O.orbiting in contents))
+		if(O.orbiting in contents)
 			ghost_counter++
 			O.invisibility = 0
 			current_spirits |= O
@@ -103,8 +140,8 @@
 	var/ghost_counter = ghost_check()
 	force = clamp((ghost_counter * 4), 0, 75)
 	user.visible_message(
-		span_danger("[user] strikes with the force of [ghost_counter] vengeful spirits!"),
-		span_notice("You strikes with the force of [ghost_counter] vengeful spirits!"),
+		span_danger("[user] нанос[pluralize_ru(user.gender,"ит","ят")] удар с силой [ghost_counter] [declension_ru(ghost_counter,"мстительного духа","мстительных духов","мстительных духов")]!"),
+		span_notice("Вы бьёте с силой [ghost_counter] [declension_ru(ghost_counter,"мстительного духа","мстительных духов","мстительных духов")]!"),
 	)
 	return ..()
 
@@ -112,16 +149,26 @@
 /obj/item/melee/ghost_sword/hit_reaction(mob/living/carbon/human/owner, atom/movable/hitby, attack_text = "the attack", final_block_chance = 0, damage = 0, attack_type = ITEM_ATTACK)
 	var/ghost_counter = ghost_check()
 	final_block_chance += clamp((ghost_counter * 5), 0, 75)
-	owner.visible_message(span_danger("[owner] is protected by a ring of [ghost_counter] ghosts!"), projectile_message = (attack_type == PROJECTILE_ATTACK))
+	owner.visible_message(span_danger("[owner] защищён кольцом из [ghost_counter] [declension_ru(ghost_counter,"призрака","призраков","призраков")]!"), projectile_message = (attack_type == PROJECTILE_ATTACK))
 	return ..()
 
 // Blood
 
 /obj/item/dragons_blood
 	name = "bottle of dragons blood"
-	desc = "You're not actually going to drink this, are you?"
+	desc = "Вы же не собираетесь это на самом деле пить, да?"
 	icon = 'icons/obj/wizard.dmi'
 	icon_state = "vial"
+
+/obj/item/dragons_blood/get_ru_names()
+	return list(
+		NOMINATIVE = "бутылка драконьей крови",
+		GENITIVE = "бутылки драконьей крови",
+		DATIVE = "бутылке драконьей крови",
+		ACCUSATIVE = "бутылку драконьей крови",
+		INSTRUMENTAL = "бутылкой драконьей крови",
+		PREPOSITIONAL = "бутылке драконьей крови"
+	)
 
 /obj/item/dragons_blood/attack_self(mob/living/carbon/human/user)
 	if(!ishuman(user))
@@ -131,18 +178,18 @@
 
 	switch(random)
 		if(1)
-			to_chat(user, span_danger("Your flesh begins to melt! Miraculously, you seem fine otherwise."))
+			to_chat(user, span_danger("Ваша плоть начинает плавиться! Чудесным образом, в остальном вы в порядке."))
 			user.set_species(/datum/species/skeleton)
 		if(2)
 			if(user.mind)
 				if(locate(/obj/effect/proc_holder/spell/shapeshift/dragon) in user.mind.spell_list)
-					to_chat(user, span_danger("Familiar power courses through you! But you already can shift into dragons..."))
+					to_chat(user, span_danger("Знакомая сила течёт по вашим жилам! Но вы уже умеете превращаться в дракона..."))
 				else
-					to_chat(user, span_danger("Power courses through you! You can now shift your form at will."))
+					to_chat(user, span_danger("Сила переполняет вас! Теперь вы можете менять форму по желанию."))
 					var/obj/effect/proc_holder/spell/shapeshift/dragon/shapeshift = new
 					user.mind.AddSpell(shapeshift)
 		if(3)
-			to_chat(user, span_danger("You feel like you could walk straight through lava now."))
+			to_chat(user, span_danger("Кажется, теперь вы могли бы пройтись прямо сквозь лаву."))
 			ADD_TRAIT(user, TRAIT_LAVA_IMMUNE, name)
 
 	playsound(user.loc,'sound/items/drink.ogg', rand(10,50), TRUE)
@@ -150,40 +197,49 @@
 
 /obj/item/dragons_blood/refined
 	name = "bottle of refined dragons blood"
-	desc = "You're totally going to drink this, aren't you?"
+	desc = "Вы ведь точно собираетесь это выпить, не так ли?"
+
+/obj/item/dragons_blood/refined/get_ru_names()
+	return list(
+		NOMINATIVE = "бутылка очищенной драконьей крови",
+		GENITIVE = "бутылки очищенной драконьей крови",
+		DATIVE = "бутылке очищенной драконьей крови",
+		ACCUSATIVE = "бутылку очищенной драконьей крови",
+		INSTRUMENTAL = "бутылкой очищенной драконьей крови",
+		PREPOSITIONAL = "бутылке очищенной драконьей крови"
+	)
 
 /obj/item/dragons_blood/refined/attack_self(mob/living/carbon/human/user)
 	if(!istype(user))
 		return
 
 	var/mob/living/carbon/human/H = user
-	to_chat(user, span_danger("You feel warmth spread through you, paired with an odd desire to burn down a village. You're suddenly a very small, humanoid ash dragon!"))
+	to_chat(user, span_danger("Вы чувствуете, как тепло разливается по телу, сопровождаемое странным желанием сжечь деревню. Теперь вы маленький человекоподобный пепельный дрейк!"))
 	H.set_species(/datum/species/unathi/draconid, save_appearance = TRUE)
 
 	playsound(user.loc,'sound/items/drink.ogg', rand(10,50), 1)
 	qdel(src)
 
 /datum/disease/virus/transformation/dragon
-	name = "dragon transformation"
-	cure_text = "Nothing"
+	name = "Драконья трансформация"
+	cure_text = "Неизлечимо"
 	cures = list("adminordrazine")
-	agent = "dragon's blood"
-	desc = "What do dragons have to do with Space Station 13?"
+	agent = "Кровь дракона"
+	desc = "Какое отношение драконы имеют к Космической Станции 13?"
 	stage_prob = 20
 	severity = BIOHAZARD
-	visibility_flags = VISIBLE
-	stage1	= list("Your bones ache.")
-	stage2	= list("Your skin feels scaley.")
-	stage3	= list("<span class='danger'>You have an overwhelming urge to terrorize some peasants.</span>", "<span class='danger'>Your teeth feel sharper.</span>")
-	stage4	= list("<span class='danger'>Your blood burns.</span>")
-	stage5	= list("<span class='danger'>You're a fucking dragon. However, any previous allegiances you held still apply. It'd be incredibly rude to eat your still human friends for no reason.</span>")
+	stage1	= list("Ваши кости ноют.")
+	stage2	= list("Ваша кожа кажется чешуйчатой.")
+	stage3	= list(span_danger("Вы чувствуете непреодолимое желание напугать пару крестьян."), span_danger("Ваши зубы кажутся острее."))
+	stage4	= list(span_danger("Ваша кровь кипит!"))
+	stage5	= list(span_danger("Вы, блять, дракон! Однако любые прежние обязательства всё ещё действуют. Было бы крайне невежливо съесть своих всё ещё человеческих друзей без причины."))
 	new_form = /mob/living/simple_animal/hostile/megafauna/dragon/lesser
 
 //Lava Staff
 
 /obj/item/lava_staff
 	name = "staff of lava"
-	desc = "The power of fire and rocks in your hands!"
+	desc = "Сила огня и камней в ваших руках!"
 	icon_state = "lavastaff"
 	lefthand_file = 'icons/mob/inhands/staff_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/staff_righthand.dmi'
@@ -206,6 +262,16 @@
 	var/timer = 0
 	var/banned_turfs
 
+/obj/item/lava_staff/get_ru_names()
+	return list(
+		NOMINATIVE = "лавовый посох",
+		GENITIVE = "лавового посоха",
+		DATIVE = "лавовому посоху",
+		ACCUSATIVE = "лавовый посох",
+		INSTRUMENTAL = "лавовым посохом",
+		PREPOSITIONAL = "лавовом посохе"
+	)
+
 /obj/item/lava_staff/New()
 	. = ..()
 	banned_turfs = typecacheof(list(/turf/space/transit, /turf/simulated/wall, /turf/simulated/mineral))
@@ -220,7 +286,7 @@
 
 	if(!is_mining_level(user.z)) //Will only spawn a few sparks if not on mining z level
 		timer = world.time + create_delay + 1
-		user.visible_message("<span class='danger'>[user]'s [src] malfunctions!</span>")
+		user.visible_message(span_danger("[capitalize(declent_ru(NOMINATIVE))] [user] даёт сбой!"))
 		do_sparks(5, FALSE, user)
 		return
 
@@ -233,10 +299,10 @@
 			var/obj/effect/temp_visual/lavastaff/L = new /obj/effect/temp_visual/lavastaff(T)
 			L.alpha = 0
 			animate(L, alpha = 255, time = create_delay)
-			user.visible_message("<span class='danger'>[user] points [src] at [T]!</span>")
+			user.visible_message(span_danger("[user] направля[pluralize_ru(user.gender,"ет","ют")] [declent_ru(ACCUSATIVE)] на [T.declent_ru(ACCUSATIVE)]!"))
 			timer = world.time + create_delay + 1
 			if(do_after(user, create_delay, T))
-				user.visible_message("<span class='danger'>[user] turns \the [T] into [transform_string]!</span>")
+				user.visible_message(span_danger("[user] превраща[pluralize_ru(user.gender,"ет","ют")] [T.declent_ru(ACCUSATIVE)] в лаву!"))
 				message_admins("[key_name_admin(user)] fired the lava staff at [ADMIN_COORDJMP(T)]")
 				add_attack_logs(user, target, "fired lava staff", ATKLOG_MOST)
 				T.ChangeTurf(turf_type, keep_icon = FALSE)
@@ -247,10 +313,10 @@
 				qdel(L)
 				return
 		else
-			user.visible_message("<span class='danger'>[user] turns \the [T] into [reset_string]!</span>")
+			user.visible_message(span_danger("[user] превраща[pluralize_ru(user.gender,"ет","ют")] [T.declent_ru(ACCUSATIVE)] в базаль!"))
 			T.ChangeTurf(reset_turf_type, keep_icon = FALSE)
 			timer = world.time + reset_cooldown
-		playsound(T,'sound/magic/fireball.ogg', 200, 1)
+		playsound(T,'sound/magic/fireball.ogg', 200, TRUE)
 
 /obj/effect/temp_visual/lavastaff
 	icon_state = "lavastaff_warn"

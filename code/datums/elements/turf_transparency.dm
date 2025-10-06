@@ -45,8 +45,6 @@ GLOBAL_LIST_EMPTY(pillars_by_z)
 	invisibility = 0
 	layer = OBJ_LAYER
 	plane = HUD_PLANE
-	anchored = TRUE
-	move_resist = INFINITY
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
 	appearance_flags = PIXEL_SCALE
 
@@ -194,7 +192,7 @@ GLOBAL_LIST_EMPTY(pillars_by_z)
 	if(!mapload)
 		update_multi_z(our_turf)
 
-/datum/element/turf_z_transparency/Detach(datum/source, force)
+/datum/element/turf_z_transparency/Detach(datum/source)
 	. = ..()
 	var/turf/our_turf = source
 	clear_multiz(our_turf)

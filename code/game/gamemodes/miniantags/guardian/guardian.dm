@@ -1,8 +1,8 @@
 /mob/living/simple_animal/hostile/guardian
 	name = "Guardian Spirit"
 	real_name = "Guardian Spirit"
-	desc = "A mysterious being that stands by it's charge, ever vigilant."
-	speak_emote = list("intones")
+	desc = "Таинственное существо, которое всегда настороже, охраняет своего подопечного."
+	speak_emote = list("распевает", "поёт", "произносит нараспев", "интонирует")
 	tts_seed = "Earth"
 	bubble_icon = "guardian"
 	response_help  = "gently pets"
@@ -13,7 +13,6 @@
 	icon_living = "magicOrange"
 	icon_dead = "magicOrange"
 	speed = 0
-	a_intent = INTENT_HARM
 	can_change_intents = 0
 	stop_automated_movement = 1
 	universal_speak = TRUE
@@ -23,7 +22,6 @@
 	maxHealth = INFINITY //The spirit itself is invincible
 	health = INFINITY
 	environment_smash = 0
-	obj_damage = 40
 	melee_damage_lower = 15
 	melee_damage_upper = 15
 	move_resist = MOVE_FORCE_STRONG
@@ -38,12 +36,22 @@
 	light_range = 3
 	var/mob/living/carbon/human/summoner
 	var/range = 10 //how far from the user the spirit can be
-	var/playstyle_string = "You are a standard Guardian. You shouldn't exist!"
-	var/magic_fluff_string = " You draw the Coder, symbolizing bugs and errors. This shouldn't happen! Submit a bug report!"
-	var/tech_fluff_string = "BOOT SEQUENCE COMPLETE. ERROR MODULE LOADED. THIS SHOULDN'T HAPPEN. Submit a bug report!"
-	var/bio_fluff_string = "Your scarabs fail to mutate. This shouldn't happen! Submit a bug report!"
+	var/playstyle_string = "Вы — стандартный Хранитель. Вы не должны существовать!"
+	var/magic_fluff_string = " Вы призываете Кодера, символ багов и ошибок. Этого не должно происходить! Отправьте отчёт об ошибке!"
+	var/tech_fluff_string = "ПОСЛЕДОВАТЕЛЬНОСТЬ ЗАГРУЗКИ ЗАВЕРШЕНА. МОДУЛЬ ОШИБОК ЗАГРУЖЕН. ЭТОГО НЕ ДОЛЖНО БЫТЬ. Отправьте отчёт об ошибке!"
+	var/bio_fluff_string = "Ваши скарабеи не смогли мутировать. Этого не должно происходить! Отправьте отчёт об ошибке!"
 	var/admin_fluff_string = "URK URF!"//the wheels on the bus...
 	var/name_color = "white"//only used with protector shields for the time being
+
+/mob/living/simple_animal/hostile/guardian/get_ru_names()
+	return list(
+		NOMINATIVE = "Дух-Хранитель",
+		GENITIVE = "Духа-Хранителя",
+		DATIVE = "Духу-Хранителю",
+		ACCUSATIVE = "Духа-Хранителя",
+		INSTRUMENTAL = "Духом-Хранителем",
+		PREPOSITIONAL = "Духе-Хранителе"
+	)
 
 /mob/living/simple_animal/hostile/guardian/Initialize(mapload, mob/living/host)
 	. = ..()
@@ -68,12 +76,11 @@
 /mob/living/simple_animal/hostile/guardian/med_hud_set_status()
 	if(summoner)
 		var/image/holder = hud_list[STATUS_HUD]
-		var/icon/I = icon(icon, icon_state, dir)
-		holder.pixel_y = I.Height() - world.icon_size
+		holder.pixel_y = get_cached_height() - ICON_SIZE_Y
 		if(summoner.stat == DEAD)
-			holder.icon_state = "huddead"
+			holder.icon_state = STATUS_HUD_DEAD
 		else
-			holder.icon_state = "hudhealthy"
+			holder.icon_state = STATUS_HUD_HEALTHY
 
 /mob/living/simple_animal/hostile/guardian/Life(seconds, times_fired)
 	..()
@@ -96,8 +103,8 @@
 		if(get_dist(get_turf(summoner),get_turf(src)) <= range)
 			return
 		else
-			to_chat(src, "<span class='holoparasite'>Вас откинуло назад, так как превышена дальность связи! Ваша дальность всего [range] метров от [summoner.real_name]!</span>")
-			visible_message(span_danger("\The [src] вернулся к носителю."))
+			to_chat(src, span_holoparasite("Вас откинуло назад, так как превышена дальность связи! Ваша дальность всего [range] метр[declension_ru(range,"","а","ов")] от [summoner.real_name]!"))
+			visible_message(span_danger("[src] вернулся к носителю."))
 			if(iseffect(summoner.loc))
 				Recall(TRUE)
 			else
@@ -157,10 +164,10 @@
 	if(amount <= 0)
 		return .
 
-	to_chat(summoner, span_danger("Ваш [name] под атакой! Вы получаете урон!"))
-	summoner.visible_message(span_danger("Кровь хлещет из [summoner] ибо [src] получает урон!"))
+	to_chat(summoner, span_danger("Вашего хранителя [name] атакуют! Вы получаете урон!"))
+	summoner.visible_message(span_danger("Кровь хлещет из [summoner] ибо [src.declent_ru(NOMINATIVE)] получает урон!"))
 	if(summoner.stat == UNCONSCIOUS)
-		to_chat(summoner, span_danger("Your body can't take the strain of sustaining [src] in this condition, it begins to fall apart!"))
+		to_chat(summoner, span_danger("Ваше тело не выдерживает нагрузки от поддержания [src.declent_ru(ACCUSATIVE)] в таком состоянии, оно начинает разрушаться!"))
 		summoner.adjustCloneLoss(amount / 2)
 
 /mob/living/simple_animal/hostile/guardian/adjustStaminaLoss(
@@ -177,13 +184,13 @@
 
 /mob/living/simple_animal/hostile/guardian/ex_act(severity, target)
 	switch(severity)
-		if(1)
+		if(EXPLODE_DEVASTATE)
 			gib()
 			return
-		if(2)
+		if(EXPLODE_HEAVY)
 			adjustBruteLoss(60)
 
-		if(3)
+		if(EXPLODE_LIGHT)
 			adjustBruteLoss(30)
 
 /mob/living/simple_animal/hostile/guardian/gib()
@@ -206,31 +213,31 @@
 		cooldown = world.time + 10
 
 /mob/living/simple_animal/hostile/guardian/proc/Recall(forced = FALSE)
-    if(!summoner || loc == summoner || (cooldown > world.time && !forced))
-        return
-    buckled?.unbuckle_mob(src, force = TRUE)
-    new /obj/effect/temp_visual/guardian/phase/out(get_turf(src))
-    forceMove(summoner)
-    cooldown = world.time + 10
+	if(!summoner || loc == summoner || (cooldown > world.time && !forced))
+		return
+	buckled?.unbuckle_mob(src, force = TRUE)
+	new /obj/effect/temp_visual/guardian/phase/out(get_turf(src))
+	forceMove(summoner)
+	cooldown = world.time + 10
 
 /mob/living/simple_animal/hostile/guardian/proc/Communicate(message)
 	var/input
 	if(!message)
-		input = tgui_input_text(src, "Введите сообщение для отправки вашему призывателю.", "Guardian")
+		input = tgui_input_text(src, "Введите сообщение для отправки вашему призывателю.", "Страж")
 	else
 		input = message
 	if(!input)
 		return
 
 	// Show the message to the host and to the guardian.
-	to_chat(summoner, "<span class='alien'><i>[src]:</i> [input]</span>")
-	to_chat(src, "<span class='alien'><i>[src]:</i> [input]</span>")
+	to_chat(summoner, span_alien("<i>[src]:</i> [input]"))
+	to_chat(src, span_alien("<i>[src]:</i> [input]"))
 	add_say_logs(src, input, summoner, "Guardian")
 
 	// Show the message to any ghosts/dead players.
 	for(var/mob/M in GLOB.dead_mob_list)
 		if(M && M.client && M.stat == DEAD && !isnewplayer(M))
-			to_chat(M, "<span class='alien'><i>Guardian Communication from <b>[src]</b> ([ghost_follow_link(src, ghost=M)]): [input]</i>")
+			to_chat(M, span_alien("<i>Сообщение Стража <b>[src]</b> ([ghost_follow_link(src, ghost=M)]): [input]</i>"))
 
 
 /mob/living/simple_animal/hostile/guardian/proc/ToggleMode()
@@ -248,7 +255,7 @@
 ////////Creation
 
 /obj/item/guardiancreator
-	name = "Колода карт Таро"
+	name = "колода карт Таро"
 	desc = "Зачарованная колода карт, по слухам - источник невероятной силы. "
 	icon = 'icons/obj/toy.dmi'
 	icon_state = "deck_syndicate_full"
@@ -270,6 +277,16 @@
 		"Green" = "#008000",
 		"Blue" = "#0000FF")
 	var/name_list = list("Aries", "Leo", "Sagittarius", "Taurus", "Virgo", "Capricorn", "Gemini", "Libra", "Aquarius", "Cancer", "Scorpio", "Pisces")
+
+/obj/item/guardiancreator/get_ru_names()
+	return list(
+		NOMINATIVE = "колода карт Таро",
+		GENITIVE = "колоды карт Таро",
+		DATIVE = "колоде карт Таро",
+		ACCUSATIVE = "колоду карт Таро",
+		INSTRUMENTAL = "колодой карт Таро",
+		PREPOSITIONAL = "колоде карт Таро"
+	)
 
 /obj/item/guardiancreator/attack_self(mob/living/user)
 	for(var/mob/living/simple_animal/hostile/guardian/G in GLOB.alive_mob_list)
@@ -356,7 +373,7 @@
 	SSticker.mode.guardians |= G.mind
 	to_chat(G, "Вы [mob_name], обязанный служить [user.real_name].")
 	to_chat(G, "Вы можете появляться или возвращаться к вашему хозяину с помощью кнопок на панели Стража. Там же вы найдете кнопку связи с хозяином.")
-	to_chat(G, "Будучи лично неуязвимым, Вы умрете если [user.real_name] умрет, и любой урон попавший по вам будет пропорционально перенесен хозяину, так как вы питаетесь от его жизненной силы.")
+	to_chat(G, "Хотя вы лично неуязвимы, ваша жизнь зависит от [user.real_name]. Если [genderize_ru(user.gender,"он","она","оно","они")] погибн[pluralize_ru(user.gender,"ет","ут")] — умрёте и вы. Кроме того, любой полученный вами урон будет передан [genderize_ru(user.gender,"ему","ей","ему","им")], так как вы существуете за счёт [genderize_ru(user.gender,"его","её","его","их")] жизненной силы.")
 	to_chat(G, "[G.playstyle_string]")
 	G.faction = user.faction
 
@@ -375,10 +392,9 @@
 	to_chat(user, "[G.magic_fluff_string].")
 
 /obj/item/guardiancreator/choose
-	random = FALSE
 
 /obj/item/guardiancreator/tech
-	name = "Инъектор голопаразитов"
+	name = "инъектор голопаразитов"
 	desc = "Содержит нанороботов неизвестного производства. Хотя он способен на почти колдовские подвиги с помощью голограмм жесткого света и наномашин, ему требуется органический носитель в качестве домашней базы и источника топлива."
 	icon = 'icons/obj/hypo.dmi'
 	icon_state = "combat_hypo"
@@ -387,7 +403,7 @@
 	confirmation_message =  "Инъектор все ещё содержит голопаразитов. Вы хотите использовать его?"
 	use_message = "Вы начинаете подавать питание на инъектор..."
 	used_message = "Инъектор уже был использован."
-	failure_message = "<B>...ОШИБКА. ПОСЛЕДОВАТЕЛЬНОСТЬ ЗАГРУЗКИ ПРЕРВАНА. AI НЕ УДАЛОСЬ ИНИЦИАЛИЗИРОВАТЬ. ОБРАТИТЕСЬ В СЛУЖБУ ПОДДЕРЖКИ ИЛИ ПОВТОРИТЕ ПОПЫТКУ ПОЗЖЕ.</B>"
+	failure_message = "<b>...ОШИБКА. ПОСЛЕДОВАТЕЛЬНОСТЬ ЗАГРУЗКИ ПРЕРВАНА. AI НЕ УДАЛОСЬ ИНИЦИАЛИЗИРОВАТЬ. ОБРАТИТЕСЬ В СЛУЖБУ ПОДДЕРЖКИ ИЛИ ПОВТОРИТЕ ПОПЫТКУ ПОЗЖЕ.</b>"
 	ling_failure = "Голопаразиты отпрянули в ужасе. Они не хотят иметь ничего общего с таким существом, как вы."
 	color_list = list("Rose" = "#F62C6B",
 		"Peony" = "#E54750",
@@ -402,6 +418,16 @@
 		"Orchid" = "#F62CF5")
 	name_list = list("Gallium", "Indium", "Thallium", "Bismuth", "Aluminium", "Mercury", "Iron", "Silver", "Zinc", "Titanium", "Chromium", "Nickel", "Platinum", "Tellurium", "Palladium", "Rhodium", "Cobalt", "Osmium", "Tungsten", "Iridium")
 
+/obj/item/guardiancreator/tech/get_ru_names()
+	return list(
+		NOMINATIVE = "инъектор голопаразитов",
+		GENITIVE = "инъектора голопаразитов",
+		DATIVE = "инъектору голопаразитов",
+		ACCUSATIVE = "инъектор голопаразитов",
+		INSTRUMENTAL = "инъектором голопаразитов",
+		PREPOSITIONAL = "инъекторе голопаразитов"
+	)
+
 /obj/item/guardiancreator/tech/create_theme(mob/living/simple_animal/hostile/guardian/G, mob/living/user, picked_name, color)
 	G.name = "[picked_name] [color]"
 	G.real_name = "[picked_name] [color]"
@@ -409,16 +435,15 @@
 	G.icon_state = "[theme][color]"
 	G.icon_dead = "[theme][color]"
 	to_chat(user, "[G.tech_fluff_string].")
-	G.speak_emote = list("states")
+	G.speak_emote = list("констатирует")
 
 /obj/item/guardiancreator/tech/check_uplink_validity()
 	return !used
 
 /obj/item/guardiancreator/tech/choose
-	random = FALSE
 
 /obj/item/guardiancreator/biological
-	name = "Скопление яиц скарабеев"
+	name = "скопление яиц скарабеев"
 	desc = "Паразитический вид, который при рождении будет гнездиться в ближайшем живом существе. Хотя это и не очень полезно для вашего здоровья, они будут защищать свой новый улей насмерть."
 	icon = 'icons/obj/fish_items.dmi'
 	icon_state = "eggs"
@@ -427,7 +452,7 @@
 	use_message = "Яйца начинают дергаться..."
 	confirmation_message =  "Эти яйца все ещё в спящем состоянии. Хотите ли вы активировать их?"
 	used_message = "Скопление уже вылупилось."
-	failure_message = "<B>..но вскоре снова успокаиваются. Видимо, они не были готовы к вылуплению.</B>"
+	failure_message = "<b>..но вскоре снова успокаиваются. Видимо, они не были готовы к вылуплению.</b>"
 	color_list = list("Rose" = "#F62C6B",
 		"Peony" = "#E54750",
 		"Lily" = "#F6562C",
@@ -441,6 +466,16 @@
 		"Orchid" = "#F62CF5")
 	name_list = list("brood", "hive", "nest")
 
+/obj/item/guardiancreator/biological/get_ru_names()
+	return list(
+		NOMINATIVE = "скопление яиц скарабеев",
+		GENITIVE = "скопления яиц скарабеев",
+		DATIVE = "скоплению яиц скарабеев",
+		ACCUSATIVE = "скопление яиц скарабеев",
+		INSTRUMENTAL = "скоплением яиц скарабеев",
+		PREPOSITIONAL = "скоплении яиц скарабеев"
+	)
+
 /obj/item/guardiancreator/biological/create_theme(mob/living/simple_animal/hostile/guardian/G, mob/living/user, picked_name, color)
 	G.name = "[color] [picked_name]"
 	G.real_name = "[color] [picked_name]"
@@ -449,10 +484,9 @@
 	G.icon_dead = "[theme][color]"
 	to_chat(user, "[G.bio_fluff_string].")
 	G.attacktext = "swarms"
-	G.speak_emote = list("chitters")
+	G.speak_emote = list("щебечет")
 
 /obj/item/guardiancreator/biological/choose
-	random = FALSE
 
 
 /obj/item/paper/guardian
@@ -460,24 +494,24 @@
 	icon_state = "paper_words"
 	info = {"<b>Cписок видов голопаразитов</b><br>
 
- <br>
- <b>Хаос</b>: Телепортирует врагов при ударе(не всегда), телепортация приводит к вашим легким галлюцинациям. Поджигает врагов при прикосновении. Автоматически тушит носителя. Имеет в арсенале заклинание, накладывающее на всех в огромном радиусе оглушающие галлюцинации с быстрой перезарядкой.<br>
- <br>
- <b>Стандарт</b>: Сокрушительные атаки ближнего боя способные пробивать стены, экстремально высокая прочность, имеет ауру замедления на врагов. Может кричать на врагов при ударе.<br>
- <br>
- <b>Стрелок</b>: Имеет два режима. Дальнобойный: очень хрупкий, очень часто выпускает опасные дальнобойные снаряды, игнорирующие броню, но тратящие энергию. Скаут: не может атаковать, но слабо видим и может перемещаться сквозь стены на огромные расстояния. Может ставить силки для наблюдения в любом режиме.<br>
- <br>
- <b>Поддержка</b>: Имеет два режима: Боевой: урон токсинами пробивающий броню и средняя защита. Лекарь: Атаки лечат все виды урона, но становится медленным. Может поставить блюспейс маяк на пол и телепортировать всё и всех не прибитых к полу на него на Alt+Click. Имеет в арсенале навык, исцеляющий сломанные кости, органы и внутренние кровотечения.<br>
- <br>
- <b>Подрывник</b>: Слабая броня и атака. Может превратить любой объект в скрытую бомбу, подрывающую любого кто коснулся неё. Может минировать вещи даже будучи внутри хозяина.<br>
- <br>
- <b>Ассасин</b>: Катастрофически высокий урон грубым уроном и ядом, может входить в невидимость для нанесения удара ещё большей силы, игнорирующего броню. Совершенно нет никакой защиты, а в невидимости получает даже больше урона чем это возможно.<br>
- <br>
- <b>Налетчик</b>: Слабая атака с двойной скоростью атаки, средняя броня, невероятно быстр, имеет особый рывок, который при столкновении пробивает броню и опрокидывает жертву.<br>
- <br>
- <b>Молния</b>: Слабая атака и средняя броня, имеет цепь молнии между собой и хозяином, что дезинтегрирует любую цель при нахождении в ней. Может метать молнии во врагов.<br>
- <br>
- <b>Защитник</b>: При нарушении дальности связи хозяин призывается к нему, а не наоборот. Имеет два режима: низкая атака с высокой защитой, и режим ультра-защиты, практически полностью нивелирующий входящий и исходящий урон. В режиме ультра-защиты способен пережить даже взрыв бомбы, лишь слегка ранив хозяина. Может ставить силовые барьеры, через которые могут пройти только вы и ваш подопечный.<br>
+<br>
+<b>Хаос</b>: Телепортирует врагов при ударе(не всегда), телепортация приводит к вашим легким галлюцинациям. Поджигает врагов при прикосновении. Автоматически тушит носителя. Имеет в арсенале заклинание, накладывающее на всех в огромном радиусе оглушающие галлюцинации с быстрой перезарядкой.<br>
+<br>
+<b>Стандарт</b>: Сокрушительные атаки ближнего боя способные пробивать стены, экстремально высокая прочность, имеет ауру замедления на врагов. Может кричать на врагов при ударе.<br>
+<br>
+<b>Стрелок</b>: Имеет два режима. Дальнобойный: очень хрупкий, очень часто выпускает опасные дальнобойные снаряды, игнорирующие броню, но тратящие энергию. Скаут: не может атаковать, но слабо видим и может перемещаться сквозь стены на огромные расстояния. Может ставить силки для наблюдения в любом режиме.<br>
+<br>
+<b>Поддержка</b>: Имеет два режима: Боевой: урон токсинами пробивающий броню и средняя защита. Лекарь: Атаки лечат все виды урона, но становится медленным. Может поставить блюспейс маяк на пол и телепортировать всё и всех не прибитых к полу на него на Alt+Click. Имеет в арсенале навык, исцеляющий сломанные кости, органы и внутренние кровотечения.<br>
+<br>
+<b>Подрывник</b>: Слабая броня и атака. Может превратить любой объект в скрытую бомбу, подрывающую любого кто коснулся неё. Может минировать вещи даже будучи внутри хозяина.<br>
+<br>
+<b>Ассасин</b>: Катастрофически высокий урон грубым уроном и ядом, может входить в невидимость для нанесения удара ещё большей силы, игнорирующего броню. Совершенно нет никакой защиты, а в невидимости получает даже больше урона чем это возможно.<br>
+<br>
+<b>Налетчик</b>: Слабая атака с двойной скоростью атаки, средняя броня, невероятно быстр, имеет особый рывок, который при столкновении пробивает броню и опрокидывает жертву.<br>
+<br>
+<b>Молния</b>: Слабая атака и средняя броня, имеет цепь молнии между собой и хозяином, что дезинтегрирует любую цель при нахождении в ней. Может метать молнии во врагов.<br>
+<br>
+<b>Защитник</b>: При нарушении дальности связи хозяин призывается к нему, а не наоборот. Имеет два режима: низкая атака с высокой защитой, и режим ультра-защиты, практически полностью нивелирующий входящий и исходящий урон. В режиме ультра-защиты способен пережить даже взрыв бомбы, лишь слегка ранив хозяина. Может ставить силовые барьеры, через которые могут пройти только вы и ваш подопечный.<br>
 "}
 
 /obj/item/paper/guardian/update_icon_state()

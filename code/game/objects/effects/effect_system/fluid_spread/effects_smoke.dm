@@ -12,8 +12,6 @@
 	opacity = TRUE
 	plane = ABOVE_GAME_PLANE
 	layer = FLY_LAYER
-	anchored = TRUE
-	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
 	animate_movement = FALSE
 	/// How long the smoke sticks around before it dissipates.
 	var/lifetime = 5 SMOKE_TICK_TO_SECONDS
@@ -267,6 +265,11 @@
 	name = "red smoke"
 	color = "#af0033"
 
+
+/obj/effect/particle_effect/fluid/smoke/bad/hell
+	name = "red smoke"
+	color = BLOOD_COLOR_RED
+
 /obj/effect/particle_effect/fluid/smoke/bad/blue
 	name = "blue smoke"
 	color = "#88aaff"
@@ -438,8 +441,13 @@
 /obj/effect/particle_effect/fluid/smoke/chem/smoke_mob(mob/living/carbon/smoker, seconds_per_tick)
 	if(lifetime < 1)
 		return FALSE
+
 	if(!istype(smoker))
 		return FALSE
+
+	if(smoker.stat == DEAD)
+		return FALSE
+
 	if(!smoker.can_breathe_gas())
 		return FALSE
 
@@ -539,3 +547,5 @@
 
 /datum/effect_system/fluid_spread/smoke/chem/quick/vapor
 	effect_type = /obj/effect/particle_effect/fluid/smoke/chem/quick/vapor
+
+#undef SMOKE_TICK_TO_SECONDS

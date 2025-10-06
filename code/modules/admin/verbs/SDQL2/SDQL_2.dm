@@ -223,15 +223,14 @@ INITIALIZE_IMMEDIATE(/obj/effect/statclick)
 /client/proc/SDQL2_query()
 	set name = "SDQL2 Query"
 	set desc = "Run a SDQL2 query."
-	set category = "Admin.Debug"
-
+	set category = STATPANEL_ADMIN_DEBUG
 	if(!check_rights(R_PROCCALL))  //Shouldn't happen... but just to be safe.
-		message_admins("<span class='danger'>ERROR: Non-admin [key_name_admin(usr)] attempted to execute a SDQL query!</span>")
+		message_admins(span_danger("ERROR: Non-admin [key_name_admin(usr)] attempted to execute a SDQL query!"))
 		log_admin("Non-admin [key_name(usr)] attempted to execute a SDQL query!")
 		return FALSE
 
 	var/prompt = tgui_alert(usr, "Run SDQL2 Query?", "SDQL2", list("Yes", "Cancel"))
-	if (prompt != "Yes")
+	if(prompt != "Yes")
 		return
 
 	var/query_text = tgui_input_text(usr, "SDQL2 query", multiline = TRUE, encode = FALSE)
@@ -567,7 +566,9 @@ GLOBAL_DATUM_INIT(sdql2_vv_statobj, /obj/effect/statclick/sdql2_vv_all, new(null
 			if(length(select_text))
 				var/text = islist(select_text)? select_text.Join() : select_text
 				var/static/result_offset = 0
-				showmob << browse(text, "window=SDQL-result-[result_offset++]")
+				var/datum/browser/popup = new(showmob, "SDQL-result-[result_offset++]", "SDQL Result")
+				popup.set_content(text)
+				popup.open(FALSE)
 	show_next_to_key = null
 	if(qdel_on_finish)
 		qdel(src)
@@ -598,18 +599,18 @@ GLOBAL_DATUM_INIT(sdql2_vv_statobj, /obj/effect/statclick/sdql2_vv_all, new(null
 
 	// 1 and 2 are type and FROM.
 	var/i = 3
-	while (i <= tree.len)
+	while(i <= tree.len)
 		var/key = tree[i++]
 		var/list/expression = tree[i++]
-		switch (key)
-			if ("map")
+		switch(key)
+			if("map")
 				for(var/j = 1 to objs.len)
 					var/x = objs[j]
 					objs[j] = SDQL_expression(x, expression)
 					SDQL2_TICK_CHECK
 					SDQL2_HALT_CHECK
 
-			if ("where")
+			if("where")
 				where_switched = TRUE
 				var/list/out = list()
 				obj_count_eligible = out
@@ -759,7 +760,7 @@ GLOBAL_DATUM_INIT(sdql2_vv_statobj, /obj/effect/statclick/sdql2_vv_all, new(null
 /datum/sdql2_query/proc/SDQL_print(object, list/text_list, print_nulls = TRUE)
 	if(isdatum(object))
 		var/datum/O = object
-		text_list += "<a href='byond://?_src_=vars;Vars=[O.UID()]'>\ref[O]</A> : [object]"
+		text_list += "<a href='byond://?_src_=vars;Vars=[O.UID()]'>\ref[O]</a> : [object]"
 		if(istype(object, /atom))
 			var/atom/A = object
 			var/turf/T = A.loc
@@ -767,32 +768,32 @@ GLOBAL_DATUM_INIT(sdql2_vv_statobj, /obj/effect/statclick/sdql2_vv_all, new(null
 			if(isturf(A))
 				a = A.loc
 				T = A //this should prevent the "inside" part
-				text_list += " <font color='gray'>at</font> [ADMIN_COORDJMP(A)]"
+				text_list += " <span style='color: gray;'>at</span> [ADMIN_COORDJMP(A)]"
 			else if(istype(T))
-				text_list += " <font color='gray'>at</font> [T] [ADMIN_COORDJMP(T)]"
+				text_list += " <span style='color: gray;'>at</span> [T] [ADMIN_COORDJMP(T)]"
 				a = T.loc
 			else
 				var/turf/final = get_turf(T) //Recursive, hopefully?
 				if(istype(final))
-					text_list += " <font color='gray'>at</font> [final] [ADMIN_COORDJMP(final)]"
+					text_list += " <span style='color: gray;'>at</span> [final] [ADMIN_COORDJMP(final)]"
 					a = final.loc
 				else
-					text_list += " <font color='gray'>at</font> nonexistent location"
+					text_list += " <span style='color: gray;'>at</span> nonexistent location"
 			if(a)
-				text_list += " <font color='gray'>in</font> area [a]"
+				text_list += " <span style='color: gray;'>in</span> area [a]"
 				if(T.loc != a)
-					text_list += " <font color='gray'>inside</font> [T]"
+					text_list += " <span style='color: gray;'>inside</span> [T]"
 		text_list += "<br>"
 	else if(islist(object))
 		var/list/L = object
 		var/first = TRUE
 		text_list += "\["
-		for (var/x in L)
-			if (!first)
+		for(var/x in L)
+			if(!first)
 				text_list += ", "
 			first = FALSE
 			SDQL_print(x, text_list)
-			if (!isnull(x) && !isnum(x) && L[x] != null)
+			if(!isnull(x) && !isnum(x) && L[x] != null)
 				text_list += " -> "
 				SDQL_print(L[L[x]])
 		text_list += "]<br>"
@@ -1054,7 +1055,7 @@ GLOBAL_DATUM_INIT(sdql2_vv_statobj, /obj/effect/statclick/sdql2_vv_all, new(null
 	if(isdatum(object))
 		D = object
 
-	if (object == world && (!long || expression[start + 1] == ".") && !(expression[start] in exclude) && copytext(expression[start], 1, 3) != "SS") //3 == length("SS") + 1
+	if(object == world && (!long || expression[start + 1] == ".") && !(expression[start] in exclude) && copytext(expression[start], 1, 3) != "SS") //3 == length("SS") + 1
 		to_chat(usr, span_danger("World variables are not allowed to be accessed. Use global."), confidential=TRUE)
 		return null
 
@@ -1180,7 +1181,7 @@ GLOBAL_DATUM_INIT(sdql2_vv_statobj, /obj/effect/statclick/sdql2_vv_all, new(null
 
 		else if(char == "'")
 			if(word != "")
-				to_chat(usr, "\red SDQL2: You have an error in your SDQL syntax, unexpected ' in query: \"<font color=gray>[query_text]</font>\" following \"<font color=gray>[word]</font>\". Please check your syntax, and try again.", confidential=TRUE)
+				to_chat(usr, "\red SDQL2: You have an error in your SDQL syntax, unexpected ' in query: \"<span style='color: gray;'>[query_text]</span>\" following \"<span style='color: gray;'>[word]</span>\". Please check your syntax, and try again.", confidential=TRUE)
 				return null
 
 			word = "'"
@@ -1200,7 +1201,7 @@ GLOBAL_DATUM_INIT(sdql2_vv_statobj, /obj/effect/statclick/sdql2_vv_all, new(null
 					word += char
 
 			if(i > len)
-				to_chat(usr, "\red SDQL2: You have an error in your SDQL syntax, unmatched ' in query: \"<font color=gray>[query_text]</font>\". Please check your syntax, and try again.", confidential=TRUE)
+				to_chat(usr, "\red SDQL2: You have an error in your SDQL syntax, unmatched ' in query: \"<span style='color: gray;'>[query_text]</span>\". Please check your syntax, and try again.", confidential=TRUE)
 				return null
 
 			query_list += "[word]'"
@@ -1208,7 +1209,7 @@ GLOBAL_DATUM_INIT(sdql2_vv_statobj, /obj/effect/statclick/sdql2_vv_all, new(null
 
 		else if(char == "\"")
 			if(word != "")
-				to_chat(usr, "\red SDQL2: You have an error in your SDQL syntax, unexpected \" in query: \"<font color=gray>[query_text]</font>\" following \"<font color=gray>[word]</font>\". Please check your syntax, and try again.", confidential=TRUE)
+				to_chat(usr, "\red SDQL2: You have an error in your SDQL syntax, unexpected \" in query: \"<span style='color: gray;'>[query_text]</span>\" following \"<span style='color: gray;'>[word]</span>\". Please check your syntax, and try again.", confidential=TRUE)
 				return null
 
 			word = "\""
@@ -1228,7 +1229,7 @@ GLOBAL_DATUM_INIT(sdql2_vv_statobj, /obj/effect/statclick/sdql2_vv_all, new(null
 					word += char
 
 			if(i > len)
-				to_chat(usr, "\red SDQL2: You have an error in your SDQL syntax, unmatched \" in query: \"<font color=gray>[query_text]</font>\". Please check your syntax, and try again.", confidential=TRUE)
+				to_chat(usr, "\red SDQL2: You have an error in your SDQL syntax, unmatched \" in query: \"<span style='color: gray;'>[query_text]</span>\". Please check your syntax, and try again.", confidential=TRUE)
 				return null
 
 			query_list += "[word]\""

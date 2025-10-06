@@ -18,8 +18,8 @@
 	env.temperature = T20C
 
 /obj/structure/closet/critter/Initialize(mapload)
-    . = ..()
-    updateEnv()
+	. = ..()
+	updateEnv()
 
 /obj/structure/closet/critter/Destroy()
 	. = ..()
@@ -175,11 +175,11 @@
 /obj/structure/closet/critter/gosling/populate_contents()
 	amount = rand(1, 3)
 
-/obj/structure/closet/critter/hamster
-	name = "hamster crate"
-	content_mob = /mob/living/simple_animal/mouse/hamster
+/obj/structure/closet/critter/wooly_mouse
+	name = "wolly mice crate"
+	content_mob = /mob/living/simple_animal/mouse/wooly
 
-/obj/structure/closet/critter/hamster/populate_contents()
+/obj/structure/closet/critter/wooly_mouse/populate_contents()
 	amount = rand(1, 5)
 
 /obj/structure/closet/critter/frog
@@ -190,7 +190,6 @@
 	amount = rand(1, 3)
 
 /obj/structure/closet/critter/frog/toxic
-	name = "frog crate"
 	content_mob = /mob/living/simple_animal/frog/toxic
 
 /obj/structure/closet/critter/snail

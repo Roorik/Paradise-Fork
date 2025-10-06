@@ -4,18 +4,16 @@
 	icon_state = "computer"
 	density = TRUE
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 300
 	active_power_usage = 300
-	max_integrity = 200
 	integrity_failure = 100
-	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 40, "acid" = 20)
+	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, RAD = 0, FIRE = 40, ACID = 20)
 	var/obj/item/circuitboard/circuit = null //if circuit==null, computer can't disassembly
 	var/obj/structure/computerframe/frame = /obj/structure/computerframe
 	var/icon_keyboard = "generic_key"
 	var/icon_screen = "generic"
-	var/light_range_on = 1
-	var/light_power_on = 0.7
+	var/light_range_on = 2
+	var/light_power_on = 0.9
 	var/abductor = FALSE
 	/// Are we in the middle of a flicker event?
 	var/flickering = FALSE
@@ -41,7 +39,7 @@
 /obj/machinery/computer/Destroy()
 	if(istype(frame))
 		qdel(frame)
-		
+
 	frame = null
 
 	return ..()
@@ -56,7 +54,12 @@
 	if(light_on)
 		set_light_on(FALSE)
 		underlays.Cut()
-		visible_message(span_danger("[src] grows dim, its screen barely readable."))
+		visible_message(span_danger("Экран [declent_ru(GENITIVE)] тускнеет, изображение становится едва видимым."))
+
+/obj/machinery/computer/MouseDrop_T(atom/dropping, mob/user, params)
+	. = ..()
+	//Adds the component only once. We do it here & not in Initialize() because there are tons of windows & we don't want to add to their init times
+	LoadComponent(/datum/component/leanable, dropping)
 
 /*
  * Reimp, flash the screen on and off repeatedly.
@@ -127,7 +130,12 @@
 	if((stat & (BROKEN|NOPOWER)))
 		set_light_on(FALSE)
 	else
-		set_light(light_range_on, light_power_on, l_on = TRUE)
+		// Get the average color of the computer screen so it can be used as a tinted glow
+		// Shamelessly stolen from /tg/'s /datum/component/customizable_reagent_holder.
+		var/icon/emissive_avg_screen_color = new(icon, icon_screen)
+		emissive_avg_screen_color.Scale(1, 1)
+		var/screen_emissive_color = copytext(emissive_avg_screen_color.GetPixel(1, 1), 1, 8) // remove opacity
+		set_light(l_range = light_range_on, l_power = light_power_on, l_color = screen_emissive_color, l_on = TRUE)
 	if(.)
 		update_icon()
 
@@ -167,19 +175,15 @@
 		if(circuit) //no circuit, no computer frame
 			if(stat & BROKEN)
 				if(user)
-					to_chat(user, span_notice("The broken glass falls out."))
-
+					to_chat(user, span_notice("Из рамки дисплея выпадает разбитое стекло."))
 				else
 					playsound(src, 'sound/effects/hit_on_shattered_glass.ogg', 70, TRUE)
-
 				new /obj/item/shard(drop_location())
 				new /obj/item/shard(drop_location())
 				frame.state = 4
-
 			else
 				if(user)
-					to_chat(user, span_notice("You disconnect the monitor."))
-
+					balloon_alert(user, "монитор отключён")
 			frame.update_icon()
 
 		for(var/obj/C in src)
@@ -196,7 +200,7 @@
 
 /obj/machinery/computer/proc/decode(text)
 	// Adds line breaks
-	text = replacetext(text, "\n", "<BR>")
+	text = replacetext(text, "\n", "<br>")
 	return text
 
 /obj/machinery/computer/attack_ghost(mob/user)
@@ -251,7 +255,6 @@
 	icon_state = "right-closed"
 
 /obj/machinery/computer/old_frame/macintosh
-	icon = 'icons/obj/machines/computer3.dmi'
 	icon_screen = "stock_computer"
 	icon_state = "oldcomp"
 

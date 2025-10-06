@@ -3,7 +3,6 @@
  */
 /obj/item/camera_film
 	name = "film cartridge"
-	icon = 'icons/obj/items.dmi'
 	desc = "A camera film cartridge. Insert it into a camera to reload it."
 	icon_state = "film"
 	item_state = "electropack"
@@ -41,5 +40,5 @@
 	item_state = "briefcase"
 	can_hold = list(/obj/item/photo)
 	resistance_flags = FLAMMABLE
-	drop_sound = 'sound/items/handling/book_drop.ogg'
-	pickup_sound =  'sound/items/handling/book_pickup.ogg'
+	drop_sound = 'sound/items/handling/drop/book_drop.ogg'
+	pickup_sound =  'sound/items/handling/pickup/book_pickup.ogg'

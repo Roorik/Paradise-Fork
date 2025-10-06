@@ -40,7 +40,6 @@
 	var/id = null
 	var/active = 0
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
 	idle_power_usage = 2
 	active_power_usage = 4
 
@@ -65,7 +64,7 @@
 	active = !active
 	update_icon(UPDATE_ICON_STATE)
 
-	for(var/obj/machinery/holosign/M in GLOB.machines)
+	for(var/obj/machinery/holosign/M in SSmachines.get_by_type(/obj/machinery/holosign))
 		if(M.id == src.id)
 			spawn( 0 )
 				M.toggle()

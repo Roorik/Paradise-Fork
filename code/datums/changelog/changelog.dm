@@ -9,8 +9,8 @@ GLOBAL_VAR_INIT(changelog_hash, "")
 
 /datum/changelog/ui_interact(mob/user, datum/tgui/ui = null)
 	ui = SStgui.try_update_ui(user, src, ui)
-	if (!ui)
-		ui = new(user, src, "Changelog")
+	if(!ui)
+		ui = new(user, src, "Changelog", "Журнал обновлений")
 		ui.open()
 
 /datum/changelog/ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
@@ -19,13 +19,13 @@ GLOBAL_VAR_INIT(changelog_hash, "")
 		return
 	if(action == "get_month")
 		var/datum/asset/changelog_item/changelog_item = changelog_items[params["date"]]
-		if (!changelog_item)
+		if(!changelog_item)
 			changelog_item = new /datum/asset/changelog_item(params["date"])
 			changelog_items[params["date"]] = changelog_item
 		return ui.send_asset(changelog_item)
 
 /datum/changelog/ui_static_data(mob/user)
-	var/list/data = list( "dates" = list() )
+	var/list/data = list("dates" = list())
 	var/regex/ymlRegex = regex(@"\.yml", "g")
 
 	for(var/archive_file in sortTim(flist("html/changelogs/archive/"), cmp = /proc/cmp_text_asc))
@@ -36,8 +36,8 @@ GLOBAL_VAR_INIT(changelog_hash, "")
 
 
 /client/verb/changelog()
-	set name = "Changelog"
-	set category = "OOC"
+	set name = "Журнал обновлений"
+	set category = STATPANEL_OOC
 	if(!GLOB.changelog_tgui)
 		GLOB.changelog_tgui = new /datum/changelog()
 
@@ -45,4 +45,4 @@ GLOBAL_VAR_INIT(changelog_hash, "")
 	if(GLOB.changelog_hash && prefs.lastchangelog != GLOB.changelog_hash)
 		prefs.lastchangelog = GLOB.changelog_hash
 		prefs.save_preferences(src)
-		winset(src, "rpane.changelog", "font-style=;")
+		winset(src, "infobuttons.changelog", "font-style=;")

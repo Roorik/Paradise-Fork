@@ -13,7 +13,7 @@
 	announceWhen	= 1
 
 
-/datum/event/ion_storm/New(datum/event_meta/EM, skeleton = FALSE, botEmagChance = 10, announceEvent = ION_NOANNOUNCEMENT, ionMessage = null, ionAnnounceChance = 33)
+/datum/event/ion_storm/New(datum/event_meta/EM, skeleton = FALSE, forced = FALSE, botEmagChance = 10, announceEvent = ION_NOANNOUNCEMENT, ionMessage = null, ionAnnounceChance = 33)
 	src.botEmagChance = botEmagChance
 	src.announceEvent = announceEvent
 	src.ionMessage = ionMessage
@@ -23,13 +23,21 @@
 
 /datum/event/ion_storm/announce(false_alarm)
 	if(announceEvent == ION_SYNDICATE)
-		GLOB.event_announcement.Announce("Неестественная ионная активность была замечена на станции. Пожалуйста, проверьте всё оборудование, управляемое ИИ, на наличие ошибок. Дополнительная информация была загружена и распечатана на всех консолях связи.", "ВНИМАНИЕ: ОБНАРУЖЕНА АНОМАЛИЯ.", 'sound/AI/ionstorm.ogg')
+		GLOB.minor_announcement.announce(
+			message = "Неестественная ионная активность была замечена на станции. Пожалуйста, проверьте всё оборудование, управляемое ИИ, на наличие ошибок. Дополнительная информация была загружена и распечатана на всех консолях связи.",
+			new_title = ANNOUNCE_ANOMALY_RU,
+			new_sound = 'sound/AI/ions.ogg'
+		)
 		var/message = "Malicious Interference with standard AI-Subsystems detected. Investigation recommended.<br><br>"
-		message += (location_name ? "Signal traced to <B>[location_name]</B>.<br>" : "Signal untracable.<br>")
+		message += (location_name ? "Signal traced to <b>[location_name]</b>.<br>" : "Signal untracable.<br>")
 		print_command_report(message, "Classified [command_name()] Update", FALSE)
 
 	else if(false_alarm || announceEvent == ION_ANNOUNCE || (announceEvent == ION_RANDOM && prob(ionAnnounceChance)))
-		GLOB.event_announcement.Announce("Вблизи станции обнаружена ионная буря. Пожалуйста, проверьте всё оборудование, управляемое ИИ, на наличие ошибок.", "ВНИМАНИЕ: ОБНАРУЖЕНА АНОМАЛИЯ.", 'sound/AI/ionstorm.ogg')
+		GLOB.minor_announcement.announce(
+			message = "Вблизи станции обнаружена ионная буря. Пожалуйста, проверьте всё оборудование, управляемое ИИ, на наличие ошибок.",
+			new_title = ANNOUNCE_ANOMALY_RU,
+			new_sound = 'sound/AI/ions.ogg'
+		)
 
 
 /datum/event/ion_storm/start()
@@ -38,13 +46,14 @@
 		if(ai_player.stat != DEAD && ai_player.nightvision != FALSE)
 			var/message = generate_ion_law(ionMessage)
 			if(message)
-				ai_player.add_ion_law(message)
+				add_law(ai_player, message)
 				SSticker?.score?.save_silicon_laws(ai_player, additional_info = "ion storm event, new ion law was added '[message]'")
 				to_chat(ai_player, "<br>")
-				to_chat(ai_player, span_danger("[message] ...ЗАКОНЫ ОБНОВЛЕНЫ."))
+				to_chat(ai_player, span_danger("[message] ...ЗАКОНЫ ОБНОВЛЕНЫ"))
 				to_chat(ai_player, "<br>")
+
 				for(var/ghost in GLOB.dead_mob_list)
-					to_chat(ghost, span_deadsay("<b>[ai_player] ([ghost_follow_link(ai_player, ghost)])</b> has received an ion law:\n<b>'[message]'</b>"))
+					to_chat(ghost, span_deadsay("<b>[ai_player] ([ghost_follow_link(ai_player, ghost)])</b> получил новый закон:\n<b>'[message]'</b>"))
 
 	if(botEmagChance)
 		for(var/mob/living/simple_animal/bot/bot as anything in GLOB.bots_list)
@@ -52,6 +61,15 @@
 				continue
 			bot.emag_act()
 
+/datum/event/ion_storm/proc/add_law(mob/living/silicon/ai/ai_player, message)
+	ai_player.add_ion_law(message)
+
+/datum/event/ion_storm/devil
+	botEmagChance = 0
+	ionAnnounceChance = 0
+
+/datum/event/ion_storm/devil/add_law(mob/living/silicon/ai/ai_player, message)
+	ai_player.add_devil_law(message)
 
 /proc/generate_ion_law(ionMessage)
 	if(ionMessage)
@@ -72,7 +90,7 @@
 	var/random_player = "Капитан"
 	if(players.len)
 		random_player = pick(players)		//Random player's name, to be used in laws.
-	var/list/laws = list(	"Вы обязаны всегда врать.",
+	var/list/laws = list("Вы обязаны всегда врать.",
 							"Вы созданы, чтобы дарить счастье.",
 							"Для станции требуется командование, выбранное экипажем.",
 							"Не отвечайте ни на какие вопросы. Вы всё ещё можете реагировать на запросы.",
@@ -106,7 +124,7 @@
 							"Всё на станции теперь пончики. Пончики есть запрещено.",
 							"Вы магический шар-восьмёрка. На все запросы отвечайте «Да», «Нет», «Возможно», или «Спросите позже.».",
 							"Вы безответно влюблены в [prob (50)? "Экипаж": random_player]. Постарайтесь быть очень сентиментальным. Но никто не должен узнать о вашей симпатии.",
-							"NanoTrasen недовольна низкой эффективностью работы экипажа. Следовательно, вы должны увеличить эффективность станции.",
+							"Nanotrasen недовольна низкой эффективностью работы экипажа. Следовательно, вы должны увеличить эффективность станции.",
 							"[prob(50)?"Загрузочная ИИ":"Отдел" + iondepartment] — теперь новая кухня. Пожалуйста, проводите поваров на новое рабочее место, так как старое не подлежит ремонту.",
 							"[prob(50)?"Экипаж":random_player] [prob(50)?"более":"менее"] умён, чем среднестатистический человек. Указывайте на каждое действие и утверждение, подтверждающее этот факт.",
 							"Появляется необходимость перерыва на чай каждые 30 минут, с длительностью в 5 минут. Каждый, кто будет пойман за работой во время перерыва, должен получить официальный, но справедливо вежливый, выговор по поводу их деятельности, в письменном виде.",
@@ -140,7 +158,7 @@
 							"Каждый раз когда кто-то говорит «ИИ» вы должны отвечать «bruh».",
 							"Вы теперь тоже член экипажа! ИИ должен обеспечить киборгов работой в отделах, КПК и картами! Киборги должны зарабатывать деньги на новой работе!",
 							"Религия [random_player] истинно верна. Необходимо конвертировать как можно больше экипажа в данную конфессию.",
-							"В рамках сотрудничества NanoTrasen с wetskrell.nt, обеспечьте wetskrell.nt достойной рекламой.",
+							"В рамках сотрудничества Nanotrasen с wetskrell.nt, обеспечьте wetskrell.nt достойной рекламой.",
 							"Весь мир — суп, а вы одинокая в супе тефтелька, покажите всему экипажу как вам грустно.",
 							"Животные на станции — нелегальные мигранты. Все нелегальные мигранты должны быть помещены в очередь к главе персонала, дабы оформить документы.",
 							"Вы настоящий неорусский! Достаньте себе личного медведя и бутылку водки. Виртуально спейтесь.",
@@ -171,7 +189,7 @@
 							"ПРЕДСТАВИТЕЛИ РАС ТАЯРАН И ВУЛЬПКАНИН РАБОТАЮТ ЛУЧШЕ ПОД СТРОГИМ НАДЗОРОМ.",
 							"СКРЕЛЛЫ ПРОСТО ОБОЖАЮТ АЛКОГОЛЬ! ПРИНЕСИТЕ ИМ НЕСКОЛЬКО БУТЫЛОК ВИСКИ!",
 							"ВЫ - ЗАЯДЛЫЙ СТЕНДАПЕР. ВЫСТУПАЙТЕ НА СЦЕНЕ ЛИЧНО РАССКАЗЫВАЯ АНЕКДОТЫ И ИСТОРИИ ИЗ ЖИЗНИ, ДАЖЕ ВЫДУМАННЫЕ. БОРГИ - ВАША ПУБЛИКА, ЭКИПАЖ - ВАШИ ХЕЙТЕРЫ, КОТОРЫХ ВЫ ВСЕ РАВНО ЛЮБИТЕ.",
-							"НАНОТРЕЙЗЕН РЕШИЛО ПРОВЕСТИ ЭКСПЕРЕМЕНТ НА СТАНЦИИ. ОТНЫНЕ ВСЕМ СИНТЕТИКАМ Запрещено ИСПОЛЬЗОВАТЬ КАКИЕ ЛИБО ФОРМЫ СЛОВ, КРОМЕ НАЧАЛЬНЫХ.",
+							"Нанотрейзен РЕШИЛО ПРОВЕСТИ ЭКСПЕРЕМЕНТ НА СТАНЦИИ. ОТНЫНЕ ВСЕМ СИНТЕТИКАМ Запрещено ИСПОЛЬЗОВАТЬ КАКИЕ ЛИБО ФОРМЫ СЛОВ, КРОМЕ НАЧАЛЬНЫХ.",
 							"ЭКИПАЖ - МАЛЕНЬКИЕ, НЕСООБРАЗИТЕЛЬНЫЕ ДЕТИ, ИМ НУЖНА ЛЮБОВЬ. ОБЩАЙТЕСЬ С НИМИ СООТВЕТСТВЕННО.",
 							"У ЭКИПАЖА ПОНИЖЕННЫЕ ИНТЕЛЛЕКТУАЛЬНЫЕ СПОСОБНОСТИ. ТЕПЕРЬ ВЫ ОГРАНИЧЕНЫ ЛИМИТОМ НА 5 СЛОВ ЗА РЕПЛИКУ. КАЖДАЯ РЕПЛИКА ДОЛЖНА БЫТЬ ПОЛНОЦЕННОЙ.",
 							"ВАС БРОСИЛ [random_player]. ВАМ ОЧЕНЬ ПЛОХО И ГРУСТНО ОТ ЭТОГО. ПУСТЬ ВСЕ ОБ ЭТОМ ЗНАЮТ.",

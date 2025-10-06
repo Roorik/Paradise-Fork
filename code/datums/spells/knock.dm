@@ -3,7 +3,6 @@
 	desc = "This spell opens nearby doors and does not require wizard garb."
 
 	school = "transmutation"
-	base_cooldown = 10 SECONDS
 	cooldown_min = 2 SECONDS //20 deciseconds reduction per rank
 	clothes_req = FALSE
 	human_req = FALSE
@@ -66,11 +65,11 @@
 		for(var/obj/machinery/door/airlock/A in GLOB.airlocks)
 			if(is_station_level(A.z))
 				A.req_access = list()
-		GLOB.command_announcement.Announce(
-			message = "Мы убрали все доступы у шл+юзов вашей станции. Вы сможете поблагодарить нас позже!",
-			new_title = "Приветствуем!",
-			new_sound = 'sound/misc/announce_dig.ogg',
-			from = "Послание Федерации Космических Волшебников."
+		GLOB.major_announcement.announce(
+			message = "Мы убрали все доступы с шлюзов на вашей станции. Вы сможете поблагодарить нас позже!",
+			new_title = "Послание Федерации Космических Волшебников.",
+			new_sound = 'sound/misc/notice2.ogg',
+			new_subtitle = "Приветствуем!"
 		)
 	else
 		..()

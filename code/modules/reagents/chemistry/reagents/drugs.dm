@@ -2,7 +2,6 @@
 	name = "Литий"
 	id = "lithium"
 	description = "Химический элемент."
-	reagent_state = SOLID
 	color = "#808080" // rgb: 128, 128, 128
 	taste_description = "металла"
 
@@ -168,7 +167,6 @@
 	addiction_chance = 20
 	addiction_threshold = 15
 	shock_reduction = 30
-	harmless = FALSE
 	minor_addiction = TRUE
 	heart_rate_increase = 1
 	taste_description = "мятного онемения во рту"
@@ -225,7 +223,7 @@
 		else if(effect <= 7)
 			M.emote("collapse")
 			to_chat(M, span_warning("Ваше сердце едва ли не выскакивает из груди!"))
-			M << 'sound/effects/singlebeat.ogg'
+			SEND_SOUND(M, sound('sound/effects/singlebeat.ogg'))
 			M.Paralyse(10 SECONDS)
 			M.Jitter(60 SECONDS)
 			update_flags |= M.adjustToxLoss(4, FALSE)
@@ -389,7 +387,9 @@
 	metabolization_rate = 1.5 * REAGENTS_METABOLISM
 	heart_rate_increase = 1
 	taste_description = "бодрости"
-
+	tags = REAGENT_TAG_ANTI_STUN
+	chemdesc = "Ускоряет передвижение, бодрит и помогает легче справляться с оглушениями разного рода. Повреждает мозг."
+	chemuse = 50
 
 /datum/reagent/methamphetamine/on_mob_add(mob/living/user)
 	. = ..()
@@ -420,6 +420,13 @@
 	. = ..()
 	user.remove_movespeed_modifier(/datum/movespeed_modifier/reagent/methamphetamine)
 
+/datum/reagent/methamphetamine/reaction_mob(mob/living/mob, method = REAGENT_TOUCH, volume, show_message = TRUE)
+	. = ..()
+
+	if(method != REAGENT_INGEST)
+		return
+
+	mob.Knockdown(1 SECONDS)
 
 /datum/reagent/methamphetamine/overdose_process(mob/living/M, severity)
 	var/list/overdose_info = ..()
@@ -453,7 +460,6 @@
 	name = "Соль для ванн"
 	id = "bath_salts"
 	description = "На самом деле это не соли для купания в ванной, а синтетические наркотики, которые часто маскируют под соли для ванн и прочие бытовые вещества, чтобы упроситить распространение."
-	reagent_state = SOLID
 	color = "#FAFAFA"
 	overdose_threshold = 20
 	addiction_chance = 15
@@ -461,6 +467,7 @@
 	shock_reduction = 60
 	metabolization_rate = 1.5 * REAGENTS_METABOLISM
 	taste_description = "нереальной бодрости"
+	tags = REAGENT_TAG_ANTI_STUN
 
 
 /datum/reagent/bath_salts/on_mob_add(mob/living/carbon/human/user)
@@ -510,11 +517,11 @@
 /datum/reagent/bath_salts/reaction_mob(mob/living/M, method=REAGENT_TOUCH, volume)
 	if(method == REAGENT_INGEST)
 		to_chat(M, span_danger("<font face='[pick("Curlz MT", "Comic Sans MS")]' size='[rand(4,6)]'>КАК ЖЕ ЭТО ОХУЕННО!!!</font>"))
-		M << 'sound/effects/singlebeat.ogg'
+		SEND_SOUND(M, sound('sound/effects/singlebeat.ogg'))
 		M.emote("faint")
-		M.apply_effect(5, IRRADIATE, negate_armor = 1)
-		M.adjustToxLoss(5)
-		M.adjustBrainLoss(10)
+		M.apply_effect(volume, IRRADIATE, negate_armor = 1)
+		M.adjustToxLoss(volume)
+		M.adjustBrainLoss(volume * 2)
 	else
 		to_chat(M, span_notice("Вы чувствуете себя соленоватым."))
 
@@ -630,6 +637,8 @@
 	addiction_chance_additional = 20
 	addiction_threshold = 10
 	taste_description = "кувырков"
+	chemdesc = "Вызывает неконтролируемое вращение."
+	chemuse = 50
 
 /datum/reagent/fliptonium/on_mob_life(mob/living/M)
 	var/update_flags = STATUS_UPDATE_NONE
@@ -738,9 +747,7 @@
 	addiction_threshold = 20
 	color = "#FF4DD2"
 	taste_description = "смеха"
-	can_synth = TRUE
 	reagent_state = LIQUID
-	harmless = TRUE
 
 /datum/reagent/consumable/laughter/on_mob_life(mob/living/carbon/M)
 	var/update_flags = STATUS_UPDATE_NONE
@@ -865,7 +872,6 @@
 	name = "Ультра-смазка"
 	id = "ultralube"
 	description = "Ультра-смазка - это улучшенная смазка, которая вызывает у синтетиков эффект, подобный метамфетамину, за счет резкого снижения внутреннего трения и повышения охлаждающей способности."
-	reagent_state = LIQUID
 	color = "#1BB1FF"
 	process_flags = SYNTHETIC
 	overdose_threshold = 20
@@ -955,7 +961,7 @@
 	M.Stuttering(10 SECONDS)
 	if(prob(10))
 		to_chat(M, span_danger("Ваши процессоры перегружаются, вызывая короткое замыкание!"))
-		playsound(get_turf(M), 'sound/effects/eleczap.ogg', 75, 1)
+		playsound(get_turf(M), 'sound/effects/eleczap.ogg', 75, TRUE)
 		//Lightning effect for electrical discharge visualization
 		var/icon/I=new('icons/obj/zap.dmi',"lightningend")
 		I.Turn(-135)
@@ -1081,6 +1087,7 @@
 	taste_description = "неприятной горечи с примесью бедности"
 	shock_reduction = 100
 	metabolization_rate = 0.6 * REAGENTS_METABOLISM
+	tags = REAGENT_TAG_ANTI_STUN
 
 /datum/reagent/crack/on_mob_life(mob/living/M)
 	var/update_flags = STATUS_UPDATE_NONE
@@ -1120,6 +1127,7 @@
 	taste_description = "легкой горечи, переходящей в чувство онемения"
 	shock_reduction = 140
 	metabolization_rate = 0.4 * REAGENTS_METABOLISM
+	tags = REAGENT_TAG_ANTI_STUN
 
 /datum/reagent/cocaine/on_mob_life(mob/living/M)
 	var/update_flags = STATUS_UPDATE_NONE

@@ -1,25 +1,46 @@
 /obj/item/ammo_casing
 	name = "bullet casing"
-	desc = "A bullet casing."
+	desc = "Иногда гильза от пули - это просто гильза, и ничего более."
+	ru_names = list(
+		NOMINATIVE = "гильза от пули",
+		GENITIVE = "гильзы от пули",
+		DATIVE = "гильзе от пули",
+		ACCUSATIVE = "гильзу от пули",
+		INSTRUMENTAL = "гильзой от пули",
+		PREPOSITIONAL = "гильзе от пули"
+	)
 	icon = 'icons/obj/weapons/ammo.dmi'
 	icon_state = "s-casing"
+	origin_tech = "materials=3;combat=3"
 	flags = CONDUCT
 	slot_flags = ITEM_SLOT_BELT
 	throwforce = 1
 	w_class = WEIGHT_CLASS_TINY
 	materials = list(MAT_METAL = 1000)
-	var/fire_sound = null						//What sound should play when this ammo is fired
-	var/casing_drop_sound = "casingdrop"        //What sound should play when this ammo hits the ground
-	var/caliber = null							//Which kind of guns it can be loaded into
-	var/projectile_type = null					//The bullet type to create when New() is called
-	var/obj/projectile/BB = null 			//The loaded bullet
-	var/pellets = 1								//Pellets for spreadshot
-	var/variance = 0							//Variance for inaccuracy fundamental to the casing
-	var/delay = 0								//Delay for energy weapons
-	var/randomspread = FALSE						//Randomspread for automatics
-	var/click_cooldown_override = 0				//Override this to make your gun have a faster fire rate, in tenths of a second. 4 is the default gun cooldown.
-	var/harmful = TRUE							//pacifism check for boolet, set to FALSE if bullet is non-lethal
-	var/leaves_residue      		    		//Остается ли порох на руках и одежде?
+	/// What sound should play when this ammo is fired
+	var/fire_sound = null
+	/// What sound should play when this ammo hits the ground
+	var/casing_drop_sound = SFX_CASING_DROP
+	/// Which kind of guns it can be loaded into
+	var/caliber = null
+	/// The bullet type to create when New() is called
+	var/projectile_type = null
+	/// The loaded bullet
+	var/obj/projectile/BB = null
+	/// Pellets for spreadshot
+	var/pellets = 1
+	/// Variance for inaccuracy fundamental to the casing
+	var/variance = 0
+	/// Delay for energy weapons
+	var/delay = 0
+	/// Randomspread for automatics
+	var/randomspread = FALSE
+	/// Override this to make your gun have a faster fire rate, in tenths of a second. 4 is the default gun cooldown.
+	var/click_cooldown_override = 0
+	/// pacifism check for boolet, set to FALSE if bullet is non-lethal
+	var/harmful = TRUE
+	/// Остается ли порох на руках и одежде?
+	var/leaves_residue
 	/// Wheter we can pick this shell by clicking on it with the ammo box
 	var/can_be_box_inserted = TRUE
 
@@ -42,6 +63,15 @@
 	dir = pick(GLOB.alldirs)
 	update_appearance(UPDATE_ICON|UPDATE_DESC)
 
+/obj/item/ammo_casing/Destroy()
+	QDEL_NULL(BB)
+	if(!isgun(loc))
+		return ..()
+	var/obj/item/gun/gun = loc
+	if(gun.chambered != src)
+		return ..()
+	gun.chambered = null
+	. = ..()
 
 /obj/item/ammo_casing/update_icon_state()
 	icon_state = "[initial(icon_state)][BB ? "-live" : ""]"
@@ -49,7 +79,7 @@
 
 /obj/item/ammo_casing/update_desc(updates = ALL)
 	. = ..()
-	desc = "[initial(desc)][BB ? "" : " This one is spent."]"
+	desc = "[initial(desc)][BB ? "" : " Эта гильза уже отстрелялась."]"
 
 
 /obj/item/ammo_casing/proc/newshot(params) //For energy weapons, shotgun shells and wands (!).
@@ -64,54 +94,69 @@
 	return ..()
 
 
-/obj/item/ammo_casing/attackby(obj/item/I, mob/user, params)
-	if(istype(I, /obj/item/ammo_box) && can_be_box_inserted)
-		add_fingerprint(user)
-		var/obj/item/ammo_box/box = I
-		if(!isturf(loc))
-			to_chat(user, span_warning("You can collect shells from the floor only."))
-			return ATTACK_CHAIN_PROCEED
+/obj/item/ammo_casing/attackby(obj/item/item, mob/user, params)
+	if(!istype(item, /obj/item/ammo_box) || !can_be_box_inserted)
+		return ..()
+	add_fingerprint(user)
+	var/obj/item/ammo_box/box = item
+	if(!isturf(loc))
+		balloon_alert(user, "не получилось собрать")
+		return ATTACK_CHAIN_PROCEED
+	if(length(box.stored_ammo) >= box.max_ammo)
+		balloon_alert(user, "уже заполнено")
+		return ATTACK_CHAIN_PROCEED
+	var/boolets = 0
+	var/turf/load_loc = loc
+	for(var/obj/item/ammo_casing/bullet in loc)
 		if(length(box.stored_ammo) >= box.max_ammo)
-			to_chat(user, span_warning("The [box.name] is full."))
-			return ATTACK_CHAIN_PROCEED
-		var/boolets = 0
-		for(var/obj/item/ammo_casing/bullet in loc)
-			if(length(box.stored_ammo) >= box.max_ammo)
+			break
+		if(!bullet.BB)
+			continue
+		if(!box.can_fast_load)
+			playsound(box, box.insert_sound, 50, TRUE)
+			if(!do_after(user, box.bullet_load_duration, box, max_interact_count = 1))
 				break
-			if(!bullet.BB)
-				continue
-			if(box.give_round(bullet, FALSE))
-				boolets++
-		if(!boolets)
-			to_chat(user, span_warning("You have failed to collect anything."))
-			return ATTACK_CHAIN_PROCEED
-		box.update_appearance(UPDATE_ICON|UPDATE_DESC)
-		to_chat(user, span_notice("You have collected [boolets] shell\s. The [box.name] now contains [length(box.stored_ammo)] shell\s."))
+			if(bullet.loc != load_loc)
+				break
+			box.update_appearance(UPDATE_ICON|UPDATE_DESC)
+		if(box.give_round(bullet, FALSE))
+			boolets++
+	if(!boolets)
+		balloon_alert(user, "не получилось собрать")
+		return ATTACK_CHAIN_PROCEED
+	box.update_appearance(UPDATE_ICON|UPDATE_DESC)
+	to_chat(user, span_notice("Вы собрали [boolets] гильз[declension_ru(boolets,"у","ы","")]. Теперь в [box.declent_ru(GENITIVE)] [length(box.stored_ammo)] гильз[declension_ru(length(box.stored_ammo),"а","ы","")]."))
+	if(box.can_fast_load)
 		playsound(src, 'sound/weapons/gun_interactions/bulletinsert.ogg', 50, TRUE)
-		return ATTACK_CHAIN_PROCEED_SUCCESS
-
-	return ..()
+	return ATTACK_CHAIN_PROCEED_SUCCESS
 
 
 /obj/item/ammo_casing/screwdriver_act(mob/living/user, obj/item/I)
 	. = TRUE
 	if(!BB)
-		to_chat(user, span_warning("There is no bullet in the casing to inscribe anything into."))
+		to_chat(user, span_warning("В гильзе нет пули для нанесения гравировки."))
 		return .
-	if(initial(BB.name) != "bullet")
-		to_chat(user, span_notice("You can only inscribe a metal bullet."))	//because inscribing beanbags is silly
+	if(initial(BB.name) != BULLET)
+		to_chat(user, span_notice("Вы можете гравировать только металлические пули."))		//because inscribing beanbags is silly
 		return .
 	if(!I.use_tool(src, user, volume = I.tool_volume))
 		return .
-	var/label_text = tgui_input_text(user, "Inscribe some text onto the [initial(BB.name)]", "Inscription", "", 20)
+	var/label_text = tgui_input_text(user, "Нанесите текст на патрон", "Гравировка", "", 20)
 	if(isnull(label_text))
 		return .
 	if(label_text == "")
-		to_chat(user, span_notice("You scratch the inscription off from the [initial(BB.name)]."))
+		to_chat(user, span_notice("Вы соскабливаете гравировку с патрона."))
 		BB.name = initial(BB.name)
 	else
-		to_chat(user, span_notice("You inscribe \"[label_text]\" onto the [initial(BB.name)]."))
-		BB.name = "[initial(BB.name)] \"[label_text]\""
+		to_chat(user, span_notice("Вы наносите \"[label_text]\" на патрон."))
+		BB.ru_names = list(
+			NOMINATIVE = "пуля \"[label_text]\"",
+			GENITIVE = "пули \"[label_text]\"",
+			DATIVE = "пуле \"[label_text]\"",
+			ACCUSATIVE = "пулю \"[label_text]\"",
+			INSTRUMENTAL = "пулей \"[label_text]\"",
+			PREPOSITIONAL = "пуле \"[label_text]\""
+		)
 
 
 /obj/item/ammo_casing/proc/leave_residue(mob/living/carbon/human/H)
@@ -123,12 +168,16 @@
 	else
 		H.gunshot_residue = caliber
 
+/obj/item/ammo_casing/proc/after_fire()
+	return
+
 //Boxes of ammo
 /obj/item/ammo_box
 	name = "ammo box (generic)"
-	desc = "A box of ammo?"
+	desc = "Э-э... коробка с патронами?"
 	icon_state = "357"
 	icon = 'icons/obj/weapons/ammo.dmi'
+	origin_tech = "materials=3;combat=3"
 	flags = CONDUCT
 	slot_flags = ITEM_SLOT_BELT
 	item_state = "syringe_kit"
@@ -137,8 +186,8 @@
 	w_class = WEIGHT_CLASS_TINY
 	throw_speed = 4
 	throw_range = 10
-	pickup_sound = 'sound/items/handling/ammobox_pickup.ogg'
-	drop_sound = 'sound/items/handling/ammobox_drop.ogg'
+	pickup_sound = 'sound/items/handling/pickup/ammobox_pickup.ogg'
+	drop_sound = 'sound/items/handling/drop/ammobox_drop.ogg'
 	var/list/stored_ammo = list()
 	var/ammo_type = /obj/item/ammo_casing
 	var/start_empty = FALSE
@@ -152,6 +201,10 @@
 	var/remove_sound = 'sound/weapons/gun_interactions/remove_bullet.ogg'
 	var/insert_sound = 'sound/weapons/gun_interactions/bulletinsert.ogg'
 	var/load_sound = 'sound/weapons/gun_interactions/shotguninsert.ogg'
+	/// Reload ammo box without progress bar
+	var/can_fast_load = TRUE
+	/// One bullet load duration
+	var/bullet_load_duration = 0.4 SECONDS
 
 
 /obj/item/ammo_box/Initialize(mapload)
@@ -255,6 +308,16 @@
 	if(ammo_box)
 		var/obj/item/ammo_box/box = I
 		for(var/obj/item/ammo_casing/casing in box.stored_ammo)
+			if(!can_fast_load)
+				playsound(src, insert_sound, 50, TRUE)
+				if(!do_after(user, bullet_load_duration, box, DA_IGNORE_USER_LOC_CHANGE, max_interact_count = 1))
+					break
+				box.update_appearance()
+				box.update_equipped_item()
+				update_appearance()
+				update_equipped_item()
+				if(!user.Adjacent(src))
+					break
 			var/did_load = give_round(casing, replace_spent, count_chambered, user)
 			if(did_load)
 				box.stored_ammo -= casing
@@ -300,14 +363,14 @@
 		if(islist(remove_sound) && length(remove_sound))
 			chosen_sound = pick(remove_sound)
 		playsound(loc, chosen_sound, 50, TRUE)
-		to_chat(user, span_notice("You have removed a round from [src]!"))
+		to_chat(user, span_notice("Вы достали патрон из [src.declent_ru(GENITIVE)]!"))
 		update_appearance(UPDATE_ICON|UPDATE_DESC)
 		user.put_in_hands(casing)
 
 
 /obj/item/ammo_box/update_desc(updates = ALL)
 	. = ..()
-	desc = "[initial(desc)] There are [length(stored_ammo)] shell\s left!"
+	desc = "[initial(desc)] В ней осталось [length(stored_ammo)] патрон[declension_ru(length(stored_ammo), "", "а", "ов")] из [max_ammo] возможных!"
 
 
 /obj/item/ammo_box/update_icon_state()

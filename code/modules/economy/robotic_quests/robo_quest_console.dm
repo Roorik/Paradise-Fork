@@ -4,15 +4,17 @@
 #define SOME_CORRECT_MODULES 2
 #define ALL_CORRECT_MODULES 3
 // Choosen mecha defines
-#define WORKING_CLASS	1
-#define MEDICAL_CLASS	2
-#define COMBAT_CLASS	3
-#define RANDOM_CLASS	4
+#define WORKING_CLASS 1
+#define MEDICAL_CLASS 2
+#define COMBAT_CLASS 3
+#define RANDOM_CLASS 4
 /// TGUI helper define for shop items good placing
-#define CATS_BY_STAGE list("number" = list("first", "second", "third"), \
-						   "first" = list("working", "medical", "security"), \
-						   "second" = list("working_medical", "medical_security"), \
-						   "third" = list("working_medical_security"))
+#define CATS_BY_STAGE list( \
+	"number" = list("first", "second", "third"), \
+	"first" = list("working", "medical", "security"), \
+	"second" = list("working_medical", "medical_security"), \
+	"third" = list("working_medical_security") \
+)
 
 
 ///////////////////////
@@ -24,7 +26,7 @@
 	desc = "Консоль, используемая для приема запросов на изготовление экзоскелетов."
 	icon_screen = "robo_ntos_roboquest"
 	icon_keyboard = "rd_key"
-	light_color = LIGHT_COLOR_FADEDPURPLE
+	light_color = LIGHT_COLOR_LAVENDER
 	/// Print order for quests
 	var/print_delayed = FALSE
 	/// Current interface theme
@@ -123,7 +125,7 @@
 	if(!emagged)
 		emagged = TRUE
 		atom_say("System override detected. Instant mech teleportation is available.")
-		playsound(src, "sparks", 100, TRUE, SHORT_RANGE_SOUND_EXTRARANGE)
+		playsound(src, SFX_SPARKS, 100, TRUE, SHORT_RANGE_SOUND_EXTRARANGE)
 
 
 /obj/machinery/computer/roboquest/proc/check_pad()
@@ -167,8 +169,7 @@
 					category += "_[cat]"
 				else
 					category = cat
-
-		var/newitem = list("name" = item.name, "desc" = item.desc, "cost" = item.cost, "icon" = path2assetID(path), "path" = path, "emagOnly" = item.emag_only)
+		var/newitem = list("name" = item.name, "desc" = item.desc, "cost" = item.cost, "icon" = item.icon_file, "icon_state" = item.icon_file, "path" = path, "emagOnly" = item.emag_only)
 		newshop[category] += list(newitem)
 		qdel(item)
 
@@ -228,12 +229,6 @@
 	data["shopItems"] = shop_items
 	return data
 
-/obj/machinery/computer/roboquest/ui_assets(mob/user)
-	return list(
-		get_asset_datum(/datum/asset/spritesheet/roboquest),
-		get_asset_datum(/datum/asset/spritesheet/roboquest_large)
-	)
-
 /obj/machinery/computer/roboquest/ui_act(action, list/params, datum/tgui/ui)
 	if(..())
 		return
@@ -277,7 +272,7 @@
 				var/list/L = list() // List of avaliable telepads
 				var/list/areaindex = list() // Telepad area location
 				var/atom/quantum
-				for(var/obj/machinery/telepad_cargo/R in GLOB.machines)
+				for(var/obj/machinery/telepad_cargo/R in SSmachines.get_by_type(/obj/machinery/telepad_cargo))
 					if(R.stage)
 						continue
 					var/turf/T = get_turf(R)
@@ -346,7 +341,7 @@
 			addtimer(VARSET_CALLBACK(src, print_delayed, FALSE), 10 SECONDS)
 
 /obj/machinery/computer/roboquest/proc/print_task(datum/roboquest/quest)
-	playsound(loc, 'sound/goonstation/machines/printer_thermal.ogg', 50, 1)
+	playsound(loc, 'sound/goonstation/machines/printer_thermal.ogg', 50, TRUE)
 	var/obj/item/paper/paper = new(get_turf(src))
 	paper.header = "<p><img style='display: block; margin-left: auto; margin-right: auto;' src='ntlogo.png' width='220' height='135' /></p><hr noshade size='4'>"
 	paper.info = "<center> <h2> Mecha request form </h2> </center>"
@@ -358,7 +353,7 @@
 		paper.info += "<li> [i["name"]]</li><br>"
 	paper.info += "<br><b> Initial reward:</b> [quest.maximum_cash] credits"
 	paper.info += "<p><b>Mecha request accepted by:</b> [currentID.registered_name] - [currentID.rank] at [station_time_timestamp()].</p></ul>"
-	paper.info += "<hr><center><small><i>The request has been approved and certified by NAS Trurl.</i></small></center>"
+	paper.info += "<hr><center><small><i>The request has been approved and certified by [command_name()].</i></small></center>"
 	var/obj/item/stamp/centcom/stamp = new()
 	paper.stamp(stamp)
 	paper.update_icon()
@@ -414,9 +409,9 @@
 	..()
 	component_parts = list()
 	component_parts += new /obj/item/stack/ore/bluespace_crystal/artificial(null)
-	component_parts += new /obj/item/stock_parts/capacitor/purple(null)
-	component_parts += new /obj/item/stock_parts/manipulator/purple(null)
-	component_parts += new /obj/item/stock_parts/scanning_module/purple(src)
+	component_parts += new /obj/item/stock_parts/capacitor(null)
+	component_parts += new /obj/item/stock_parts/manipulator(null)
+	component_parts += new /obj/item/stock_parts/scanning_module(src)
 	component_parts += new /obj/item/stack/cable_coil(null, 1)
 	component_parts += new /obj/item/circuitboard/advanced_roboquest_pad(null)
 	RefreshParts()
@@ -441,8 +436,8 @@
 		return
 	default_deconstruction_screwdriver(user, "pad-o", initial(icon_state), I)
 
-/obj/machinery/roboquest_pad/proc/teleport(atom/destination, datum/roboquest/quest, obj/machinery/computer/roboquest/console, var/penalty)
-	do_sparks(5, 1, get_turf(src))
+/obj/machinery/roboquest_pad/proc/teleport(atom/destination, datum/roboquest/quest, obj/machinery/computer/roboquest/console, penalty)
+	do_sparks(5, TRUE, get_turf(src))
 	var/obj/mecha/M = (locate(/obj/mecha) in get_turf(src))
 	if(istype(M))
 		var/obj/structure/closet/critter/mecha/box = new(get_turf(src), quest, console, penalty)
@@ -451,8 +446,8 @@
 			do_teleport(box, destination)
 		console.canSend = FALSE
 
-/obj/machinery/roboquest_pad/proc/clear(datum/roboquest/quest, obj/machinery/computer/roboquest/console, var/penalty)
-	do_sparks(5, 1, get_turf(src))
+/obj/machinery/roboquest_pad/proc/clear(datum/roboquest/quest, obj/machinery/computer/roboquest/console, penalty)
+	do_sparks(5, TRUE, get_turf(src))
 	var/obj/mecha/M = (locate(/obj/mecha) in get_turf(src))
 	if(istype(M))
 		qdel(M)

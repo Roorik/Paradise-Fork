@@ -1,12 +1,8 @@
-// original implementation: https://ss13.moe/wiki/index.php/Pulse_Demon
-
 #define PULSEDEMON_PLATING_SPARK_CHANCE 20
 #define PULSEDEMON_APC_CHARGE_MULTIPLIER 2
 #define PULSEDEMON_SMES_DRAIN_MULTIPLIER 10
 #define ALERT_CATEGORY_NOPOWER "pulse_nopower"
 #define ALERT_CATEGORY_NOREGEN "pulse_noregen"
-
-#define PULSEDEMON_SOURCE_DRAIN_INVALID (-1)
 
 /mob/living/simple_animal/demon/pulse_demon
 	name = "pulse demon"
@@ -17,10 +13,9 @@
 
 	damage_coeff = list(BRUTE = 0, BURN = 0, TOX = 0, CLONE = 0, STAMINA = 0, OXY = 0) // Pulse demons take damage from nothing
 
-	emote_hear = list("vibrates", "sizzles")
-	speak_emote = list("modulates")
+	emote_hear = list("вибрирует", "шипит")
+	speak_emote = list("трещит", "потрёскивает", "шипит")
 
-	icon = 'icons/mob/animal.dmi'
 	icon_state = "pulsedem"
 	icon_living = "pulsedem"
 	icon_dead = "pulsedem"
@@ -37,16 +32,13 @@
 	speed = -0.5
 	mob_size = MOB_SIZE_TINY
 	density = FALSE
-	del_on_death = TRUE
 	light_system = MOVABLE_LIGHT
 	attacktext = "electrocutes"
-	attack_sound = "sparks"
-	a_intent = INTENT_HARM
+	attack_sound = SFX_SPARKS
 	harm_intent_damage = 0
 	melee_damage_lower = 0
 	melee_damage_upper = 0
 	pass_flags = PASSDOOR
-	stop_automated_movement = TRUE
 	has_unlimited_silicon_privilege = TRUE
 	can_buckle_to = FALSE
 	// this makes the demon able to speak through holopads, due to the overriden say, PD cannot speak normally regardless
@@ -268,7 +260,7 @@
 	drainpower.owner = mind
 	tampermach.owner = mind
 	greeting.Add(mind.prepare_announce_objectives(FALSE))
-	greeting.Add("<span class='motd'>С полной информацией вы можете ознакомиться на вики: <a href=\"[CONFIG_GET(string/wikiurl)]/index.php/Pulse_Demon\">Электродемон</a></span>")
+	greeting.Add(span_motd("С полной информацией вы можете ознакомиться на вики: <a href=\"[CONFIG_GET(string/wikiurl)]/index.php/Pulse_Demon\">Электродемон</a>"))
 	to_chat(src, chat_box_yellow(greeting.Join("<br>")))
 	SSticker.mode.traitors |= mind
 	return
@@ -418,38 +410,38 @@
 		update_controlling_area()
 
 /mob/living/simple_animal/demon/pulse_demon/move_up()
-	set name = "Move Upwards"
-	set category = "IC"
+	set name = "Подняться"
+	set category = STATPANEL_IC
 
 	var/turf/current_turf = get_turf(src)
 	if(!locate(/obj/structure/cable/multiz) in current_turf)
-		to_chat(src, "<span class='warning'>You need to be on multi z cable hub to move up and down!</span>")
+		to_chat(src, span_warning("You need to be on multi z cable hub to move up and down!"))
 		return FALSE
 
 	var/turf/turf_to_check = GET_TURF_ABOVE(current_turf)
 	if(!(can_exit_cable || locate(/obj/structure/cable/multiz) in turf_to_check))
-		to_chat(src, "<span class='warning'>There isn't a connected cable to be moved on!</span>")
+		to_chat(src, span_warning("There isn't a connected cable to be moved on!"))
 		return FALSE
 
 	if(zMove(UP, z_move_flags = ZMOVE_FEEDBACK|ZMOVE_IGNORE_OBSTACLES))
-		to_chat(src, "<span class='notice'>You move upwards.</span>")
+		to_chat(src, span_notice("You move upwards."))
 
 /mob/living/simple_animal/demon/pulse_demon/move_down()
-	set name = "Move Down"
-	set category = "IC"
+	set name = "Опуститься"
+	set category = STATPANEL_IC
 
 	var/turf/current_turf = get_turf(src)
 	if(!locate(/obj/structure/cable/multiz) in current_turf)
-		to_chat(src, "<span class='warning'>You need to be on multi z cable hub to move up and down!</span>")
+		to_chat(src, span_warning("You need to be on multi z cable hub to move up and down!"))
 		return
 
 	var/turf/turf_to_check = GET_TURF_BELOW(current_turf)
 	if(!(can_exit_cable || locate(/obj/structure/cable/multiz) in turf_to_check))
-		to_chat(src, "<span class='warning'>There isn't a connected cable to be moved on!</span>")
+		to_chat(src, span_warning("There isn't a connected cable to be moved on!"))
 		return FALSE
 
 	if(zMove(DOWN, z_move_flags = ZMOVE_FEEDBACK|ZMOVE_IGNORE_OBSTACLES))
-		to_chat(src, "<span class='notice'>You move down.</span>")
+		to_chat(src, span_notice("You move down."))
 
 // signal to replace relaymove where or when? // Never, actually just manage your code instead
 /obj/machinery/power/relaymove(mob/user, dir)
@@ -584,10 +576,10 @@
 		current_robot.say(message, null, FALSE, ignore_speech_problems, ignore_atmospherics, ignore_languages)
 		return TRUE
 
-	var/message_mode = parse_message_mode(message, "headset")
+	var/message_mode = parse_message_mode(message, HEADSET_MODE)
 
 	if(message_mode)
-		if(message_mode == "headset")
+		if(message_mode == HEADSET_MODE)
 			message = copytext(message, 2)
 		else
 			message = copytext(message, 3)
@@ -622,7 +614,7 @@
 	else if(istype(loc, /obj/machinery/hologram/holopad))
 		var/obj/machinery/hologram/holopad/H = loc
 		name = "[H]"
-		for(var/mob/M in get_mobs_in_view(7, H))
+		for(var/mob/M in get_hearers_in_view(7, H))
 			M.hear_say(message_pieces, verb, FALSE, src)
 		name = real_name
 		return TRUE
@@ -632,7 +624,7 @@
 
 /mob/living/simple_animal/demon/pulse_demon/visible_message(message, self_message, blind_message, list/ignored_mobs, chat_message_type, projectile_message = FALSE)
 	// overriden because pulse demon is quite often in non-turf locs, and /mob/visible_message acts differently there
-	for(var/mob/mob in get_mobs_in_view(7, src))
+	for(var/mob/mob in get_hearers_in_view(7, src))
 		if(mob.see_invisible < invisibility)
 			continue //can't view the invisible
 		if(projectile_message && (mob?.client?.prefs.toggles2 & PREFTOGGLE_2_OFF_PROJECTILE_MESSAGES))
@@ -850,6 +842,7 @@
 	return FALSE
 
 /mob/living/simple_animal/demon/pulse_demon/hitby(atom/movable/AM, skipcatch, hitpush, blocked, datum/thrownthing/throwingdatum)
+	SEND_SIGNAL(src, COMSIG_ATOM_HITBY, AM, skipcatch, hitpush, blocked, throwingdatum)
 	return
 
 /mob/living/simple_animal/demon/pulse_demon/experience_pressure_difference()
@@ -908,5 +901,8 @@
 	desc = "You've been EMP'd and cannot regenerate health!"
 	icon_state = "pd_noregen"
 
+#undef PULSEDEMON_PLATING_SPARK_CHANCE
+#undef PULSEDEMON_APC_CHARGE_MULTIPLIER
+#undef PULSEDEMON_SMES_DRAIN_MULTIPLIER
 #undef ALERT_CATEGORY_NOPOWER
 #undef ALERT_CATEGORY_NOREGEN

@@ -11,7 +11,6 @@
 	selection_color = "#9f8545"
 	access = list(ACCESS_RC_ANNOUNCE, ACCESS_KEYCARD_AUTH, ACCESS_HEADS_VAULT, ACCESS_ALL_PERSONAL_LOCKERS, ACCESS_HEADS, ACCESS_SEC_DOORS, ACCESS_EVA, ACCESS_MAINT_TUNNELS, ACCESS_MAILSORTING, ACCESS_CARGO, ACCESS_CARGO_BOT, ACCESS_QM, ACCESS_MINT, ACCESS_MINING, ACCESS_MINING_STATION, ACCESS_MINERAL_STOREROOM)
 	minimal_access = list(ACCESS_RC_ANNOUNCE, ACCESS_KEYCARD_AUTH, ACCESS_HEADS_VAULT, ACCESS_ALL_PERSONAL_LOCKERS, ACCESS_HEADS, ACCESS_SECURITY, ACCESS_EVA, ACCESS_MAINT_TUNNELS, ACCESS_MAILSORTING, ACCESS_CARGO, ACCESS_CARGO_BOT, ACCESS_QM, ACCESS_MINT, ACCESS_MINING, ACCESS_MINING_STATION, ACCESS_MINERAL_STOREROOM)
-	min_age_type = JOB_MIN_AGE_COMMAND
 	exp_requirements = 3000
 	exp_type = EXP_TYPE_CREW
 	disabilities_allowed = 0
@@ -19,7 +18,7 @@
 	outfit = /datum/outfit/job/qm
 	insurance_type = INSURANCE_TYPE_DELUXE // Always has been.
 
-	//QM IS NOT THE HEAD!!
+	//QM IS THE HEAD!!
 	salary = 300
 	min_start_money = 400
 	max_start_money = 700
@@ -58,16 +57,15 @@
 	alt_titles = list("Supply Manager","Loader")
 	outfit = /datum/outfit/job/cargo_tech
 
-	salary = 100
-	min_start_money = 100
-	max_start_money = 300
+	salary = 130
+	min_start_money = 200
+	max_start_money = 400
 
 /datum/outfit/job/cargo_tech
 	name = "Cargo Technician"
 	jobtype = /datum/job/cargo_tech
 
 	uniform = /obj/item/clothing/under/rank/cargotech
-	shoes = /obj/item/clothing/shoes/black
 	l_ear = /obj/item/radio/headset/headset_cargo
 	id = /obj/item/card/id/supply
 	pda = /obj/item/pda/cargo
@@ -121,7 +119,6 @@
 	box = /obj/item/storage/box/survival_mining
 
 /datum/outfit/job/mining/equipped
-	name = "Shaft Miner"
 	toggle_helmet = TRUE
 	suit = /obj/item/clothing/suit/hooded/explorer
 	mask = /obj/item/clothing/mask/gas/explorer
@@ -141,6 +138,50 @@
 	name = "Shaft Miner (Equipment + Hardsuit)"
 	suit = /obj/item/clothing/suit/space/hardsuit/mining
 	mask = /obj/item/clothing/mask/breath
+
+/// Mining medic job and outfit
+
+/datum/job/mining_medic
+	title = JOB_TITLE_MINING_MEDIC
+	flag = JOB_FLAG_MINING_MEDIC
+	department_flag = JOBCAT_SUPPORT
+	is_supply = 1
+	total_positions = 1
+	spawn_positions = 1
+	supervisors = "the chief medical officer and the quartermaster"
+	department_head = list(JOB_TITLE_QUARTERMASTER, JOB_TITLE_CMO)
+	selection_color = "#cee6ef"
+	access = list(ACCESS_MAILSORTING, ACCESS_CARGO, ACCESS_CARGO_BOT, ACCESS_MINT, ACCESS_MINING, ACCESS_MINING_STATION, ACCESS_MAINT_TUNNELS, ACCESS_MINERAL_STOREROOM, ACCESS_MEDICAL, ACCESS_MORGUE, ACCESS_SURGERY, ACCESS_CHEMISTRY, ACCESS_GENETICS)
+	minimal_access = list(ACCESS_MINING, ACCESS_MINT, ACCESS_MINING_STATION, ACCESS_MAILSORTING, ACCESS_MAINT_TUNNELS, ACCESS_MINERAL_STOREROOM, ACCESS_MEDICAL, ACCESS_MORGUE, ACCESS_SURGERY)
+	alt_titles = list("Lavaland Health Officer")
+	outfit = /datum/outfit/job/mining_medic
+	insurance_type = INSURANCE_TYPE_EXTENDED
+	exp_requirements = 600 //10 hours
+	exp_type = EXP_TYPE_MEDICAL
+
+	salary = 170
+	min_start_money = 250
+	max_start_money = 500
+
+/datum/outfit/job/mining_medic
+	name = "Mining Medic"
+	jobtype = /datum/job/mining_medic
+	glasses = /obj/item/clothing/glasses/hud/health/meson
+	l_ear = /obj/item/radio/headset/headset_mining_medic
+	shoes = /obj/item/clothing/shoes/workboots/mining
+	uniform = /obj/item/clothing/under/rank/medical/mining_medic
+	suit = /obj/item/clothing/suit/storage/labcoat/mining_medic
+	l_pocket = /obj/item/roller/holo
+	r_pocket = /obj/item/flash
+	l_hand = /obj/item/storage/firstaid/doctor/mining_medic
+	id = /obj/item/card/id/mining_medic
+	pda = /obj/item/pda/cargo
+
+	backpack_contents = list(
+		/obj/item/flashlight/lantern = 1,
+		/obj/item/radio/weather_monitor = 1,
+		/obj/item/wormhole_jaunter = 1,
+	)
 
 //Food
 /datum/job/bartender
@@ -169,7 +210,6 @@
 	uniform = /obj/item/clothing/under/rank/bartender
 	suit = /obj/item/clothing/suit/armor/vest
 	belt = /obj/item/storage/belt/bandolier/full
-	shoes = /obj/item/clothing/shoes/black
 	l_ear = /obj/item/radio/headset/headset_service
 	glasses = /obj/item/clothing/glasses/sunglasses/reagent
 	pda = /obj/item/pda/bar
@@ -211,7 +251,6 @@
 	uniform = /obj/item/clothing/under/rank/chef
 	suit = /obj/item/clothing/suit/chef
 	belt = /obj/item/storage/belt/chef
-	shoes = /obj/item/clothing/shoes/black
 	head = /obj/item/clothing/head/chefhat
 	l_ear = /obj/item/radio/headset/headset_service
 	pda = /obj/item/pda/chef
@@ -265,7 +304,6 @@
 	uniform = /obj/item/clothing/under/rank/hydroponics
 	suit = /obj/item/clothing/suit/apron
 	gloves = /obj/item/clothing/gloves/botanic_leather
-	shoes = /obj/item/clothing/shoes/black
 	l_ear = /obj/item/radio/headset/headset_service
 	suit_store = /obj/item/plant_analyzer
 	pda = /obj/item/pda/botanist
@@ -411,7 +449,7 @@
 			if(empty_slots < 1)
 				to_chat(owner, span_notice("You have no available slots."))
 				return
-			var/voice_name = input(owner, "Choose a name for slot.", "Mimicking") as text|null
+			var/voice_name = tgui_input_text(owner, "Choose a name for slot.", "Mimicking")
 			if(!voice_name)
 				return
 			var/voice_seed = tgui_input_list(owner, "Choose a voice for slot", "Mimicking", available_voices, owner.tts_seed)
@@ -456,9 +494,9 @@
 /datum/mimicking_voice/proc/voice_data()
 	return list("name" = name, "voice" = voice, "selected" = selected, "id" = UID())
 
-/mob/living/carbon/human/proc/mimicking(var/mob/living/carbon/human/H)
-	set name = "Mimic voice"
-	set category = "IC"
+/mob/living/carbon/human/proc/mimicking(mob/living/carbon/human/H)
+	set name = "Имитировать голос"
+	set category = STATPANEL_IC
 	if(!H)
 		to_chat(usr, span_notice("Use right click to choose target correctly."))
 	var/datum/action/innate/mimicking/mimic = locate(/datum/action/innate/mimicking) in usr.actions
@@ -520,7 +558,6 @@
 	uniform = /obj/item/clothing/under/mime
 	suit = /obj/item/clothing/suit/suspenders
 	gloves = /obj/item/clothing/gloves/color/white
-	shoes = /obj/item/clothing/shoes/black
 	head = /obj/item/clothing/head/beret
 	mask = /obj/item/clothing/mask/gas/mime
 	l_ear = /obj/item/radio/headset/headset_service
@@ -576,7 +613,6 @@
 	jobtype = /datum/job/janitor
 
 	uniform = /obj/item/clothing/under/rank/janitor
-	shoes = /obj/item/clothing/shoes/black
 	l_ear = /obj/item/radio/headset/headset_service
 	pda = /obj/item/pda/janitor
 
@@ -606,7 +642,6 @@
 	jobtype = /datum/job/librarian
 
 	uniform = /obj/item/clothing/under/suit_jacket/red
-	shoes = /obj/item/clothing/shoes/black
 	l_ear = /obj/item/radio/headset/headset_service
 	l_pocket = /obj/item/laser_pointer
 	r_pocket = /obj/item/barcodescanner
@@ -619,8 +654,6 @@
 	title = JOB_TITLE_EXPLORER
 	flag = JOB_FLAG_EXPLORER
 	department_flag = JOBCAT_SUPPORT
-	total_positions = 0
-	spawn_positions = 0
 	supervisors = "the head of personnel"
 	department_head = list(JOB_TITLE_HOP)
 	selection_color = "#d1e8d3"
@@ -639,4 +672,3 @@
 	name = "Explorer"
 	jobtype = /datum/job/explorer
 	uniform = /obj/item/clothing/under/color/random
-	shoes = /obj/item/clothing/shoes/black

@@ -88,8 +88,8 @@
 	visuals.layer = beam_layer
 	visuals.update_appearance()
 	Draw()
-	RegisterSignal(origin, COMSIG_MOVABLE_MOVED, PROC_REF(redrawing))
-	RegisterSignal(target, COMSIG_MOVABLE_MOVED, PROC_REF(redrawing))
+	RegisterSignal(origin, COMSIG_MOVABLE_MOVED, PROC_REF(redrawing), TRUE)
+	RegisterSignal(target, COMSIG_MOVABLE_MOVED, PROC_REF(redrawing), TRUE)
 
 /**
  * Triggered by signals set up when the beam is set up. If it's still sane to create a beam, it removes the old beam, creates a new one. Otherwise it kills the beam.
@@ -185,7 +185,6 @@
 /obj/effect/ebeam
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
 	layer = ABOVE_ALL_MOB_LAYER
-	anchored = TRUE
 	var/emissive = FALSE
 	var/datum/beam/owner
 
@@ -212,7 +211,7 @@
 /obj/effect/ebeam/singularity_act()
 	return
 
-/obj/effect/ebeam/ex_act(severity)
+/obj/effect/ebeam/ex_act(severity, target)
 	return
 
 /// A beam subtype used for advanced beams, to react to atoms entering the beam
@@ -345,6 +344,10 @@
 
 /obj/effect/ebeam/medical
 	name = "medical beam"
+
+/obj/effect/ebeam/laser_sight
+	name = "laser sight"
+	layer = OBJ_LAYER
 
 /obj/effect/ebeam/reacting/deadly
 

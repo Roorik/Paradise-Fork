@@ -37,8 +37,8 @@
 
 
 /obj/item/clothing/neck/poncho/verb/flip_poncho()
-	set name = "Flip poncho"
-	set category = "Object"
+	set name = "Перекинуть пончо"
+	set category = STATPANEL_OBJECT
 	set desc = "Flip poncho behind your back"
 	set src in usr
 
@@ -74,7 +74,7 @@
 		to_chat(user, "You flip [src] behind your back.")
 	else
 		to_chat(user, "You flip [src] to its normal position.")
-	user.update_inv_neck()
+	user.update_worn_neck()
 
 /obj/item/clothing/neck/poncho/red
 	name = "red poncho"

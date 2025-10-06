@@ -62,6 +62,9 @@ LOG_ACCESS
 ## log game actions (start of round, results, etc.)
 LOG_GAME
 
+## log mapmanip json + loaded submaps
+LOG_MAPMANIP
+
 ## log player votes
 LOG_VOTE
 
@@ -207,8 +210,10 @@ MINPLAYERS DEVILAGENTS 25
 ## Weights for all special antags in ANTAG-PARADISE gamemode. Traitor Hijacker, Malfunctioning AI and Space Ninja currently. If Nothing is chosen special antag will not spawn.
 #ANTAG_PARADISE_SPECIAL_ANTAGS_WEIGHTS HIJACKER 10
 #ANTAG_PARADISE_SPECIAL_ANTAGS_WEIGHTS MALFAI 10
+#ANTAG_PARADISE_SPECIAL_ANTAGS_WEIGHTS PRISONER 10
 #ANTAG_PARADISE_SPECIAL_ANTAGS_WEIGHTS NINJA 10
 #ANTAG_PARADISE_SPECIAL_ANTAGS_WEIGHTS NOTHING 30
+#ANTAG_PARADISE_SPECIAL_ANTAGS_WEIGHTS DEVIL 0
 
 ## Chance for traitors to roll additional antag role in ANTAG-PARADISE gamemode. Leave it commented for default 10% chance.
 #ANTAG_PARADISE_DOUBLE_ANTAG_CHANCE 10
@@ -683,6 +688,18 @@ MINUTE_TOPIC_LIMIT 150
 SECOND_CLICK_LIMIT 15
 MINUTE_CLICK_LIMIT 400
 
+## INSTANCE
+ENABLE_MULTI_INSTANCE
+#ENABLE_INSTANCE_ANNOUNCE
+INSTANCE_ID paradise_main
+INTERNAL_IP 127.0.0.1
+
+## REDIS
+## Enable redis subsystem
+#ENABLE_REDIS
+## Redis connection string
+#REDIS_CONNSTRING redis://127.0.0.1/
+
 ## Assets can opt-in to caching their results into `cache/`.
 ## This is important, as preferences assets take upwards of 30 seconds (without sleeps) to collect.
 ## The cache is assumed to be cleared by TGS recompiling, which deletes `cache/`.
@@ -741,5 +758,9 @@ EXTRA_SPACE_RUIN_LEVELS_MIN 4
 
 ## Maximum number of space ruins levels to generate
 EXTRA_SPACE_RUIN_LEVELS_MAX 8
+
+## Tgui payloads larger than the 2kb limit for BYOND topic requests are split into roughly 1kb chunks and sent in sequence.
+## This config option limits the maximum chunk count for which the server will accept a payload, default is 32
+TGUI_MAX_CHUNK_COUNT 128
 
 ### INITIALIZATION SETTINGS END ###

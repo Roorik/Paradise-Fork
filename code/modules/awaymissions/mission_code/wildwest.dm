@@ -7,31 +7,28 @@
 //Wild West Areas
 
 /area/awaymission/wwmines
-	name = "\improper Wild West Mines"
+	name = "Wild West Mines"
 	icon_state = "away1"
 	requires_power = FALSE
 	static_lighting = FALSE
 	base_lighting_alpha = 255
-	base_lighting_color = COLOR_WHITE
 
 /area/awaymission/wwgov
-	name = "\improper Wild West Mansion"
+	name = "Wild West Mansion"
 	icon_state = "away2"
 	requires_power = FALSE
 	static_lighting = FALSE
 	base_lighting_alpha = 255
-	base_lighting_color = COLOR_WHITE
 
 /area/awaymission/wwrefine
-	name = "\improper Wild West Refinery"
+	name = "Wild West Refinery"
 	icon_state = "away3"
 	requires_power = FALSE
 	static_lighting = FALSE
 	base_lighting_alpha = 255
-	base_lighting_color = COLOR_WHITE
 
 /area/awaymission/wwvault
-	name = "\improper Wild West Vault"
+	name = "Wild West Vault"
 	icon_state = "away3"
 
 /*
@@ -50,7 +47,7 @@
 	var/chargesa = 1
 	var/insistinga = 0
 
-/obj/machinery/wish_granter_dark/attack_hand(var/mob/living/carbon/human/user as mob)
+/obj/machinery/wish_granter_dark/attack_hand(mob/living/carbon/human/user as mob)
 	usr.set_machine(src)
 
 	if(chargesa <= 0)
@@ -71,10 +68,10 @@
 	else
 		chargesa--
 		insistinga = 0
-		var/wish = input("You want...","Wish") as null|anything in list("Power","Wealth","Immortality","Peace")
+		var/wish = tgui_input_list(usr, "You want...", "Wish", list("Power", "Wealth", "Immortality", "Peace"))
 		switch(wish)
 			if("Power")
-				to_chat(user, "<B>Your wish is granted, but at a terrible cost...</B>")
+				to_chat(user, "<b>Your wish is granted, but at a terrible cost...</b>")
 				to_chat(user, "The Wish Granter punishes you for your selfishness, claiming your soul and warping your body to match the darkness in your heart.")
 				ADD_TRAIT(user, TRAIT_LASEREYES, WISHGRANTER_TRAIT)
 				ADD_TRAIT(user, TRAIT_RESIST_COLD, WISHGRANTER_TRAIT)
@@ -83,40 +80,40 @@
 				if(ishuman(user))
 					var/mob/living/carbon/human/human = user
 					if(!isshadowperson(human))
-						to_chat(user, "<span class='warning'>Your flesh rapidly mutates!</span>")
+						to_chat(user, span_warning("Your flesh rapidly mutates!"))
 						to_chat(user, "<b>You are now a Shadow Person, a mutant race of darkness-dwelling humanoids.</b>")
-						to_chat(user, "<span class='warning'>Your body reacts violently to light.</span> <span class='notice'>However, it naturally heals in darkness.</span>")
+						to_chat(user, "[span_warning("Your body reacts violently to light.")] [span_notice("However, it naturally heals in darkness.")]")
 						to_chat(user, "Aside from your new traits, you are mentally unchanged and retain your prior obligations.")
 						human.set_species(/datum/species/shadow)
 				user.regenerate_icons()
 			if("Wealth")
-				to_chat(user, "<B>Your wish is granted, but at a terrible cost...</B>")
+				to_chat(user, "<b>Your wish is granted, but at a terrible cost...</b>")
 				to_chat(user, "The Wish Granter punishes you for your selfishness, claiming your soul and warping your body to match the darkness in your heart.")
 				new /obj/structure/closet/syndicate/resources/everything(loc)
 				if(ishuman(user))
 					var/mob/living/carbon/human/human = user
 					if(!isshadowperson(human))
-						to_chat(user, "<span class='warning'>Your flesh rapidly mutates!</span>")
+						to_chat(user, span_warning("Your flesh rapidly mutates!"))
 						to_chat(user, "<b>You are now a Shadow Person, a mutant race of darkness-dwelling humanoids.</b>")
-						to_chat(user, "<span class='warning'>Your body reacts violently to light.</span> <span class='notice'>However, it naturally heals in darkness.</span>")
+						to_chat(user, "[span_warning("Your body reacts violently to light.")] [span_notice("However, it naturally heals in darkness.")]")
 						to_chat(user, "Aside from your new traits, you are mentally unchanged and retain your prior obligations.")
 						human.set_species(/datum/species/shadow)
 				user.regenerate_icons()
 			if("Immortality")
-				to_chat(user, "<B>Your wish is granted, but at a terrible cost...</B>")
+				to_chat(user, "<b>Your wish is granted, but at a terrible cost...</b>")
 				to_chat(user, "The Wish Granter punishes you for your selfishness, claiming your soul and warping your body to match the darkness in your heart.")
 				add_verb(user, /mob/living/carbon/proc/immortality)
 				if(ishuman(user))
 					var/mob/living/carbon/human/human = user
 					if(!isshadowperson(human))
-						to_chat(user, "<span class='warning'>Your flesh rapidly mutates!</span>")
+						to_chat(user, span_warning("Your flesh rapidly mutates!"))
 						to_chat(user, "<b>You are now a Shadow Person, a mutant race of darkness-dwelling humanoids.</b>")
-						to_chat(user, "<span class='warning'>Your body reacts violently to light.</span> <span class='notice'>However, it naturally heals in darkness.</span>")
+						to_chat(user, "[span_warning("Your body reacts violently to light.")] [span_notice("However, it naturally heals in darkness.")]")
 						to_chat(user, "Aside from your new traits, you are mentally unchanged and retain your prior obligations.")
 						human.set_species(/datum/species/shadow)
 				user.regenerate_icons()
 			if("Peace")
-				to_chat(user, "<B>Whatever alien sentience that the Wish Granter possesses is satisfied with your wish. There is a distant wailing as the last of the Faithless begin to die, then silence.</B>")
+				to_chat(user, "<b>Whatever alien sentience that the Wish Granter possesses is satisfied with your wish. There is a distant wailing as the last of the Faithless begin to die, then silence.</b>")
 				to_chat(user, "You feel as if you just narrowly avoided a terrible fate...")
 				for(var/mob/living/simple_animal/hostile/faithless/F in GLOB.mob_living_list)
 					F.death()
@@ -129,8 +126,6 @@
 	name = "Meat Grinder"
 	desc = "What is that thing?"
 	density = TRUE
-	anchored = TRUE
-	layer = 3
 	icon = 'icons/mob/blob.dmi'
 	icon_state = "blobpod"
 	var/triggered = FALSE
@@ -160,8 +155,8 @@
 		return
 	visible_message(span_warning("[moving_atom] triggered the [bicon(src)] [src]!"))
 	triggered = TRUE
-	do_sparks(3, 1, src)
-	explosion(src, 1, 0, 0, 0)
+	do_sparks(3, TRUE, src)
+	explosion(src, devastation_range = 1, heavy_impact_range = 0, light_impact_range = 0, flash_range = 0)
 	qdel(src)
 
 
@@ -173,20 +168,20 @@
 
 	var/mob/living/carbon/C = usr
 	if(C.stat != DEAD)
-		to_chat(C, "<span class='notice'>You're not dead yet!</span>")
+		to_chat(C, span_notice("You're not dead yet!"))
 		return
 	if(revival_in_progress)
-		to_chat(C, "<span class='notice'>You're already rising from the dead!</span>")
+		to_chat(C, span_notice("You're already rising from the dead!"))
 		return //no spam callbacks
 	C.revival_in_progress = TRUE
-	to_chat(C, "<span class='notice'>Death is not your end!</span>")
+	to_chat(C, span_notice("Death is not your end!"))
 	addtimer(CALLBACK(C, PROC_REF(resurrect), C), rand(80 SECONDS, 120 SECONDS))
 
-/mob/living/carbon/proc/resurrect(var/mob/living/carbon/user)
+/mob/living/carbon/proc/resurrect(mob/living/carbon/user)
 	user.revive()
 	user.revival_in_progress = FALSE
-	to_chat(user, "<span class='notice'>You have regenerated.</span>")
-	user.visible_message("<span class='warning'>[user] appears to wake from the dead, having healed all wounds.</span>")
+	to_chat(user, span_notice("You have regenerated."))
+	user.visible_message(span_warning("[user] appears to wake from the dead, having healed all wounds."))
 	return 1
 
 

@@ -18,12 +18,11 @@ BONUS
 
 /datum/symptom/headache
 
-	name = "Headache"
+	name = "Головная боль"
 	id = "headache"
 	stealth = -1
 	resistance = 4
 	stage_speed = 2
-	transmittable = 0
 	level = 1
 	severity = 1
 
@@ -31,5 +30,5 @@ BONUS
 	..()
 	if(prob(SYMPTOM_ACTIVATION_PROB))
 		var/mob/living/M = A.affected_mob
-		to_chat(M, span_warning(pick("Your head hurts.", "Your head starts pounding.")))
+		to_chat(M, span_warning(pick("Голова раскалывается.", "В висках пульсирует боль.")))
 	return

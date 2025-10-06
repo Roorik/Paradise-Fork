@@ -365,7 +365,7 @@
 		return
 
 	vamp.is_goon_cloak = !vamp.is_goon_cloak
-	update_name(user = user)
+	update_appearance(UPDATE_NAME)
 	to_chat(user, span_notice("Теперь вас будет <b>[vamp.is_goon_cloak ? "не видно" : "видно"]</b> в темноте."))
 
 
@@ -435,7 +435,7 @@
 		user.ExtinguishMob()
 		flick("liquify", animation)
 		user.forceMove(holder)
-		user.client.eye = holder
+		user.client.set_eye(holder)
 		var/datum/effect_system/steam_spread/steam = new /datum/effect_system/steam_spread()
 		steam.set_up(10, 0, originalloc)
 		steam.start()
@@ -468,7 +468,7 @@
 				if(check && user.Move(check))
 					break
 
-		user.client.eye = user
+		user.client.set_eye(user)
 		qdel(animation)
 		qdel(holder)
 
